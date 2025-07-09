@@ -136,48 +136,117 @@
             });
         }
 
-        function saveProduct(event) {
-            event.preventDefault();
-            const form = document.getElementById("productForm");
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
 
-            const id = document.getElementById("product-id").value;
-            const images = Array.from(document.getElementById("image-preview").querySelectorAll("img")).map(img => img.src);
-            const product = {
-                id: id ? parseInt(id) : products.length + 1,
-                name: document.getElementById("product-name").value,
-                category: document.getElementById("product-category").value,
-                brand: document.getElementById("product-brand").value || null,
-                price: parseFloat(document.getElementById("product-price").value),
-                discount: parseFloat(document.getElementById("product-discount").value) || null,
-                stock: parseInt(document.getElementById("product-stock").value),
-                lowStock: parseInt(document.getElementById("product-low-stock").value),
-                description: document.getElementById("product-description").value,
-                specs: document.getElementById("product-specs").value.split("\n").filter(s => s.trim()),
-                weight: parseFloat(document.getElementById("product-weight").value) || null,
-                warranty: parseInt(document.getElementById("product-warranty").value) || null,
-                featured: document.getElementById("product-featured").checked,
-                active: document.getElementById("product-active").checked,
-                images
-            };
+       function saveProduct(event) {
+    event.preventDefault();
 
-            if (id) {
-                const index = products.findIndex(p => p.id === parseInt(id));
-                products[index] = product;
-            } else {
-                products.push(product);
-            }
+    const form = document.getElementById("productForm");
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
 
-            document.getElementById("total-products").textContent = products.length;
+    const id = document.getElementById("product-id").value;
+    const isEditing = !!id;
+    const apiUrl = isEditing ? 'api/update_product.php' : 'api/add_product.php';
+
+    const formData = new FormData();
+    const imageInput = document.getElementById("product-images");
+
+    for (let i = 0; i < imageInput.files.length; i++) {
+        formData.append('images[]', imageInput.files[i]);
+    }
+
+    // Collect existing images from the preview (for edit mode)
+    let images = [];
+    if (isEditing) {
+        formData.append('id', id);
+        images = Array.from(document.getElementById("image-preview").querySelectorAll("img"))
+            .map(img => img.src)
+            .filter(src => !src.startsWith("data:")); // Only keep existing (not new uploads)
+        formData.append('existing_images', images.join(','));
+    }
+
+    formData.append('name', document.getElementById("product-name").value);
+    formData.append('category', document.getElementById("product-category").value);
+    formData.append('brand', document.getElementById("product-brand").value);
+    formData.append('price', document.getElementById("product-price").value);
+    formData.append('discount_price', document.getElementById("product-discount").value);
+    formData.append('stock', document.getElementById("product-stock").value);
+    formData.append('low_stock_threshold', document.getElementById("product-low-stock").value);
+    formData.append('description', document.getElementById("product-description").value);
+    formData.append('specifications', document.getElementById("product-specs").value);
+    formData.append('weight_kg', document.getElementById("product-weight").value);
+    formData.append('warranty_months', document.getElementById("product-warranty").value);
+    formData.append('is_featured', document.getElementById("product-featured").checked ? 1 : 0);
+    formData.append('is_active', document.getElementById("product-active").checked ? 1 : 0);
+
+    fetch(apiUrl, {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Product ${isEditing ? "updated" : "added"} successfully!`, "success");
             closeModal("productModal");
-            showNotification(`Product ${id ? "updated" : "added"} successfully!`, "success");
-            generateNotifications();
-            renderProducts(products);
-            showSection("products");
+            fetchProducts(); // fetch updated product list
+        } else {
+            showNotification(`Failed to ${isEditing ? "update" : "add"} product: ` + data.error, "error");
         }
+    })
+    .catch(err => {
+        console.error(err);
+        showNotification(`An error occurred while ${isEditing ? "updating" : "adding"} the product.`, "error");
+    });
+}
+
+
+function fetchProducts() {
+    fetch('api/get_products.php')
+        .then(response => response.json())
+        .then(data => {
+            products = data.map(product => {
+                // --- Begin universal specs parsing ---
+                let specsArray = [];
+                if (typeof product.specifications === 'string') {
+                    try {
+                        specsArray = JSON.parse(product.specifications); // if it's a JSON string
+                    } catch {
+                        specsArray = product.specifications.split(','); // fallback: comma text
+                    }
+                } else if (typeof product.specifications === 'object' && product.specifications !== null) {
+                    specsArray = Object.entries(product.specifications).map(
+                        ([key, value]) => `${key}: ${value}`
+                    );
+                }
+                // --- End universal specs parsing ---
+                return {
+                    id: parseInt(product.id),
+                    name: product.name,
+                    category: product.category,
+                    brand: product.brand,
+                    price: parseFloat(product.price),
+                    discount: product.discount_price ? parseFloat(product.discount_price) : null,
+                    stock: parseInt(product.stock),
+                    lowStock: parseInt(product.low_stock_threshold),
+                    description: product.description,
+                    specs: specsArray,
+                    weight: product.weight_kg ? parseFloat(product.weight_kg) : null,
+                    warranty: product.warranty_months ? parseInt(product.warranty_months) : null,
+                    featured: product.is_featured == "1",
+                    active: product.is_active == "1",
+                    images: product.image_paths ? product.image_paths.split(",") : []
+                };
+            });
+
+            renderProducts(products);
+            document.getElementById("total-products").textContent = products.length;
+            generateNotifications();
+        });
+}
+
+
 
         function renderProducts(productList) {
             const tbody = document.getElementById("products-tbody");
@@ -198,11 +267,28 @@
         }
 
         function deleteProduct(id) {
-            products = products.filter(p => p.id !== id);
-            document.getElementById("total-products").textContent = products.length;
-            showNotification("Product deleted successfully!", "success");
-            generateNotifications();
-            renderProducts(products);
+            if (!confirm("Are you sure you want to delete this product?")) return;
+
+            const formData = new FormData();
+            formData.append("id", id);
+
+            fetch("api/delete_product.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification("Product deleted successfully!", "success");
+                    fetchProducts(); // reload updated list
+                } else {
+                    showNotification("Failed to delete product: " + data.error, "error");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showNotification("An error occurred while deleting the product.", "error");
+            });
         }
 
         function exportData(type) {
@@ -320,7 +406,30 @@
         }
 
         window.onload = () => {
-            generateNotifications();
-            document.getElementById("total-products").textContent = products.length;
-            renderProducts(products);
+            fetchProducts();
+            fetchOrders(); // ✅ NEW
         };
+function fetchOrders() {
+    fetch('api/get_orders.php')
+        .then(res => res.json())
+        .then(data => {
+            renderOrders(data);
+        });
+}
+
+function renderOrders(orderList) {
+    const tbody = document.getElementById("orders-tbody");
+    tbody.innerHTML = orderList.map(order => `
+        <tr>
+            <td>${order.id}</td>
+            <td>${order.customer_name}</td>
+            <td>${new Date(order.order_date).toLocaleDateString()}</td>
+            <td>${order.items}</td>
+            <td>${order.total_price}</td>
+            <td><span class="status-badge status-${order.status}">${order.status}</span></td>
+            <td class="action-buttons">
+                <button class="btn btn-primary" onclick="viewOrderDetails(${order.id})">View</button>
+            </td>
+        </tr>
+    `).join("");
+}

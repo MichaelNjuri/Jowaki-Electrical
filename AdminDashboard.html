@@ -10,43 +10,43 @@
     <div class="admin-container">
         <nav class="sidebar">
             <div class="logo">
-                <h1>⚡ JOWAKI</h1>
+                <h1> JOWAKI ELECTRICAL </h1>
                 <p>Admin Panel</p>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
                     <a href="AdminDashboard.html" class="nav-link active" data-section="dashboard">
-                        <span class="nav-icon">📊</span>
+                        <span class="nav-icon"></span>
                         Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#products" class="nav-link" data-section="products" onclick="showSection('products'); return false;">
-                        <span class="nav-icon">📦</span>
+                        <span class="nav-icon"></span>
                         Products
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#orders" class="nav-link" data-section="orders" onclick="showSection('orders'); return false;">
-                        <span class="nav-icon">🛒</span>
+                        <span class="nav-icon"></span>
                         Orders
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#customers" class="nav-link" data-section="customers" onclick="showSection('customers'); return false;">
-                        <span class="nav-icon">👥</span>
+                        <span class="nav-icon"></span>
                         Customers
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#services" class="nav-link" data-section="services" onclick="showSection('services'); return false;">
-                        <span class="nav-icon">🔧</span>
+                        <span class="nav-icon"></span>
                         Service Requests
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#reports" class="nav-link" data-section="reports" onclick="showSection('reports'); return false;">
-                        <span class="nav-icon">📈</span>
+                        <span class="nav-icon"></span>
                         Reports
                     </a>
                 </li>
@@ -57,14 +57,17 @@
             <div class="header">
                 <h2 id="page-title">Dashboard</h2>
                 <div class="user-info">
-                    <span>Welcome, Admin</span>
+                    <span>Welcome</span>
                     <div class="notification-bell" onclick="toggleNotifications()">
-                        🔔
-                        <span id="notification-count" class="notification-count"></span>
-                        <div id="notification-dropdown" class="notification-dropdown">
-                            <div id="notifications-list"></div>
-                        </div>
-                    </div>
+    🔔
+    <span id="notification-count" class="notification-count"></span>
+
+    <!-- Dropdown panel -->
+    <div id="notification-dropdown" class="notification-dropdown">
+        <div id="notifications-list"></div>
+    </div>
+</div>
+
                     <button class="btn btn-danger" onclick="logout()">Logout</button>
                 </div>
             </div>
@@ -479,6 +482,8 @@
             </form>
         </div>
     </div>
+    
+
 
     <script src="AdminDashboard.js"></script>
 </body>
