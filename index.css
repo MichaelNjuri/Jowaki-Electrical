@@ -98,6 +98,15 @@ header {
     background: #3182ce;
 }
 
+.profile-link {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.profile-link:hover {
+    background: linear-gradient(135deg, #5a6dd8, #6a3f92);
+}
+
 .contact-quick {
     display: flex;
     flex-direction: column;

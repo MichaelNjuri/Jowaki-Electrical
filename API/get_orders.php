@@ -19,16 +19,25 @@ $orders = [];
 while ($row = $result->fetch_assoc()) {
     $order_id = $row['id'];
 
-    $item_sql = "SELECT product_name, quantity FROM order_items WHERE order_id = $order_id";
-    $item_result = $conn->query($item_sql);
+    $item_sql = "SELECT product_name, quantity, price FROM order_items WHERE order_id = ?";
+    $item_stmt = $conn->prepare($item_sql);
+    $item_stmt->bind_param('i', $order_id);
+    $item_stmt->execute();
+    $item_result = $item_stmt->get_result();
 
     $items = [];
     while ($item = $item_result->fetch_assoc()) {
-        $items[] = $item['product_name'] . ' (x' . $item['quantity'] . ')';
+        $items[] = [
+            'name' => $item['product_name'],
+            'quantity' => $item['quantity'],
+            'price' => $item['price']
+        ];
     }
 
-    $row['items'] = implode(', ', $items);
+    $row['items'] = $items; // Structured array instead of string
     $orders[] = $row;
 }
 
 echo json_encode($orders);
+$conn->close();
+?>

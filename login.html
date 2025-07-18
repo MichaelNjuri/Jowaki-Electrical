@@ -3,191 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Jowaki Electrical Services</title>
+    <title>Jowaki Electrical Services - Login</title>
     <link rel="stylesheet" href="login.css">
+    <script src="login.js" defer></script>
 </head>
 <body>
     <header>
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="Logo.jpg"></div>
-                    <div class="logo-text">JOWAKI ELECTRICAL SERVICES LTD</div>
+                    <span class="logo-text">JOWAKI ELECTRICAL SERVICES LTD</span>
                 </div>
-                
                 <nav class="main-nav">
-                    <a href="Index.html" class="nav-link">Home</a>
-                    <a href="#about" class="nav-link">About</a>
+                    <a href="index.html" class="nav-link">Home</a>
                     <a href="Service.html" class="nav-link">Services</a>
                     <a href="Store.html" class="nav-link shop-link">🛒 Shop</a>
+                    <a href="login.html" class="nav-link login-link">👤 Login</a>
                 </nav>
-                
                 <div class="contact-quick">
-                    <div class="contact-item">
-                        <span class="contact-icon"></span>
-                        <span>+254 721442248</span>
-                    </div>
-                    <div class="contact-item">
-                        <span class="contact-icon"></span>
-                        <span>Jowakielectricalsrvs@gmail.com</span>
-                    </div>
+                    <div class="contact-item">📞 0721 442 248</div>
+                    <div class="contact-item">✉️ kibukush@gmail.com</div>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="main-content">
-        <div class="form-container">
-            <div class="success-message" id="successMessage">
-                Welcome! Your account has been created successfully.
-            </div>
-            
-            <div id="dynamicFormContainer"></div>
-            
-            <!-- Login Form -->
-            <div id="loginForm" class="form-section active">
-                <h2 class="form-title">Welcome Back</h2>
-                
-                <form id="loginFormElement" novalidate>
-                    <div class="form-group">
-                        <label for="loginEmail">Email Address</label>
-                        <input type="email" 
-                               id="loginEmail" 
-                               name="email" 
-                               required 
-                               autocomplete="email" 
-                               spellcheck="false" 
-                               maxlength="254"
-                               aria-describedby="loginEmailError">
-                        <div class="error-message" id="loginEmailError" role="alert" aria-live="polite"></div>
+    <main>
+        <div class="main-content">
+            <div class="form-wrapper">
+                <div class="form-container">
+                    <div id="successMessage" class="success-message">
+                        Welcome! Your account has been created successfully.
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="loginPassword">Password</label>
-                        <input type="password" 
-                               id="loginPassword" 
-                               name="password" 
-                               required 
-                               autocomplete="current-password" 
-                               maxlength="128"
-                               aria-describedby="loginPasswordError">
-                        <div class="error-message" id="loginPasswordError" role="alert" aria-live="polite"></div>
-                    </div>
-                    
-                    <button type="submit" class="btn">Sign In</button>
-                    
-                    <div class="forgot-password">
-                        <a href="#" id="forgotPasswordLink" aria-label="Reset your password">Forgot your password?</a>
-                    </div>
-                    
-                    <div class="switch-form">
-                        Don't have an account? <a href="#" id="switchToSignUpLink" aria-label="Switch to sign up form">Sign up here</a>
-                    </div>
-                </form>
-            </div>
 
-            <!-- Sign Up Form -->
-            <div id="signUpForm" class="form-section">
-                <h2 class="form-title">Create Account</h2>
-                
-                <form id="signUpFormElement" novalidate>
-                    <div class="form-group">
-                        <label for="firstName">First Name</label>
-                        <input type="text" 
-                               id="firstName" 
-                               name="firstName" 
-                               required 
-                               autocomplete="given-name" 
-                               maxlength="50"
-                               pattern="[A-Za-z\s]+"
-                               aria-describedby="firstNameError">
-                        <div class="error-message" id="firstNameError" role="alert" aria-live="polite"></div>
+                    <div id="loginForm" class="form-section active">
+                        <h2 class="form-title">Welcome Back</h2>
+                        <form id="loginFormElement" action="login.php" method="POST">
+                            <div class="form-group">
+                                <label for="loginEmail">Email Address</label>
+                                <input type="email" id="loginEmail" name="email" required>
+                                <div id="loginEmailError" class="error-message" aria-describedby="loginEmail"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <input type="password" id="loginPassword" name="password" required>
+                                <div id="loginPasswordError" class="error-message" aria-describedby="loginPassword"></div>
+                            </div>
+                            <button type="submit" class="btn">Sign In</button>
+                            <div class="forgot-password">
+                                <a href="#" id="forgotPasswordLink">Forgot your password?</a>
+                            </div>
+                            <div class="switch-form">
+                                <a href="#" id="switchToSignUpLink">Don't have an account? Sign up here</a>
+                            </div>
+                        </form>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="lastName">Last Name</label>
-                        <input type="text" 
-                               id="lastName" 
-                               name="lastName" 
-                               required 
-                               autocomplete="family-name" 
-                               maxlength="50"
-                               pattern="[A-Za-z\s]+"
-                               aria-describedby="lastNameError">
-                        <div class="error-message" id="lastNameError" role="alert" aria-live="polite"></div>
+
+                    <div id="signUpForm" class="form-section">
+                        <h2 class="form-title">Create Account</h2>
+                        <form id="signUpFormElement" action="signup.php" method="POST">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="firstName" required>
+                                <div id="firstNameError" class="error-message" aria-describedby="firstName"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" required>
+                                <div id="lastNameError" class="error-message" aria-describedby="lastName"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="signUpEmail">Email Address</label>
+                                <input type="email" id="signUpEmail" name="email" required>
+                                <div id="signUpEmailError" class="error-message" aria-describedby="signUpEmail"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" required>
+                                <div id="phoneError" class="error-message" aria-describedby="phone"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="signUpPassword">Password</label>
+                                <input type="password" id="signUpPassword" name="password" required>
+                                <div id="signUpPasswordError" class="error-message" aria-describedby="signUpPassword"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" required>
+                                <div id="confirmPasswordError" class="error-message" aria-describedby="confirmPassword"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="terms" name="terms">
+                                    <span class="checkmark"></span>
+                                    I agree to the Terms of Service and Privacy Policy
+                                </label>
+                                <div id="termsError" class="error-message" aria-describedby="terms"></div>
+                            </div>
+                            <button type="submit" class="btn">Create Account</button>
+                            <div class="switch-form">
+                                <a href="#" id="switchToLoginLink">Already have an account? Sign in here</a>
+                            </div>
+                        </form>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="signUpEmail">Email Address</label>
-                        <input type="email" 
-                               id="signUpEmail" 
-                               name="email" 
-                               required 
-                               autocomplete="email" 
-                               spellcheck="false" 
-                               maxlength="254"
-                               aria-describedby="signUpEmailError">
-                        <div class="error-message" id="signUpEmailError" role="alert" aria-live="polite"></div>
+
+                    <div id="forgotPasswordForm" class="form-section">
+                        <h2 class="form-title">Reset Password</h2>
+                        <form id="forgotPasswordFormElement" action="forgot_password.php" method="POST">
+                            <div class="form-group">
+                                <label for="forgotEmail">Email Address</label>
+                                <input type="email" id="forgotEmail" name="email" required>
+                                <div id="forgotEmailError" class="error-message" aria-describedby="forgotEmail"></div>
+                            </div>
+                            <button type="submit" class="btn">Send Reset Link</button>
+                            <div class="switch-form">
+                                <a href="#" id="backToLoginLink">Back to Login</a>
+                            </div>
+                        </form>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" 
-                               id="phone" 
-                               name="phone" 
-                               required 
-                               autocomplete="tel" 
-                               maxlength="15"
-                               pattern="[0-9+\-\s\(\)]+"
-                               placeholder="e.g., +254 123 456 789"
-                               aria-describedby="phoneError">
-                        <div class="error-message" id="phoneError" role="alert" aria-live="polite"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="signUpPassword">Password</label>
-                        <input type="password" 
-                               id="signUpPassword" 
-                               name="password" 
-                               required 
-                               autocomplete="new-password" 
-                               maxlength="128"
-                               minlength="8"
-                               aria-describedby="signUpPasswordError">
-                        <div class="error-message" id="signUpPasswordError" role="alert" aria-live="polite"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" 
-                               id="confirmPassword" 
-                               name="confirmPassword" 
-                               required 
-                               autocomplete="new-password" 
-                               maxlength="128"
-                               aria-describedby="confirmPasswordError">
-                        <div class="error-message" id="confirmPasswordError" role="alert" aria-live="polite"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="terms" name="terms" required aria-describedby="termsError">
-                            <span class="checkmark"></span>
-                            I agree to the <a href="#" id="showTermsLink" aria-label="View terms of service">Terms of Service</a> and <a href="#" id="showPrivacyLink" aria-label="View privacy policy">Privacy Policy</a>
-                        </label>
-                        <div class="error-message" id="termsError" role="alert" aria-live="polite"></div>
-                    </div>
-                    
-                    <button type="submit" class="btn">Create Account</button>
-                    
-                    <div class="switch-form">
-                        Already have an account? <a href="#" id="switchToLoginLink" aria-label="Switch to login form">Sign in here</a>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </main>
-
-    <script src="login.js"></script>
 </body>
 </html>
