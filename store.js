@@ -414,9 +414,13 @@ function hideModal(modalId) {
 }
 
 function showNotification(message, type = 'success') {
+    console.log(`Notification [${type}]: ${message}`); // Log to console for debugging
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    notification.textContent = message;
+    notification.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="margin-left: 1rem; background: none; border: none; color: white; cursor: pointer;">✕</button>
+    `;
     document.body.appendChild(notification);
 
     if (!document.getElementById('notification-styles')) {
@@ -431,7 +435,9 @@ function showNotification(message, type = 'success') {
                 border-radius: 5px;
                 color: white;
                 z-index: 10001;
-                animation: slideIn 0.5s ease-out, slideOut 0.5s ease-out 2.5s forwards;
+                animation: slideIn 0.5s ease-out;
+                display: flex;
+                align-items: center;
             }
             .notification.success { background: #2ecc71; }
             .notification.error { background: #e74c3c; }
@@ -439,15 +445,18 @@ function showNotification(message, type = 'success') {
                 from { transform: translateX(100%); opacity: 0; }
                 to { transform: translateX(0); opacity: 1; }
             }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
         `;
         document.head.appendChild(styles);
     }
 
-    setTimeout(() => notification.remove(), 3000);
+  
+   setTimeout(() => notification.remove(), 15000);
+    // Automatically remove the notification after 15 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 15000);
 }
 
 function startCheckout() {
@@ -633,12 +642,8 @@ function getPaymentStep() {
                     <p>Pay with M-Pesa</p>
                 </div>
                 <div class="payment-method ${customerInfo.paymentMethod === 'card' ? 'selected' : ''}" data-method="card">
-                    <img src="/jowaki_electrical_srvs/card-logo.png" alt="Card" style="width: 100px; height: auto;">
-                    <p>Pay with Credit/Debit Card</p>
-                </div>
-                <div class="payment-method ${customerInfo.paymentMethod === 'paypal' ? 'selected' : ''}" data-method="paypal">
-                    <img src="/jowaki_electrical_srvs/paypal-logo.png" alt="PayPal" style="width: 100px; height: auto;">
-                    <p>Pay with PayPal</p>
+                    <img src="/jowaki_electrical_srvs/visa-logo.jpeg" alt="Visa/Credit Card" style="width: 100px; height: auto;">
+                    <p>Pay with Visa/Credit Card</p>
                 </div>
             </div>
             <div style="display: flex; gap: 1rem;">
@@ -743,12 +748,18 @@ function placeOrder() {
         body: JSON.stringify(orderData)
     })
     .then(response => {
-        if (!response.ok) {
-            return response.text().then(text => {
+        console.log('Raw response status:', response.status);
+        return response.text().then(text => {
+            console.log('Raw response text:', text);
+            if (!response.ok) {
                 throw new Error(`HTTP error ${response.status}: ${text}`);
-            });
-        }
-        return response.json();
+            }
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error(`Failed to parse JSON: ${text}`);
+            }
+        });
     })
     .then(data => {
         if (data.success) {

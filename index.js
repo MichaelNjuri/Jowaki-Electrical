@@ -1,6 +1,37 @@
-// Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
-    
+    // Check session status and update auth link
+    function initAuthLink() {
+        fetch('/jowaki_electrical_srvs/api/session-check.php', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const authLink = document.getElementById('auth-link');
+            if (data.valid) {
+                authLink.href = '/jowaki_electrical_srvs/api/Profile.php';
+                authLink.textContent = '👤 Profile';
+                authLink.classList.remove('login-link');
+                authLink.classList.add('profile-link');
+            } else {
+                authLink.href = '#login';
+                authLink.textContent = '👤 Login';
+                authLink.classList.remove('profile-link');
+                authLink.classList.add('login-link');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking session:', error);
+            const authLink = document.getElementById('auth-link');
+            authLink.href = '#login';
+            authLink.textContent = '👤 Login';
+            authLink.classList.remove('profile-link');
+            authLink.classList.add('login-link');
+        });
+    }
+
     // Mobile Navigation Toggle (if needed for smaller screens)
     function initMobileNav() {
         const header = document.querySelector('header');
@@ -360,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize all functions
     function init() {
         addAnimationStyles();
+        initAuthLink();
         initMobileNav();
         initSmoothScrolling();
         initGalleryLightbox();

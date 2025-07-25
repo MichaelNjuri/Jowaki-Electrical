@@ -5,28 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jowaki Store - Complete E-commerce System</title>
     <link rel="stylesheet" href="store.css">
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <!-- Top Navigation -->
-    <nav class="top-nav">
-        <div class="nav-container">
-            <div class="logo-container">
-                <img src="Logo.jpg" alt="Jowaki Logo" class="logo-img">
-                <a href="#" class="logo" onclick="showHome()">Jowaki Store</a>
-            </div>
-            <nav class="nav-links">
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logo.png" alt="" class="logo-img">
+                    <span class="Logo.jpg">JOWAKI ELECTRICAL SERVICES LTD</span>
+                </div>
+                <nav class="main-nav">
                     <a href="Index.html" class="nav-link">Home</a>
                     <a href="Service.html" class="nav-link">Services</a>
                     <a href="Store.html" class="nav-link shop-link">🛒 Shop</a>
-                    <a href="login.html" class="nav-link login-link">👤 Login</a>
+                    <a href="login.html" class="nav-link">👤 Login</a>
                 </nav>
                 <div class="search-container">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search products...">
-                    <button class="search-btn" onclick="searchProducts()">🔍</button>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search products...">
+                    <button class="search-btn">🔍</button>
                 </div>
             </div>
         </div>
-    </nav>
+    </header>
 
     <div id="app">
         <!-- Notification -->
@@ -116,7 +117,7 @@
                 <div class="footer-section">
                     <h3>Contact Info</h3>
                     <p>📞 +254 721442248</p>
-                    <p>📧 JowakiElectricalsrvs@gmail.com</p>
+                    <p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f7bd9880969c9eb29b929483859e94969b84858184b7909a969e9bd994989a">[email&#160;protected]</a></p>
                     <p>📍 Nairobi, Kenya</p>
                 </div>
                 <div class="footer-section">
@@ -140,6 +141,6 @@
         </div>
     </footer>
 
-    <script src="store.js"></script>
-</body>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="store.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'963d34bbfcbc87a4',t:'MTc1MzI5NDk3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

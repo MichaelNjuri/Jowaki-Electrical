@@ -1,1144 +1,1205 @@
-let products = [];
+// Ensure PapaParse is included via <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+// Ensure Font Awesome is included via <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+document.addEventListener('DOMContentLoaded', () => {
+    showSection('dashboard');
+    fetchDashboardStats();
+    fetchOrders();
+    fetchProducts();
+    fetchCustomers();
+    fetchNotifications();
+});
+
 let orders = [];
-let services = [];
+let products = [];
+let customers = [];
 let notifications = [];
 
-function generateNotifications() {
-    notifications = [];
-    const now = new Date();
-
-    products.forEach(product => {
-        if (product.stock <= product.lowStock && product.active) {
-            notifications.push({
-                id: `prod-${product.id}`,
-                message: `Low stock alert: ${product.name} has ${product.stock} units left.`,
-                time: now.toISOString(),
-                action: `openModal('productModal', ${product.id})`,
-                section: "products"
-            });
+    function showNotification(message, type = 'info') {
+        // Remove any existing notification to prevent stacking
+        const existingNotification = document.querySelector('.notification-popup');
+        if (existingNotification) {
+            existingNotification.remove();
         }
-    });
 
-    orders.forEach(order => {
-        if (order.status === "pending") {
-            notifications.push({
-                id: `ord-${order.id}`,
-                message: `Pending order #${order.id} from ${order.customer_info.firstName} ${order.customer_info.lastName}.`,
-                time: order.order_date,
-                action: `openModal('orderModal', '${order.id}')`,
-                section: "orders"
-            });
-        }
-    });
+        const notification = document.createElement('div');
+        notification.className = `notification-popup notification-${type}`; // Ensure this class is styled in CSS
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-message">${sanitizeHTML(message)}</span>
+                <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+        `;
 
-    services.forEach(service => {
-        if (service.status === "pending") {
-            notifications.push({
-                id: `srv-${service.id}`,
-                message: `Pending service request ${service.id}: ${service.type}.`,
-                time: service.date,
-                action: `openModal('serviceModal', '${service.id}')`,
-                section: "services"
-            });
-        }
-    });
+        document.body.appendChild(notification);
 
-    updateNotificationDisplay();
-}
+        // Automatically remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) { // Check if it still exists before trying to remove
+                notification.remove();
+            }
+        }, 5000);
 
-function updateNotificationDisplay() {
-    const notificationList = document.getElementById("notifications-list");
-    const notificationCount = document.getElementById("notification-count");
-    if (notificationList && notificationCount) {
-        notificationList.innerHTML = notifications.length === 0 
-            ? '<div class="notification-item">No new notifications</div>'
-            : notifications.map(notif => `
-                <div class="notification-item" id="notif-${notif.id}">
-                    <span class="message">${notif.message}</span>
-                    <span class="time">${new Date(notif.time).toLocaleString()}</span>
-                    <a href="#" class="action" onclick="${notif.action}; showSection('${notif.section}'); return false;">View</a>
-                </div>
-            `).join("");
-        notificationCount.textContent = notifications.length || "";
-        notificationCount.style.display = notifications.length ? "inline" : "none";
+        console.log(`${type.toUpperCase()}: ${message}`);
+    }
+    
+
+function toggleNotifications() {
+    const notificationList = document.getElementById('notifications-list');
+    if (notificationList) {
+        notificationList.style.display = notificationList.style.display === 'none' ? 'block' : 'none';
+    } else {
+        console.error('Notifications list element not found!');
+        showNotification('Notifications list not found', 'error');
     }
 }
 
-function toggleNotifications() {
-    const dropdown = document.getElementById("notification-dropdown");
-    if (dropdown) dropdown.classList.toggle("show");
+// Helper function to sanitize HTML to prevent XSS
+function sanitizeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 function showSection(sectionId) {
-    document.querySelectorAll(".content-section").forEach(section => section.classList.remove("active"));
-    const section = document.getElementById(sectionId);
-    if (section) section.classList.add("active");
-    document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
-    const navLink = document.querySelector(`.nav-link[data-section="${sectionId}"]`);
-    if (navLink) navLink.classList.add("active");
-    const pageTitle = document.getElementById("page-title");
-    if (pageTitle) pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
-    const notificationDropdown = document.getElementById("notification-dropdown");
-    if (notificationDropdown) notificationDropdown.classList.remove("show");
-    if (sectionId === "products") {
-        renderProducts(products);
-    } else if (sectionId === "orders") {
-        renderOrders(orders);
-    } else if (sectionId === "services") {
-        renderServices(services);
-    }
-}
+    const sections = document.querySelectorAll('.content-section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const pageTitle = document.getElementById('page-title');
 
-function openModal(modalId, id = null) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    modal.style.display = "block";
-    if (modalId === "productModal" && id) {
-        const product = products.find(p => p.id === id);
-        if (product) {
-            document.getElementById("product-id").value = product.id;
-            document.getElementById("product-name").value = product.name;
-            document.getElementById("product-category").value = product.category;
-            document.getElementById("product-brand").value = product.brand || "";
-            document.getElementById("product-price").value = product.price;
-            document.getElementById("product-discount").value = product.discount || "";
-            document.getElementById("product-stock").value = product.stock;
-            document.getElementById("product-low-stock").value = product.lowStock;
-            document.getElementById("product-description").value = product.description || "";
-            document.getElementById("product-specs").value = product.specs ? product.specs.join("\n") : "";
-            document.getElementById("product-weight").value = product.weight || "";
-            document.getElementById("product-warranty").value = product.warranty || "";
-            document.getElementById("product-featured").checked = product.featured;
-            document.getElementById("product-active").checked = product.active;
-            document.getElementById("product-modal-title").textContent = "Edit Product";
-            const preview = document.getElementById("image-preview");
-            if (preview) preview.innerHTML = product.images.map(url => `<img src="${url}" alt="Product Image">`).join("");
-        }
-    } else if (modalId === "productModal") {
-        const form = document.getElementById("productForm");
-        if (form) form.reset();
-        document.getElementById("product-id").value = "";
-        document.getElementById("product-active").checked = true;
-        document.getElementById("product-low-stock").value = 10;
-        const preview = document.getElementById("image-preview");
-        if (preview) preview.innerHTML = "";
-        document.getElementById("product-modal-title").textContent = "Add New Product";
-    } else if (modalId === "orderModal" && id) {
-        viewOrderDetails(id);
-    }
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.style.display = "none";
-}
-
-function handleImageUpload(input) {
-    const preview = document.getElementById("image-preview");
-    if (!preview) return;
-    preview.innerHTML = "";
-    const files = Array.from(input.files);
-    files.forEach(file => {
-        if (file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = document.createElement("img");
-                img.src = e.target.result;
-                img.style.maxWidth = "100px";
-                preview.appendChild(img);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-}
-
-function saveProduct(event) {
-    event.preventDefault();
-    const form = document.getElementById("productForm");
-    if (!form.checkValidity()) {
-        form.reportValidity();
+    if (!pageTitle) {
+        console.error('page-title element not found!');
         return;
     }
 
-    const id = document.getElementById("product-id").value;
-    const isEditing = !!id;
-    const apiUrl = isEditing ? 'api/update_product.php' : 'api/add_product.php';
-
-    const formData = new FormData();
-    const imageInput = document.getElementById("product-images");
-    for (let i = 0; i < imageInput.files.length; i++) {
-        formData.append('images[]', imageInput.files[i]);
+    sections.forEach(section => section.classList.remove('active'));
+    const section = document.querySelector(`#${sectionId}`);
+    if (section) {
+        section.classList.add('active');
+    } else {
+        console.error(`Section #${sectionId} not found!`);
     }
 
-    if (isEditing) {
-        formData.append('id', id);
-        const existingImages = Array.from(document.getElementById("image-preview").querySelectorAll("img"))
-            .map(img => img.src)
-            .filter(src => !src.startsWith("data:"));
-        formData.append('existing_images', existingImages.join(','));
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-section') === sectionId) {
+            link.classList.add('active');
+        }
+    });
+
+    pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+}
+
+function fetchDashboardStats() {
+    fetch('api/get_dashboard_stats.php')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false) {
+                updateDashboardElements({
+                    'total-products': data.total_products || 0,
+                    'pending-orders': data.pending_orders || 0,
+                    'total-customers': data.total_customers || 0,
+                    'monthly-revenue': data.monthly_revenue ? Number(data.monthly_revenue).toFixed(2) : '0.00',
+                    'monthly-sales': data.monthly_sales || '0',
+                    'orders-this-month': data.orders_this_month || 0,
+                    'new-customers': data.new_customers || '0',
+                    'service-completion': data.service_completion || '0%'
+                });
+            } else {
+                updateDashboardStatsFromLocal();
+            }
+        })
+        .catch(error => {
+            console.error('Dashboard stats fetch error:', error);
+            showNotification('Error fetching dashboard stats: ' + error.message, 'error');
+            updateDashboardStatsFromLocal();
+        });
+}
+
+function updateDashboardElements(data) {
+    Object.keys(data).forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = data[id];
+        } else {
+            console.warn(`Dashboard element #${id} not found!`);
+        }
+    });
+}
+
+function updateDashboardStatsFromLocal() {
+    const pendingOrders = orders.filter(order => order.status === 'pending').length;
+    const monthlyRevenue = orders.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0);
+    
+    updateDashboardElements({
+        'total-products': products.length,
+        'pending-orders': pendingOrders,
+        'total-customers': customers.length,
+        'monthly-revenue': monthlyRevenue.toFixed(2),
+        'monthly-sales': orders.length,
+        'orders-this-month': orders.length,
+        'new-customers': customers.length,
+        'service-completion': '0%'
+    });
+}
+
+function fetchOrders() {
+    console.log('Fetching orders...');
+    fetch('api/admin_orders.php')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.text();
+        })
+        .then(text => {
+            console.log('Raw response received');
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error('JSON parse error:', e, 'Raw text:', text.substring(0, 200));
+                throw new Error('Invalid JSON response from server');
+            }
+            
+            if (data.success !== false && Array.isArray(data.data)) {
+                orders = data.data.map(order => processOrderData(order));
+                console.log(`Processed ${orders.length} orders`);
+                renderOrders(orders);
+                updateDashboardStatsFromLocal();
+            } else {
+                const errorMsg = data.error || 'Failed to fetch orders';
+                console.error('API Error:', errorMsg, data.debug);
+                showNotification(errorMsg, 'error');
+                renderOrders([]);
+            }
+        })
+        .catch(error => {
+            console.error('Orders fetch error:', error);
+            showNotification('Network error fetching orders: ' + error.message, 'error');
+            renderOrders([]);
+        });
+}
+
+function processOrderData(order) {
+    return {
+        id: parseInt(order.id) || 0,
+        customer_name: sanitizeHTML(order.customer_name || 'Unknown Customer'),
+        customer_email: sanitizeHTML(order.customer_email || ''),
+        customer_phone: sanitizeHTML(order.customer_phone || ''),
+        customer_address: sanitizeHTML(order.customer_address || ''),
+        order_date: order.order_date || new Date().toISOString(),
+        items: Array.isArray(order.items) ? order.items.map(item => ({
+            name: sanitizeHTML(item.name || ''),
+            sku: sanitizeHTML(item.sku || ''),
+            quantity: parseInt(item.quantity) || 0,
+            price: parseFloat(item.price) || 0
+        })) : [],
+        subtotal: parseFloat(order.subtotal) || 0,
+        shipping: parseFloat(order.shipping) || 0,
+        tax: parseFloat(order.tax) || 0,
+        total_amount: parseFloat(order.total_amount) || 0,
+        payment_method: sanitizeHTML(order.payment_method || 'N/A'),
+        shipping_method: sanitizeHTML(order.shipping_method || 'N/A'),
+        status: order.status || 'pending'
+    };
+}
+
+function renderOrders(ordersToRender) {
+    const tbody = document.getElementById('orders-tbody');
+    if (!tbody) {
+        console.error('orders-tbody element not found!');
+        return;
     }
+    
+    tbody.innerHTML = '';
+    
+    if (!Array.isArray(ordersToRender) || ordersToRender.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">No orders found</td></tr>';
+        return;
+    }
+    
+    ordersToRender.forEach(order => {
+        const tr = document.createElement('tr');
+        const statusClass = `status-${order.status}`;
+        const statusText = formatStatusText(order.status);
+        
+        tr.innerHTML = `
+            <td>${order.id}</td>
+            <td>${order.customer_name}</td>
+            <td>${formatDate(order.order_date)}</td>
+            <td>${order.items.length}</td>
+            <td>KSh ${order.total_amount.toFixed(2)}</td>
+            <td><span class="status-badge status-badge-large ${statusClass}">${statusText}</span></td>
+            <td class="action-buttons">
+                <button class="btn btn-primary" onclick="viewOrderDetails(${order.id})">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                ${renderOrderActionButtons(order)}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    console.log(`Rendered ${ordersToRender.length} orders`);
+}
 
-    formData.append('name', document.getElementById("product-name").value);
-    formData.append('category', document.getElementById("product-category").value);
-    formData.append('brand', document.getElementById("product-brand").value);
-    formData.append('price', document.getElementById("product-price").value);
-    formData.append('discount_price', document.getElementById("product-discount").value);
-    formData.append('stock', document.getElementById("product-stock").value);
-    formData.append('low_stock_threshold', document.getElementById("product-low-stock").value);
-    formData.append('description', document.getElementById("product-description").value);
-    formData.append('specifications', document.getElementById("product-specs").value);
-    formData.append('weight_kg', document.getElementById("product-weight").value);
-    formData.append('warranty_months', document.getElementById("product-warranty").value);
-    formData.append('is_featured', document.getElementById("product-featured").checked ? 1 : 0);
-    formData.append('is_active', document.getElementById("product-active").checked ? 1 : 0);
+function formatStatusText(status) {
+    if (!status) return 'Unknown';
+    return status === 'pending' ? 'Pending' : status.charAt(0).toUpperCase() + status.slice(1);
+}
 
-    fetch(apiUrl, {
+function formatDate(dateString) {
+    try {
+        return new Date(dateString).toLocaleDateString();
+    } catch (e) {
+        return 'Invalid Date';
+    }
+}
+
+function renderOrderActionButtons(order) {
+    if (order.status === 'pending') {
+        return `
+            <button class="btn btn-success" onclick="confirmOrder(${order.id}, this)">
+                <i class="fas fa-check"></i> Confirm
+            </button>
+            <button class="btn btn-danger" onclick="cancelOrder(${order.id}, this)">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        `;
+    } else if (order.status !== 'cancelled') {
+        const isDisabled = order.status === 'delivered' ? 'disabled' : '';
+        return `
+            <select class="status-select" onchange="updateOrderStatus(${order.id}, this.value, this)" ${isDisabled}>
+                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+            </select>
+        `;
+    }
+    return '';
+}
+
+function viewOrderDetails(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) {
+        showNotification('Order not found', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('orderModal');
+    if (!modal) {
+        console.error('orderModal element not found!');
+        return;
+    }
+    
+    const modalBody = modal.querySelector('.modal-body');
+    if (!modalBody) {
+        console.error('modal-body element not found in orderModal!');
+        return;
+    }
+    
+    modalBody.innerHTML = generateOrderModalContent(order);
+    modal.style.display = 'block';
+}
+
+function generateOrderModalContent(order) {
+    return `
+        <div class="order-status-section">
+            <h3><i class="fas fa-info-circle"></i> Order Status</h3>
+            <div class="status-controls">
+                <span class="status-badge-large status-${order.status}">
+                    ${formatStatusText(order.status)}
+                </span>
+                ${generateModalActionButtons(order)}
+            </div>
+        </div>
+        <div class="order-info-grid">
+            <div class="info-card">
+                <h4><i class="fas fa-user"></i> Customer Information</h4>
+                <div class="info-content">
+                    <p><strong>Name:</strong> ${order.customer_name}</p>
+                    <p><strong>Email:</strong> ${order.customer_email}</p>
+                    <p><strong>Phone:</strong> ${order.customer_phone}</p>
+                    <p><strong>Address:</strong> ${order.customer_address}</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <h4><i class="fas fa-shopping-cart"></i> Order Information</h4>
+                <div class="info-content">
+                    <p><strong>Order ID:</strong> ${order.id}</p>
+                    <p><strong>Date:</strong> ${formatDate(order.order_date)}</p>
+                    <p><strong>Payment Method:</strong> ${order.payment_method}</p>
+                    <p><strong>Shipping Method:</strong> ${order.shipping_method}</p>
+                </div>
+            </div>
+        </div>
+        <div class="order-items-section">
+            <h4><i class="fas fa-box"></i> Order Items</h4>
+            <div class="items-container">
+                ${generateOrderItemsHtml(order.items)}
+            </div>
+        </div>
+        <div class="order-summary">
+            <h4><i class="fas fa-dollar-sign"></i> Order Summary</h4>
+            <div class="summary-table">
+                <div class="summary-row"><span>Subtotal</span><span>KSh ${order.subtotal.toFixed(2)}</span></div>
+                <div class="summary-row"><span>Shipping</span><span>KSh ${order.shipping.toFixed(2)}</span></div>
+                <div class="summary-row"><span>Tax</span><span>KSh ${order.tax.toFixed(2)}</span></div>
+                <div class="summary-row total-row"><span>Total</span><span>KSh ${order.total_amount.toFixed(2)}</span></div>
+            </div>
+        </div>
+    `;
+}
+
+function generateModalActionButtons(order) {
+    if (order.status === 'pending') {
+        return `
+            <button class="btn btn-success" onclick="confirmOrder(${order.id}, this, true)">
+                <i class="fas fa-check"></i> Confirm
+            </button>
+            <button class="btn btn-danger" onclick="cancelOrder(${order.id}, this, true)">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        `;
+    } else if (order.status !== 'cancelled') {
+        const isDisabled = order.status === 'delivered' ? 'disabled' : '';
+        return `
+            <select id="order-status-${order.id}" class="form-control status-select-large" 
+                    onchange="updateOrderStatus(${order.id}, this.value, this)" ${isDisabled}>
+                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+            </select>
+        `;
+    }
+    return '';
+}
+
+function generateOrderItemsHtml(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return '<div class="no-items">No items found</div>';
+    }
+    
+    return items.map(item => `
+        <div class="order-item">
+            <div class="item-info">
+                <h5>${item.name}</h5>
+                <p>SKU: ${item.sku}</p>
+                <p>Quantity: ${item.quantity}</p>
+                <p>Price: KSh ${item.price.toFixed(2)}</p>
+            </div>
+            <div class="item-total">KSh ${(item.quantity * item.price).toFixed(2)}</div>
+        </div>
+    `).join('');
+}
+
+function confirmOrder(orderId, button, fromModal = false) {
+    if (!button) return;
+    
+    const originalContent = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirming...';
+    
+    fetch('api/confirm_order.php', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId })
     })
-    .then(res => res.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            showNotification(`Product ${isEditing ? "updated" : "added"} successfully!`, "success");
-            closeModal("productModal");
-            fetchProducts();
+            updateOrderStatus(orderId, 'processing');
+            showNotification(`Order #${orderId} confirmed successfully`, 'success');
+            if (fromModal) {
+                viewOrderDetails(orderId);
+            }
         } else {
-            showNotification(`Failed to ${isEditing ? "update" : "add"} product: ${data.error}`, "error");
+            throw new Error(data.error || 'Failed to confirm order');
         }
     })
-    .catch(err => {
-        console.error('Error saving product:', err);
-        showNotification(`An error occurred while ${isEditing ? "updating" : "adding"} the product.`, "error");
+    .catch(error => {
+        console.error('Confirm order error:', error);
+        showNotification('Error confirming order: ' + error.message, 'error');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = originalContent;
     });
+}
+
+function cancelOrder(orderId, button, fromModal = false) {
+    if (!button || !confirm('Are you sure you want to cancel this order?')) return;
+    
+    const originalContent = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+    
+    fetch('api/cancel_order.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateOrderStatus(orderId, 'cancelled');
+            showNotification(`Order #${orderId} cancelled successfully`, 'success');
+            if (fromModal) {
+                viewOrderDetails(orderId);
+            }
+        } else {
+            throw new Error(data.error || 'Failed to cancel order');
+        }
+    })
+    .catch(error => {
+        console.error('Cancel order error:', error);
+        showNotification('Error cancelling order: ' + error.message, 'error');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = originalContent;
+    });
+}
+
+function updateOrderStatus(orderId, status, select = null) {
+    if (select) {
+        select.disabled = true;
+    }
+    
+    fetch('api/update_order_status.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Update local order status
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = status;
+                renderOrders(orders);
+                updateDashboardStatsFromLocal();
+            }
+            
+            showNotification(`Order #${orderId} status updated to ${status}`, 'success');
+            
+            if (select && select.classList.contains('status-select-large')) {
+                viewOrderDetails(orderId);
+            }
+        } else {
+            throw new Error(data.error || 'Failed to update order status');
+        }
+    })
+    .catch(error => {
+        console.error('Update order status error:', error);
+        showNotification('Error updating order status: ' + error.message, 'error');
+    })
+    .finally(() => {
+        if (select) {
+            select.disabled = false;
+        }
+    });
+}
+
+
+
+function importProductsFromExcel() {
+    const fileInput = createFileInput();
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+}
+
+
+function processCSVData(csvData) {
+    console.log('Processing CSV data...');
+    
+    if (typeof Papa === 'undefined') {
+        const error = 'PapaParse library not loaded! Please include the PapaParse script tag.';
+        console.error(error);
+        showNotification(error, 'error');
+        return;
+    }
+    
+    Papa.parse(csvData, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: header => header.trim().replace(/^"|"$/g, ''),
+        transform: (value) => value.trim().replace(/^"|"$/g, ''),
+        complete: async (results) => {
+            console.log('CSV parsing completed');
+            
+            if (results.errors && results.errors.length > 0) {
+                console.warn('CSV parsing errors:', results.errors);
+            }
+            
+            const validProducts = results.data.filter((item, index) => {
+                if (!item["ITEM NAME"] || !item["CATEGORY"]) {
+                    console.warn(`Skipping invalid item at row ${index + 1}:`, item);
+                    return false;
+                }
+                return true;
+            });
+            
+            if (validProducts.length === 0) {
+                showNotification('No valid products found in CSV file', 'error');
+                return;
+            }
+            
+            const processedProducts = validProducts.map(item => processProductFromCSV(item));
+            
+            let successCount = 0;
+            const totalProducts = processedProducts.length;
+            
+            for (const product of processedProducts) {
+                try {
+                    const formData = createProductFormData(product);
+                    const response = await fetch('api/add_product.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        successCount++;
+                    } else {
+                        console.warn(`Failed to add product "${product.name}": ${data.error || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    console.error(`Error adding product "${product.name}":`, error);
+                }
+            }
+            
+            showNotification(`Imported ${successCount} of ${totalProducts} products successfully`, 'success');
+            fetchProducts();
+            updateCategoryDropdownFromExcel(csvData);
+        },
+        error: (err) => {
+            console.error('CSV parsing error:', err);
+            showNotification('Failed to import products: Invalid CSV format.', 'error');
+        }
+    });
+}
+
+
+
+function createProductFormData(product) {
+    const formData = new FormData();
+    Object.keys(product).forEach(key => {
+        if (key === 'featured' || key === 'active') {
+            const formKey = key === 'featured' ? 'is_featured' : 'is_active';
+            formData.append(formKey, product[key] ? '1' : '0');
+        } else {
+            formData.append(key, product[key]);
+        }
+    });
+    return formData;
+}
+
+function updateCategoryDropdownFromExcel(csvData = null) {
+    if (!csvData) {
+        const fileInput = createFileInput();
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.name.toLowerCase().endsWith('.csv')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    processCategoryData(e.target.result);
+                };
+                reader.readAsText(file);
+            } else {
+                showNotification('Please select a CSV file for category update', 'error');
+            }
+        });
+        document.body.appendChild(fileInput);
+        fileInput.click();
+        document.body.removeChild(fileInput);
+        return;
+    }
+    processCategoryData(csvData);
+}
+
+function processCategoryData(csvData) {
+    if (typeof Papa === 'undefined') {
+        const error = 'PapaParse library not loaded!';
+        console.error(error);
+        showNotification(error, 'error');
+        return;
+    }
+    
+    Papa.parse(csvData, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: header => header.trim().replace(/^"|"$/g, ''),
+        transform: (value) => value.trim().replace(/^"|"$/g, ''),
+        complete: (results) => {
+            const categories = results.data
+                .map(item => item["CATEGORY"]?.toUpperCase())
+                .filter(Boolean);
+            
+            const uniqueCategories = [...new Set(categories)].sort();
+            
+            const categorySelect = document.getElementById('product-category');
+            if (!categorySelect) {
+                console.warn('Category select element not found');
+                showNotification('Category select element not found', 'error');
+                return;
+            }
+            
+            categorySelect.innerHTML = `<option value="">Select Category</option>` +
+                uniqueCategories.map(category => 
+                    `<option value="${sanitizeHTML(category)}">${sanitizeHTML(category)}</option>`
+                ).join('');
+            
+            showNotification('Categories updated successfully', 'success');
+        },
+        error: (err) => {
+            console.error('Category processing error:', err);
+            showNotification('Failed to load categories from CSV file.', 'error');
+        }
+    });
+}
+
+function triggerCategoryUpdate() {
+    updateCategoryDropdownFromExcel();
 }
 
 function fetchProducts() {
     fetch('api/get_products_admin.php')
         .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             return response.json();
         })
         .then(data => {
-            let productsArray = Array.isArray(data) ? data : data.products || [];
-            products = productsArray.map(product => {
-                let specsArray = [];
-                if (product.specifications) {
-                    if (typeof product.specifications === 'string') {
-                        try {
-                            specsArray = JSON.parse(product.specifications);
-                        } catch {
-                            specsArray = product.specifications.split(',').map(s => s.trim());
-                        }
-                    } else if (Array.isArray(product.specifications)) {
-                        specsArray = product.specifications;
-                    } else if (typeof product.specifications === 'object' && product.specifications !== null) {
-                        specsArray = Object.entries(product.specifications).map(([key, value]) => `${key}: ${value}`);
-                    }
-                }
-                let images = product.image_paths ? product.image_paths.split(",").map(path => path.trim()).filter(path => path) : product.image ? [product.image] : ['placeholder.jpg'];
-                return {
-                    id: parseInt(product.id),
-                    name: product.name || '',
-                    category: product.category || '',
-                    brand: product.brand || '',
-                    price: parseFloat(product.price) || 0,
-                    discount: product.discount_price ? parseFloat(product.discount_price) : null,
-                    stock: parseInt(product.stock) || 0,
-                    lowStock: parseInt(product.low_stock_threshold) || 10,
-                    description: product.description || '',
-                    specs: specsArray,
-                    weight: product.weight_kg ? parseFloat(product.weight_kg) : null,
-                    warranty: product.warranty_months ? parseInt(product.warranty_months) : null,
-                    featured: product.is_featured == 1,
-                    active: product.is_active == 1,
-                    images: images
-                };
-            });
-            renderProducts(products);
-            const totalProducts = document.getElementById("total-products");
-            if (totalProducts) totalProducts.textContent = products.length;
-            generateNotifications();
+            if (data.success !== false && Array.isArray(data)) {
+                products = data.map(product => processProductData(product));
+                renderProducts(products);
+                updateDashboardStatsFromLocal();
+            } else {
+                throw new Error(data.error || 'Failed to fetch products');
+            }
         })
-        .catch(err => {
-            console.error('Error fetching products:', err);
-            showNotification('Failed to fetch products: ' + err.message, 'error');
+        .catch(error => {
+            console.error('Products fetch error:', error);
+            showNotification('Error fetching products: ' + error.message, 'error');
+            renderProducts([]);
         });
 }
 
-function renderProducts(productList) {
-    const tbody = document.getElementById("products-tbody");
-    if (!tbody) return;
-    tbody.innerHTML = productList.length === 0 
-        ? '<tr><td colspan="7">No products found</td></tr>'
-        : productList.map(product => {
-            const imageUrl = product.images && product.images.length > 0 ? product.images[0] : 'placeholder.jpg';
-            const stockStatus = product.active ? (product.stock <= product.lowStock ? 'Low Stock' : 'In Stock') : 'Inactive';
-            const statusClass = product.active ? (product.stock <= product.lowStock ? 'out-of-stock' : 'completed') : 'pending';
-            return `
-                <tr>
-                    <td><img src="${imageUrl}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;" onerror="this.src='placeholder.jpg'"></td>
-                    <td>${product.name}</td>
-                    <td>${product.category}</td>
-                    <td>KSh ${product.price.toFixed(2)}</td>
-                    <td>${product.stock}</td>
-                    <td><span class="status-badge status-${statusClass}">${stockStatus}</span></td>
-                    <td class="action-buttons">
-                        <button class="btn btn-primary" onclick="openModal('productModal', ${product.id})">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteProduct(${product.id})">${product.active ? 'Deactivate' : 'Activate'}</button>
-                    </td>
-                </tr>
-            `;
-        }).join("");
+function processProductData(product) {
+    return {
+        id: parseInt(product.id) || 0,
+        name: sanitizeHTML(product.name || ''),
+        category: sanitizeHTML(product.category || ''),
+        price: parseFloat(product.price) || 0,
+        stock: parseInt(product.stock) || 0,
+        low_stock_alert: parseInt(product.low_stock_alert) || 0,
+        image: sanitizeHTML(product.image || ''),
+        brand: sanitizeHTML(product.brand || ''),
+        discount_price: parseFloat(product.discount_price) || 0,
+        description: sanitizeHTML(product.description || ''),
+        specs: sanitizeHTML(product.specifications || ''),
+        weight: parseFloat(product.weight_kg) || 0,
+        warranty: parseInt(product.warranty_months) || 0,
+        featured: product.is_featured === '1' || product.is_featured === 1,
+        active: product.is_active === '1' || product.is_active === 1
+    };
 }
 
-function deleteProduct(id) {
-    const product = products.find(p => p.id === id);
-    if (!product || !confirm(`Are you sure you want to ${product.active ? 'deactivate' : 'activate'} this product?`)) return;
-    const formData = new FormData();
-    formData.append("id", id);
-    fetch("api/delete_product.php", {
-        method: "POST",
+function renderProducts(productsToRender) {
+    const tbody = document.getElementById('products-tbody');
+    if (!tbody) {
+        console.error('products-tbody element not found!');
+        showNotification('Products table not found', 'error');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (!Array.isArray(productsToRender) || productsToRender.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #666;">No products found</td></tr>';
+        return;
+    }
+    
+    productsToRender.forEach(product => {
+        const tr = document.createElement('tr');
+        const stockStatus = product.stock <= product.low_stock_alert ? 'Low Stock' : 'In Stock';
+        const stockClass = product.stock <= product.low_stock_alert ? 'status-out-of-stock' : 'status-completed';
+        
+        tr.innerHTML = `
+            <td>${product.id}</td>
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>KSh ${product.price.toFixed(2)}</td>
+            <td>${product.stock}</td>
+            <td><span class="status-badge ${stockClass}">${stockStatus}</span></td>
+            <td class="action-buttons">
+                <button class="btn btn-primary" onclick="editProduct(${product.id})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-danger" onclick="deleteProduct(${product.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+    function fetchCustomers() {
+       fetch('api/get_customer_admin.php') // Corrected path
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success !== false && Array.isArray(data)) {
+                    customers = data.map(customer => processCustomerData(customer));
+                    renderCustomers(customers);
+                    updateDashboardStatsFromLocal();
+                } else {
+                    throw new Error(data.error || 'Failed to fetch customers');
+                }
+            })
+            .catch(error => {
+                console.error('Customers fetch error:', error);
+                showNotification('Error fetching customers: ' + error.message, 'error');
+                renderCustomers([]);
+            });
+    }
+    
+
+function processCustomerData(customer) {
+    return {
+        id: parseInt(customer.id) || 0,
+        name: sanitizeHTML(customer.name || ''),
+        email: sanitizeHTML(customer.email || ''),
+        phone: sanitizeHTML(customer.phone || ''),
+        location: sanitizeHTML(customer.location || ''),
+        orders: parseInt(customer.orders) || 0,
+        total_spent: parseFloat(customer.total_spent) || 0
+    };
+}
+
+function renderCustomers(customersToRender) {
+    const tbody = document.getElementById('customers-tbody');
+    if (!tbody) {
+        console.error('customers-tbody element not found!');
+        showNotification('Customers table not found', 'error');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (!Array.isArray(customersToRender) || customersToRender.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #666;">No customers found</td></tr>';
+        return;
+    }
+    
+    customersToRender.forEach(customer => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${customer.id}</td>
+            <td>${customer.name}</td>
+            <td>${customer.email}</td>
+            <td>${customer.phone}</td>
+            <td>${customer.location}</td>
+            <td>${customer.orders}</td>
+            <td>KSh ${customer.total_spent.toFixed(2)}</td>
+            <td class="action-buttons">
+                <button class="btn btn-primary" onclick="viewCustomerDetails(${customer.id})">
+                    <i class="fas fa-eye"></i> View
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function fetchNotifications() {
+    fetch('api/get_notifications_admin.php')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false && Array.isArray(data)) {
+                notifications = data.map(notification => processNotificationData(notification));
+                renderNotifications();
+            } else {
+                throw new Error(data.error || 'Failed to fetch notifications');
+            }
+        })
+        .catch(error => {
+            console.error('Notifications fetch error:', error);
+            showNotification('Error fetching notifications: ' + error.message, 'error');
+            renderNotifications();
+        });
+}
+
+function processNotificationData(notification) {
+    return {
+        id: parseInt(notification.id) || 0,
+        message: sanitizeHTML(notification.message || ''),
+        type: notification.type || 'info'
+    };
+}
+
+function renderNotifications() {
+    const notificationList = document.getElementById('notifications-list');
+    const notificationCount = document.getElementById('notification-count');
+    
+    if (!notificationList || !notificationCount) {
+        console.error('Notification elements not found!');
+        return;
+    }
+    
+    notificationList.innerHTML = '';
+    notificationCount.textContent = notifications.length;
+    
+    if (notifications.length === 0) {
+        notificationList.innerHTML = '<p>No notifications</p>';
+        return;
+    }
+    
+    notifications.forEach(notification => {
+        const div = document.createElement('div');
+        div.className = `notification ${notification.type}`;
+        div.textContent = notification.message;
+        notificationList.appendChild(div);
+    });
+}
+
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        console.error(`Modal with ID ${modalId} not found!`);
+        showNotification(`Modal ${modalId} not found`, 'error');
+        return;
+    }
+    modal.style.display = 'block';
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        console.error(`Modal with ID ${modalId} not found!`);
+        showNotification(`Modal ${modalId} not found`, 'error');
+        return;
+    }
+    
+    modal.style.display = 'none';
+    
+    if (modalId === 'productModal') {
+        resetProductModal();
+    }
+}
+
+function resetProductModal() {
+    const productForm = document.getElementById('productForm');
+    const imagePreview = document.getElementById('image-preview');
+    const modalTitle = document.getElementById('product-modal-title');
+    
+    if (productForm) {
+        productForm.reset();
+        const productIdField = document.getElementById('product-id');
+        if (productIdField) {
+            productIdField.value = '';
+        }
+    }
+    
+    if (imagePreview) {
+        imagePreview.innerHTML = '';
+    }
+    
+    if (modalTitle) {
+        modalTitle.textContent = 'Add Product';
+    }
+}
+
+function saveProduct(event) {
+    event.preventDefault();
+    
+    const productForm = document.getElementById('productForm');
+    if (!productForm) {
+        console.error('productForm element not found!');
+        showNotification('Product form not found', 'error');
+        return;
+    }
+    
+    const formData = new FormData(productForm);
+    const productIdField = document.getElementById('product-id');
+    const productId = productIdField ? productIdField.value : '';
+    
+    const url = productId ? 'api/update_product.php' : 'api/add_product.php';
+    const action = productId ? 'updated' : 'added';
+    
+    fetch(url, {
+        method: 'POST',
         body: formData
     })
-    .then(res => res.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            showNotification(`Product ${data.active ? 'activated' : 'deactivated'} successfully!`, "success");
+            showNotification(`Product ${action} successfully`, 'success');
             fetchProducts();
+            closeModal('productModal');
         } else {
-            showNotification("Failed to update product status: " + data.error, "error");
+            throw new Error(data.error || `Failed to ${action.slice(0, -1)} product`);
         }
     })
-    .catch(err => {
-        console.error('Error updating product status:', err);
-        showNotification("An error occurred while updating the product status.", "error");
+    .catch(error => {
+        console.error(`Product ${action.slice(0, -1)} error:`, error);
+        showNotification(`Error ${action.slice(0, -1)}ing product: ${error.message}`, 'error');
     });
 }
 
-function exportData(type) {
-    if (type === "products") {
-        const csv = [
-            ["ID", "Name", "Category", "Brand", "Price", "Discount Price", "Stock", "Low Stock", "Active", "Featured", "Images"],
-            ...products.map(p => [
-                p.id,
-                `"${p.name.replace(/"/g, '""')}"`,
-                p.category,
-                p.brand || '',
-                p.price,
-                p.discount || '',
-                p.stock,
-                p.lowStock,
-                p.active ? 1 : 0,
-                p.featured ? 1 : 0,
-                `"${p.images.join(',')}"`
-            ])
-        ].map(row => row.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "products.csv";
-        a.click();
-        URL.revokeObjectURL(url);
-        showNotification("Products exported successfully!", "success");
-    } else if (type === "orders") {
-        const csv = [
-            ["ID", "Customer", "Date", "Subtotal", "Tax", "Delivery Fee", "Total", "Status"],
-            ...orders.map(o => [
-                o.id,
-                `"${o.customer_info.firstName} ${o.customer_info.lastName}"`,
-                new Date(o.order_date).toLocaleDateString(),
-                o.subtotal,
-                o.tax,
-                o.delivery_fee,
-                o.total,
-                o.status
-            ])
-        ].map(row => row.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "orders.csv";
-        a.click();
-        URL.revokeObjectURL(url);
-        showNotification("Orders exported successfully!", "success");
-    } else {
-        showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} data exported!`, "success");
+function editProduct(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) {
+        showNotification('Product not found', 'error');
+        return;
     }
-}
-
-function bulkUpdatePrices() {
-    const percentage = prompt("Enter percentage increase (e.g., 10 for 10%):");
-    if (percentage && !isNaN(percentage)) {
-        const formData = new FormData();
-        formData.append('percentage', parseFloat(percentage));
-        fetch('api/bulk_update_prices.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showNotification(`Prices updated by ${percentage}%!`, "success");
-                fetchProducts();
+    
+    const fieldMappings = {
+        'product-id': product.id,
+        'product-name': product.name,
+        'product-category': product.category,
+        'product-brand': product.brand,
+        'product-price': product.price,
+        'product-discount': product.discount_price,
+        'product-stock': product.stock,
+        'product-low-stock': product.low_stock_alert,
+        'product-description': product.description,
+        'product-specs': product.specs,
+        'product-weight': product.weight,
+        'product-warranty': product.warranty,
+        'product-featured': product.featured,
+        'product-active': product.active
+    };
+    
+    Object.keys(fieldMappings).forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+            if (fieldId === 'product-featured' || fieldId === 'product-active') {
+                element.checked = fieldMappings[fieldId];
             } else {
-                showNotification("Failed to update prices: " + data.error, "error");
+                element.value = fieldMappings[fieldId];
             }
-        })
-        .catch(err => {
-            console.error('Error updating prices:', err);
-            showNotification("An error occurred while updating prices.", "error");
-        });
-    } else {
-        showNotification("Invalid percentage!", "error");
+        } else {
+            console.warn(`Form field #${fieldId} not found!`);
+        }
+    });
+    
+    const modalTitle = document.getElementById('product-modal-title');
+    if (modalTitle) {
+        modalTitle.textContent = 'Edit Product';
     }
+    
+    openModal('productModal');
 }
 
-function viewLowStock() {
-    showSection("products");
-    const lowStockProducts = products.filter(p => p.stock <= p.lowStock && p.active);
-    renderProducts(lowStockProducts);
-    showNotification("Displaying low stock products!", "success");
-}
-
-function saveService(event) {
-    event.preventDefault();
-    showNotification("Service request updated!", "success");
-}
-
-function showNotification(message, type) {
-    const notification = document.createElement("div");
-    notification.className = `notification ${type} show`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        notification.classList.remove("show");
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-function logout() {
-    fetch('api/logout.php', {
-        method: 'POST'
+function deleteProduct(productId) {
+    if (!confirm('Are you sure you want to delete this product?')) {
+        return;
+    }
+    
+    fetch('api/delete_product.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: productId })
     })
-    .then(res => res.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            showNotification("Logged out successfully!", "success");
-            window.location.href = 'login.html';
+            products = products.filter(p => p.id !== productId);
+            renderProducts(products);
+            showNotification('Product deleted successfully', 'success');
+            updateDashboardStatsFromLocal();
         } else {
-            showNotification("Failed to log out: " + data.error, "error");
+            throw new Error(data.error || 'Failed to delete product');
         }
     })
-    .catch(err => {
-        console.error('Error logging out:', err);
-        showNotification("An error occurred while logging out.", "error");
+    .catch(error => {
+        console.error('Delete product error:', error);
+        showNotification('Error deleting product: ' + error.message, 'error');
     });
-}
-
-function importProducts() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv";
-    input.onchange = () => {
-        const file = input.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            fetch('api/import_products.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification("Products imported successfully!", "success");
-                    fetchProducts();
-                } else {
-                    showNotification("Failed to import products: " + data.error, "error");
-                }
-            })
-            .catch(err => {
-                console.error('Error importing products:', err);
-                showNotification("An error occurred while importing products.", "error");
-            });
-        }
-    };
-    input.click();
-}
-
-function assignBulkTechnician() {
-    showNotification("Technicians assigned successfully!", "success");
-}
-
-function sendNewsletter() {
-    const subject = prompt("Enter newsletter subject:");
-    const message = prompt("Enter newsletter message:");
-    if (subject && message) {
-        fetch('api/send_newsletter.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subject, message })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showNotification("Newsletter sent successfully!", "success");
-            } else {
-                showNotification("Failed to send newsletter: " + data.error, "error");
-            }
-        })
-        .catch(err => {
-            console.error('Error sending newsletter:', err);
-            showNotification("An error occurred while sending newsletter.", "error");
-        });
-    } else {
-        showNotification("Subject and message are required!", "error");
-    }
 }
 
 function searchProducts(query) {
-    const filtered = products.filter(p => 
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.category.toLowerCase().includes(query.toLowerCase()) ||
-        (p.brand && p.brand.toLowerCase().includes(query.toLowerCase()))
+    if (!query || typeof query !== 'string') {
+        renderProducts(products);
+        return;
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    const filteredProducts = products.filter(product =>
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.category.toLowerCase().includes(searchTerm) ||
+        product.brand.toLowerCase().includes(searchTerm)
     );
-    renderProducts(filtered);
-    showNotification(`Found ${filtered.length} products matching "${query}"`, "success");
+    
+    renderProducts(filteredProducts);
 }
 
 function filterProducts(category) {
-    const filtered = category ? products.filter(p => p.category === category) : products;
-    renderProducts(filtered);
-    showNotification(category ? `Filtered by ${category}` : "Showing all products", "success");
+    if (!category) {
+        renderProducts(products);
+        return;
+    }
+    
+    const filteredProducts = products.filter(product => 
+        product.category.toLowerCase() === category.toLowerCase()
+    );
+    
+    renderProducts(filteredProducts);
 }
 
 function searchOrders(query) {
-    const filtered = orders.filter(o => 
-        `${o.customer_info.firstName} ${o.customer_info.lastName}`.toLowerCase().includes(query.toLowerCase()) ||
-        o.id.toString().includes(query)
+    if (!query || typeof query !== 'string') {
+        renderOrders(orders);
+        return;
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    const filteredOrders = orders.filter(order =>
+        order.id.toString().includes(searchTerm) ||
+        order.customer_name.toLowerCase().includes(searchTerm) ||
+        order.customer_email.toLowerCase().includes(searchTerm)
     );
-    renderOrders(filtered);
-    showNotification(`Found ${filtered.length} orders matching "${query}"`, "success");
+    
+    renderOrders(filteredOrders);
 }
 
 function filterOrders(status) {
-    const filtered = status ? orders.filter(o => o.status === status) : orders;
-    renderOrders(filtered);
-    showNotification(status ? `Filtered by ${status}` : "Showing all orders", "success");
+    if (!status) {
+        renderOrders(orders);
+        return;
+    }
+    
+    const filteredOrders = orders.filter(order => 
+        order.status.toLowerCase() === status.toLowerCase()
+    );
+    
+    renderOrders(filteredOrders);
 }
 
 function searchCustomers(query) {
-    const filteredOrders = orders.filter(o => 
-        `${o.customer_info.firstName} ${o.customer_info.lastName}`.toLowerCase().includes(query.toLowerCase()) ||
-        (o.customer_info.email && o.customer_info.email.toLowerCase().includes(query.toLowerCase()))
-    );
-    renderOrders(filteredOrders);
-    showNotification(`Found ${filteredOrders.length} customers matching "${query}"`, "success");
-}
-
-function searchServices(query) {
-    const filtered = services.filter(s => 
-        (s.type && s.type.toLowerCase().includes(query.toLowerCase())) ||
-        s.id.toString().includes(query)
-    );
-    renderServices(filtered);
-    showNotification(`Found ${filtered.length} services matching "${query}"`, "success");
-}
-
-function filterServices(status) {
-    const filtered = status ? services.filter(s => s.status === status) : services;
-    renderServices(filtered);
-    showNotification(status ? `Filtered by ${status}` : "Showing all services", "success");
-}
-
-function generateReport(type) {
-    if (type === "sales") {
-        const csv = [
-            ["Order ID", "Customer", "Date", "Subtotal", "Tax", "Delivery Fee", "Total", "Status"],
-            ...orders.map(o => [
-                o.id,
-                `"${o.customer_info.firstName} ${o.customer_info.lastName}"`,
-                new Date(o.order_date).toLocaleDateString(),
-                o.subtotal,
-                o.tax,
-                o.delivery_fee,
-                o.total,
-                o.status
-            ])
-        ].map(row => row.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "sales_report.csv";
-        a.click();
-        URL.revokeObjectURL(url);
-        showNotification("Sales report generated successfully!", "success");
-    } else if (type === "inventory") {
-        const csv = [
-            ["ID", "Name", "Category", "Stock", "Low Stock Threshold", "Status"],
-            ...products.map(p => [
-                p.id,
-                `"${p.name.replace(/"/g, '""')}"`,
-                p.category,
-                p.stock,
-                p.lowStock,
-                p.active ? (p.stock <= p.lowStock ? 'Low Stock' : 'In Stock') : 'Inactive'
-            ])
-        ].map(row => row.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "inventory_report.csv";
-        a.click();
-        URL.revokeObjectURL(url);
-        showNotification("Inventory report generated successfully!", "success");
-    } else {
-        showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} report generated!`, "success");
-    }
-}
-
-function fetchOrders() {
-    fetch('api/get_orders.php')
-        .then(res => {
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            return res.json();
-        })
-        .then(data => {
-            if (!Array.isArray(data)) {
-                console.error('Invalid API response: data is not an array', data);
-                throw new Error('Invalid API response: expected an array of orders');
-            }
-            orders = data.map((order, index) => {
-                let cart = [];
-                let customer_info = {};
-                try {
-                    console.log(`Processing order ${order.id || index}:`, order);
-                    if (order.hasOwnProperty('cart')) {
-                        if (Array.isArray(order.cart)) {
-                            cart = order.cart;
-                        } else if (typeof order.cart === 'string') {
-                            if (order.cart.trim() === '') {
-                                console.warn(`Empty cart string for order ${order.id || index}`);
-                                cart = [];
-                            } else {
-                                try {
-                                    const parsedCart = JSON.parse(order.cart);
-                                    cart = Array.isArray(parsedCart) ? parsedCart : [];
-                                } catch (e) {
-                                    console.warn(`Failed to parse cart JSON for order ${order.id || index}:`, e);
-                                    cart = [];
-                                }
-                            }
-                        } else {
-                            console.warn(`Invalid cart type for order ${order.id || index}:`, typeof order.cart, order.cart);
-                            cart = [];
-                        }
-                    }
-                    if (order.customer_info) {
-                        customer_info = typeof order.customer_info === 'string' ? JSON.parse(order.customer_info) : order.customer_info;
-                        if (typeof customer_info !== 'object' || customer_info === null) {
-                            console.warn(`Invalid customer_info for order ${order.id || index}`);
-                            customer_info = {};
-                        }
-                    }
-                } catch (e) {
-                    console.error(`Error parsing items or customer_info for order ${order.id || index}:`, e, order);
-                    cart = [];
-                    customer_info = {};
-                }
-                return {
-                    id: parseInt(order.id) || 0,
-                    customer_info: customer_info,
-                    cart: cart,
-                    subtotal: parseFloat(order.subtotal) || 0,
-                    tax: parseFloat(order.tax) || 0,
-                    delivery_fee: parseFloat(order.delivery_fee) || 0,
-                    total: parseFloat(order.total) || 0,
-                    status: order.status || 'pending',
-                    order_date: order.order_date || new Date().toISOString(),
-                    delivery_method: order.delivery_method || '',
-                    delivery_address: order.delivery_address || '',
-                    payment_method: order.payment_method || ''
-                };
-            });
-            console.log('Orders processed:', orders);
-            renderOrders(orders);
-            generateNotifications();
-        })
-        .catch(err => {
-            console.error('Error fetching orders:', err);
-            showNotification('Failed to fetch orders: ' + err.message, 'error');
-            orders = [];
-            renderOrders(orders);
-        });
-}
-
-function renderOrders(orderList) {
-    const tbody = document.getElementById("orders-tbody");
-    if (!tbody) return;
-    tbody.innerHTML = orderList.length === 0 
-        ? '<tr><td colspan="7">No orders found</td></tr>'
-        : orderList.map(order => {
-            const items = Array.isArray(order.cart) ? order.cart : [];
-            return `
-                <tr>
-                    <td>${order.id}</td>
-                    <td>${order.customer_info.firstName || ''} ${order.customer_info.lastName || ''}</td>
-                    <td>${new Date(order.order_date).toLocaleDateString()}</td>
-                    <td>${items.map(item => `${item.name || 'Unknown Item'} x${item.quantity || 0}`).join(', ')}</td>
-                    <td>KSh ${order.total.toFixed(2)}</td>
-                    <td>
-                        <select class="status-select" onchange="updateOrderStatus(${order.id}, this.value)">
-                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
-                            <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                            <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                        </select>
-                    </td>
-                    <td class="action-buttons">
-                        <button class="btn btn-primary" onclick="openModal('orderModal', ${order.id})">View</button>
-                        ${order.status !== 'confirmed' ? `<button class="btn btn-secondary" onclick="confirmOrder(${order.id})">Confirm Order</button>` : ''}
-                    </td>
-                </tr>
-            `;
-        }).join("");
-}
-
-function updateOrderStatus(orderId, status) {
-    fetch('api/update_order_status.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId, status })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Order #${orderId} status updated to ${status}!`, "success");
-            fetchOrders();
-        } else {
-            showNotification("Failed to update order status: " + data.error, "error");
-        }
-    })
-    .catch(err => {
-        console.error('Error updating order status:', err);
-        showNotification("An error occurred while updating order status.", "error");
-    });
-}
-
-function confirmOrder(orderId) {
-    const confirmBtn = document.querySelector(`button[onclick="confirmOrder(${orderId})"]`);
-    if (!confirm(`Confirm order #${orderId}? This will send a receipt to the customer.`)) return;
-
-    if (confirmBtn) {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = "Confirming...";
-    }
-
-    fetch('api/confirm_order.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message || `Order #${orderId} confirmed.`, "success");
-            fetchOrders();
-            closeModal('orderModal');
-        } else {
-            showNotification(data.error || "Failed to confirm order.", "error");
-            if (confirmBtn) {
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = "Confirm Order";
-            }
-        }
-    })
-    .catch(err => {
-        console.error('Confirm Order error:', err);
-        showNotification("An error occurred while confirming order.", "error");
-        if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = "Confirm Order";
-        }
-    });
-}
-
-function viewOrderDetails(orderId) {
-    const order = orders.find(o => o.id == orderId);
-    if (!order) {
-        showNotification('Order not found!', 'error');
+    if (!query || typeof query !== 'string') {
+        renderCustomers(customers);
         return;
     }
+    
+    const searchTerm = query.toLowerCase().trim();
+    const filteredCustomers = customers.filter(customer =>
+        customer.name.toLowerCase().includes(searchTerm) ||
+        customer.email.toLowerCase().includes(searchTerm) ||
+        customer.phone.includes(searchTerm)
+    );
+    
+    renderCustomers(filteredCustomers);
+}
 
-    // Safely parse cart
-    let items = [];
-    if (Array.isArray(order.cart)) {
-        items = order.cart;
-    } else if (typeof order.cart === 'string') {
-        try {
-            const parsed = JSON.parse(order.cart);
-            items = Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-            console.warn(`Failed to parse cart for order ${order.id}:`, e);
-        }
-    } else {
-        console.warn(`Unexpected cart type for order ${order.id}:`, typeof order.cart);
+function viewCustomerDetails(customerId) {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) {
+        showNotification('Customer not found', 'error');
+        return;
     }
-
-    // Render item list with better formatting
-    const itemsHtml = items.length > 0
-        ? items.map(item => `
-            <div class="order-item">
-                <div class="item-info">
-                    <h5>${item.name || 'Unnamed Item'}</h5>
-                    <p>Quantity: ${item.quantity || 0}</p>
-                    <p>Unit Price: KSh ${(item.price || 0).toFixed(2)}</p>
-                </div>
-                <div class="item-total">
-                    <strong>KSh ${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</strong>
-                </div>
+    
+    const modal = document.getElementById('customerModal');
+    if (!modal) {
+        console.error('customerModal element not found!');
+        showNotification('Customer modal not found', 'error');
+        return;
+    }
+    
+    const modalBody = modal.querySelector('.modal-body');
+    if (!modalBody) {
+        console.error('modal-body element not found in customerModal!');
+        return;
+    }
+    
+    modalBody.innerHTML = `
+        <div class="customer-info">
+            <h3><i class="fas fa-user"></i> Customer Details</h3>
+            <div class="info-content">
+                <p><strong>Name:</strong> ${customer.name}</p>
+                <p><strong>Email:</strong> ${customer.email}</p>
+                <p><strong>Phone:</strong> ${customer.phone}</p>
+                <p><strong>Location:</strong> ${customer.location}</p>
+                <p><strong>Orders:</strong> ${customer.orders}</p>
+                <p><strong>Total Spent:</strong> KSh ${customer.total_spent.toFixed(2)}</p>
             </div>
-        `).join('')
-        : '<div class="no-items"><p>No items found in this order.</p></div>';
-
-    // Enhanced Modal HTML with better styling and functionality
-    const modalContent = `
-        <div class="modal-header">
-            <h2>Order Details #${order.id}</h2>
-            <span class="close" onclick="closeModal('orderModal')">×</span>
-        </div>
-        
-        <div class="modal-body">
-            <!-- Order Status Section -->
-            <div class="order-status-section">
-                <h3>Order Status</h3>
-                <div class="status-controls">
-                    <select id="order-status-${order.id}" class="form-control status-select-large" onchange="updateOrderStatusFromModal(${order.id}, this.value)">
-                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                        <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
-                        <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                        <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                    </select>
-                    <div class="status-badge-large status-${order.status}">
-                        Current Status: ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Order Information Grid -->
-            <div class="order-info-grid">
-                <!-- Customer Information -->
-                <div class="info-card">
-                    <h4><i class="fas fa-user"></i> Customer Information</h4>
-                    <div class="info-content">
-                        <p><strong>Name:</strong> ${order.customer_info.firstName || ''} ${order.customer_info.lastName || ''}</p>
-                        <p><strong>Email:</strong> ${order.customer_info.email || 'N/A'}</p>
-                        <p><strong>Phone:</strong> ${order.customer_info.phone || 'N/A'}</p>
-                        <p><strong>Address:</strong> ${order.customer_info.address || 'N/A'}</p>
-                        <p><strong>City:</strong> ${order.customer_info.city || 'N/A'}</p>
-                        ${order.customer_info.postalCode ? `<p><strong>Postal Code:</strong> ${order.customer_info.postalCode}</p>` : ''}
-                    </div>
-                </div>
-
-                <!-- Delivery Information -->
-                <div class="info-card">
-                    <h4><i class="fas fa-truck"></i> Delivery Information</h4>
-                    <div class="info-content">
-                        <p><strong>Method:</strong> ${order.delivery_method || 'N/A'}</p>
-                        <p><strong>Address:</strong> ${order.delivery_address || 'Same as billing'}</p>
-                        <p><strong>Payment Method:</strong> ${order.payment_method || 'N/A'}</p>
-                        <p><strong>Order Date:</strong> ${new Date(order.order_date).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Order Items Section -->
-            <div class="order-items-section">
-                <h4><i class="fas fa-shopping-cart"></i> Order Items</h4>
-                <div class="items-container">
-                    ${itemsHtml}
-                </div>
-            </div>
-
-            <!-- Order Summary -->
-            <div class="order-summary">
-                <h4><i class="fas fa-calculator"></i> Order Summary</h4>
-                <div class="summary-table">
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
-                        <span>KSh ${order.subtotal.toFixed(2)}</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Tax (16%):</span>
-                        <span>KSh ${order.tax.toFixed(2)}</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Delivery Fee:</span>
-                        <span>KSh ${order.delivery_fee.toFixed(2)}</span>
-                    </div>
-                    <div class="summary-row total-row">
-                        <span><strong>Total Amount:</strong></span>
-                        <span><strong>KSh ${order.total.toFixed(2)}</strong></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal('orderModal')">Close</button>
-            <button class="btn btn-primary" onclick="printOrderDetails(${order.id})">Print Order</button>
-            ${order.status !== 'confirmed' 
-                ? `<button class="btn btn-success" id="confirm-btn-${order.id}" onclick="confirmOrderFromModal(${order.id})">
-                    <i class="fas fa-check"></i> Confirm Order
-                   </button>`
-                : `<button class="btn btn-success" disabled>
-                    <i class="fas fa-check-circle"></i> Already Confirmed
-                   </button>`
-            }
         </div>
     `;
+    
+    modal.style.display = 'block';
+}
 
-    const modal = document.getElementById("orderModal");
-    if (modal) {
-        modal.innerHTML = modalContent;
-        modal.style.display = "block";
+// Event listeners for modal close buttons
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('close') || e.target.classList.contains('modal-close')) {
+        const modal = e.target.closest('.modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
-}
-
-function updateOrderStatusFromModal(orderId, status) {
-    const statusSelect = document.getElementById(`order-status-${orderId}`);
-    const originalValue = statusSelect.value;
     
-    // Show loading state
-    statusSelect.disabled = true;
-    
-    fetch('api/update_order_status.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId, status })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Order #${orderId} status updated to ${status}!`, "success");
-            
-            // Update the order in the local array
-            const orderIndex = orders.findIndex(o => o.id == orderId);
-            if (orderIndex !== -1) {
-                orders[orderIndex].status = status;
-            }
-            
-            // Update the status badge in the modal
-            const statusBadge = document.querySelector('.status-badge-large');
-            if (statusBadge) {
-                statusBadge.className = `status-badge-large status-${status}`;
-                statusBadge.textContent = `Current Status: ${status.charAt(0).toUpperCase() + status.slice(1)}`;
-            }
-            
-            // Update confirm button visibility
-            const confirmBtn = document.getElementById(`confirm-btn-${orderId}`);
-            if (status === 'confirmed' && confirmBtn) {
-                confirmBtn.outerHTML = `<button class="btn btn-success" disabled>
-                    <i class="fas fa-check-circle"></i> Already Confirmed
-                </button>`;
-            }
-            
-            // Refresh the orders table
-            fetchOrders();
-            
-        } else {
-            showNotification("Failed to update order status: " + data.error, "error");
-            // Reset to original value
-            statusSelect.value = originalValue;
-        }
-    })
-    .catch(err => {
-        console.error('Error updating order status:', err);
-        showNotification("An error occurred while updating order status.", "error");
-        // Reset to original value
-        statusSelect.value = originalValue;
-    })
-    .finally(() => {
-        statusSelect.disabled = false;
-    });
-}
-
-function confirmOrderFromModal(orderId) {
-    const confirmBtn = document.getElementById(`confirm-btn-${orderId}`);
-    if (!confirm(`Confirm order #${orderId}? This will send a receipt to the customer and update the order status.`)) return;
-
-    if (confirmBtn) {
-        confirmBtn.disabled = true;
-        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirming...';
+    // Close modal when clicking outside
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
     }
+});
 
-    fetch('api/confirm_order.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message || `Order #${orderId} confirmed successfully!`, "success");
-            
-            // Update the order in the local array
-            const orderIndex = orders.findIndex(o => o.id == orderId);
-            if (orderIndex !== -1) {
-                orders[orderIndex].status = 'confirmed';
-            }
-            
-            // Update the modal elements
-            const statusSelect = document.getElementById(`order-status-${orderId}`);
-            if (statusSelect) {
-                statusSelect.value = 'confirmed';
-            }
-            
-            // Update status badge
-            const statusBadge = document.querySelector('.status-badge-large');
-            if (statusBadge) {
-                statusBadge.className = 'status-badge-large status-confirmed';
-                statusBadge.textContent = 'Current Status: Confirmed';
-            }
-            
-            // Replace confirm button with confirmed state
-            if (confirmBtn) {
-                confirmBtn.outerHTML = `<button class="btn btn-success" disabled>
-                    <i class="fas fa-check-circle"></i> Already Confirmed
-                </button>`;
-            }
-            
-            // Refresh the orders table
-            fetchOrders();
-            
-        } else {
-            showNotification(data.error || "Failed to confirm order.", "error");
-            if (confirmBtn) {
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Order';
-            }
-        }
-    })
-    .catch(err => {
-        console.error('Confirm Order error:', err);
-        showNotification("An error occurred while confirming order.", "error");
-        if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Order';
-        }
-    });
-}
-
-function printOrderDetails(orderId) {
-    const order = orders.find(o => o.id == orderId);
-    if (!order) return;
-    
-    // Create print window
-    const printWindow = window.open('', '_blank');
-    const printContent = `
-        <html>
-        <head>
-            <title>Order #${order.id} - Details</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; }
-                .section { margin: 20px 0; }
-                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-                .item { border-bottom: 1px solid #eee; padding: 10px 0; }
-                .total { font-weight: bold; font-size: 1.2em; }
-                @media print { .no-print { display: none; } }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>Order Receipt #${order.id}</h1>
-                <p>Date: ${new Date(order.order_date).toLocaleDateString()}</p>
-            </div>
-            
-            <div class="grid">
-                <div class="section">
-                    <h3>Customer Information</h3>
-                    <p>${order.customer_info.firstName} ${order.customer_info.lastName}</p>
-                    <p>${order.customer_info.email}</p>
-                    <p>${order.customer_info.phone}</p>
-                    <p>${order.customer_info.address}, ${order.customer_info.city}</p>
-                </div>
-                
-                <div class="section">
-                    <h3>Delivery Information</h3>
-                    <p>Method: ${order.delivery_method}</p>
-                    <p>Address: ${order.delivery_address}</p>
-                    <p>Status: ${order.status}</p>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>Order Items</h3>
-                ${Array.isArray(order.cart) ? order.cart.map(item => `
-                    <div class="item">
-                        <strong>${item.name}</strong> - Qty: ${item.quantity} - KSh ${(item.price * item.quantity).toFixed(2)}
-                    </div>
-                `).join('') : '<p>No items</p>'}
-            </div>
-            
-            <div class="section">
-                <h3>Order Summary</h3>
-                <p>Subtotal: KSh ${order.subtotal.toFixed(2)}</p>
-                <p>Tax: KSh ${order.tax.toFixed(2)}</p>
-                <p>Delivery: KSh ${order.delivery_fee.toFixed(2)}</p>
-                <p class="total">Total: KSh ${order.total.toFixed(2)}</p>
-            </div>
-            
-            <button class="no-print" onclick="window.print()">Print</button>
-        </body>
-        </html>
-    `;
-    
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-}
-
-function fetchServices() {
-    services = [];
-    renderServices(services);
-}
-
-function renderServices(serviceList) {
-    const tbody = document.getElementById("services-tbody");
-    if (!tbody) return;
-    tbody.innerHTML = serviceList.length === 0
-        ? '<tr><td colspan="5">No services found.</td></tr>'
-        : serviceList.map(service => `
-            <tr>
-                <td>${service.id}</td>
-                <td>${service.type || 'N/A'}</td>
-                <td>${service.customer || 'N/A'}</td>
-                <td>${new Date(service.date).toLocaleDateString()}</td>
-                <td><span class="status-badge status-${service.status || 'pending'}">${service.status || 'pending'}</span></td>
-                <td class="action-buttons">
-                    <button class="btn btn-primary" onclick="openModal('serviceModal', '${service.id}')">View</button>
-                </td>
-            </tr>
-        `).join("");
-}
-
-window.onload = () => {
-    fetchProducts();
-    fetchOrders();
-    fetchServices();
-};
+// Keyboard event listener for ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const openModals = document.querySelectorAll('.modal[style*="block"]');
+        openModals.forEach(modal => {
+            modal.style.display = 'none';
+        });
+    }
+});

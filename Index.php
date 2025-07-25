@@ -21,7 +21,7 @@
                     <a href="Service.html" class="nav-link">Services</a>
                     <a href="Store.html" class="nav-link shop-link">🛒 Shop</a>
                     <a href="login.html" class="nav-link login-link">👤 Login</a>
-                    <a href="Profile.php" class="nav-link profile-link">Profile</a>
+                  
                 </nav>
                 <!-- Contact Info -->
                 <div class="contact-quick">

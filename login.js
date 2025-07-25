@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Check for error messages from PHP
+    // Check for error messages from URL
     if (urlParams.get('error')) {
         const errorMessage = urlParams.get('error');
-        showError(errorMessage);
+        showError(decodeURIComponent(errorMessage));
     }
 
     // Form switching
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formContainer.insertBefore(errorDiv, formContainer.firstChild);
         }
         
-        errorDiv.textContent = decodeURIComponent(message);
+        errorDiv.textContent = message;
         errorDiv.classList.add('show');
         
         setTimeout(() => {
@@ -82,28 +82,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     }
 
-  document.getElementById('loginFormElement')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
+    // Login form submission
+    document.getElementById('loginFormElement')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.classList.add('loading');
+        submitButton.disabled = true;
 
-    fetch('/login.php', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-    })
-    .then(response => response.json())
-    .then(data => {
-    
-    if (data.success) {
-        window.location.href = data.redirect; // <-- now uses dynamic redirect
-    } else {
-        showError(data.error);
-    }
-})
+        fetch('api/login.php', { // Updated to api/login.php
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect;
+            } else {
+                showError(data.error || 'Login failed');
+            }
+        })
+        .catch(error => {
+            console.error('Login error:', error.message, error.stack);
+            showError(error.message.includes('SyntaxError') 
+                ? 'Server response error. Please try again.'
+                : error.message);
+        })
+        .finally(() => {
+            submitButton.classList.remove('loading');
+            submitButton.disabled = false;
+        });
+    });
 
-    })
-    .catch(error => {
-        console.error('Login error:', error);
-        showError('An error occurred during login');
+    // Signup form submission
+    document.getElementById('signUpFormElement')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const submitButton = e.target.querySelector('button[type="submit"]');
+        submitButton.classList.add('loading');
+        submitButton.disabled = true;
+
+        fetch('api/signup.php', { // Updated to api/signup.php
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                window.location.href = 'login.html?success=true';
+            } else {
+                showError(data.error || 'Signup failed');
+            }
+        })
+        .catch(error => {
+            console.error('Signup error:', error.message, error.stack);
+            showError(error.message.includes('SyntaxError') 
+                ? 'Server response error. Please try again.'
+                : error.message);
+        })
+        .finally(() => {
+            submitButton.classList.remove('loading');
+            submitButton.disabled = false;
+        });
     });
 });

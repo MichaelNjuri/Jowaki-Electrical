@@ -3,74 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jowaki Electrical Services - Admin Dashboard</title>
+    <title>JOWAKI ELECTRICAL - Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="AdminDashboard.css">
+    <script src="AdminDashboard.js" defer></script>
+
 </head>
 <body>
     <div class="admin-container">
-        <nav class="sidebar">
+        <aside class="sidebar">
             <div class="logo">
-                <h1> JOWAKI ELECTRICAL </h1>
+                <h1>JOWAKI ELECTRICAL</h1>
                 <p>Admin Panel</p>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="AdminDashboard.html" class="nav-link active" data-section="dashboard">
-                        <span class="nav-icon"></span>
-                        Dashboard
+                    <a href="#" class="nav-link" data-section="dashboard" onclick="showSection('dashboard')">
+                        <i class="fas fa-tachometer-alt nav-icon"></i> Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#products" class="nav-link" data-section="products" onclick="showSection('products'); return false;">
-                        <span class="nav-icon"></span>
-                        Products
+                    <a href="#" class="nav-link" data-section="products" onclick="showSection('products')">
+                        <i class="fas fa-box nav-icon"></i> Products
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#orders" class="nav-link" data-section="orders" onclick="showSection('orders'); return false;">
-                        <span class="nav-icon"></span>
-                        Orders
+                    <a href="#" class="nav-link" data-section="orders" onclick="showSection('orders')">
+                        <i class="fas fa-shopping-cart nav-icon"></i> Orders
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#customers" class="nav-link" data-section="customers" onclick="showSection('customers'); return false;">
-                        <span class="nav-icon"></span>
-                        Customers
+                    <a href="#" class="nav-link" data-section="customers" onclick="showSection('customers')">
+                        <i class="fas fa-users nav-icon"></i> Customers
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#services" class="nav-link" data-section="services" onclick="showSection('services'); return false;">
-                        <span class="nav-icon"></span>
-                        Service Requests
+                    <a href="#" class="nav-link" data-section="services" onclick="showSection('services')">
+                        <i class="fas fa-wrench nav-icon"></i> Service Requests
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#reports" class="nav-link" data-section="reports" onclick="showSection('reports'); return false;">
-                        <span class="nav-icon"></span>
-                        Reports
+                    <a href="#" class="nav-link" data-section="reports" onclick="showSection('reports')">
+                        <i class="fas fa-chart-line nav-icon"></i> Reports
                     </a>
                 </li>
             </ul>
-        </nav>
+        </aside>
 
         <main class="main-content">
-            <div class="header">
+            <header class="header">
                 <h2 id="page-title">Dashboard</h2>
                 <div class="user-info">
                     <span>Welcome</span>
-                    <div class="notification-bell" onclick="toggleNotifications()">
-    🔔
-    <span id="notification-count" class="notification-count"></span>
-
-    <!-- Dropdown panel -->
-    <div id="notification-dropdown" class="notification-dropdown">
-        <div id="notifications-list"></div>
-    </div>
-</div>
-
+                    <span class="notification-bell" onclick="toggleNotifications()">🔔<span id="notification-count"></span></span>
+                    <div id="notification-dropdown" class="notification-dropdown">
+                        <div id="notifications-list"></div>
+                    </div>
                     <button class="btn btn-danger" onclick="logout()">Logout</button>
                 </div>
-            </div>
+            </header>
 
             <section id="dashboard" class="content-section active">
                 <div class="stats-grid">
@@ -91,52 +82,45 @@
                         <div>Monthly Revenue (KSh)</div>
                     </div>
                 </div>
-
-                <div style="background: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
+                <div class="content-section">
                     <h3>Quick Actions</h3>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <div class="action-buttons">
                         <button class="btn btn-primary" onclick="openModal('productModal')">Add Product</button>
-                        <button class="btn btn-success" onclick="exportData('products')">Export Products</button>
+                        <button class="btn btn-secondary" onclick="exportData('products')">Export Products</button>
                         <button class="btn btn-warning" onclick="bulkUpdatePrices()">Update Prices</button>
-                        <button class="btn btn-primary" onclick="viewLowStock()">Low Stock Alert</button>
+                        <button class="btn btn-danger" onclick="viewLowStock()">Low Stock Alert</button>
                     </div>
                 </div>
-
-                <div style="background: white; padding: 2rem; border-radius: 15px;">
+                <div class="content-section">
                     <h3>Recent Activities</h3>
-                    <div id="recent-activities">
-                        <!-- Activities will be loaded here -->
+                    <div class="data-table">
+                        <div id="recent-activities"></div>
                     </div>
                 </div>
             </section>
 
             <section id="products" class="content-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <h3>Product Management</h3>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="openModal('productModal')">Add Product</button>
-                        <button class="btn btn-success" onclick="importProducts()">Import CSV</button>
-                        <button class="btn btn-warning" onclick="exportData('products')">Export</button>
-                    </div>
+                <h3>Product Management</h3>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openModal('productModal')">Add Product</button>
+                    <button class="btn btn-secondary" onclick="importProducts()">Import CSV</button>
+                    <button class="btn btn-secondary" onclick="exportData('products')">Export</button>
                 </div>
-
                 <div class="search-box">
-                    <span class="search-icon">🔍</span>
+                    <i class="fas fa-search search-icon"></i>
                     <input type="text" placeholder="Search products..." oninput="searchProducts(this.value)">
                 </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <select class="form-control" style="width: 200px; display: inline-block;" onchange="filterProducts(this.value)">
+                <div class="action-buttons">
+                    <select onchange="filterProducts(this.value)">
                         <option value="">All Categories</option>
-                        <option value="lighting">Lighting</option>
-                        <option value="accessories">Accessories</option>
-                        <option value="safety">Safety</option>
-                        <option value="tools">Tools</option>
-                        <option value="cables">Cables</option>
+                        <option value="Lighting">Lighting</option>
+                        <option value="Accessories">Accessories</option>
+                        <option value="Safety">Safety</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Cables">Cables</option>
                     </select>
                 </div>
-
-                <table class="data-table" id="productsTable">
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th>Image</th>
@@ -148,34 +132,28 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="products-tbody">
-                        <!-- Products will be loaded here -->
-                    </tbody>
+                    <tbody id="products-tbody"></tbody>
                 </table>
             </section>
 
             <section id="orders" class="content-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <h3>Orders Management</h3>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <select class="form-control" style="width: 200px;" onchange="filterOrders(this.value)">
-                            <option value="">All Orders</option>
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="exportData('orders')">Export Orders</button>
-                    </div>
+                <h3>Orders Management</h3>
+                <div class="action-buttons">
+                    <select onchange="filterOrders(this.value)">
+                        <option value="">All Orders</option>
+                        <option value="awaiting">Awaiting Confirmation</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="exportData('orders')">Export Orders</button>
                 </div>
-
                 <div class="search-box">
-                    <span class="search-icon">🔍</span>
+                    <i class="fas fa-search search-icon"></i>
                     <input type="text" placeholder="Search orders..." oninput="searchOrders(this.value)">
                 </div>
-
-                <table class="data-table" id="ordersTable">
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th>Order ID</th>
@@ -188,26 +166,24 @@
                         </tr>
                     </thead>
                     <tbody id="orders-tbody">
-                        <!-- Orders will be loaded here -->
+                        <tr>
+                            <td colspan="7">No orders found</td>
+                        </tr>
                     </tbody>
                 </table>
             </section>
 
             <section id="customers" class="content-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <h3>Customer Management</h3>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="exportData('customers')">Export Customers</button>
-                        <button class="btn btn-success" onclick="sendNewsletter()">Send Newsletter</button>
-                    </div>
+                <h3>Customer Management</h3>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="exportData('customers')">Export Customers</button>
+                    <button class="btn btn-primary" onclick="sendNewsletter()">Send Newsletter</button>
                 </div>
-
                 <div class="search-box">
-                    <span class="search-icon">🔍</span>
+                    <i class="fas fa-search search-icon"></i>
                     <input type="text" placeholder="Search customers..." oninput="searchCustomers(this.value)">
                 </div>
-
-                <table class="data-table" id="customersTable">
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -220,33 +196,27 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="customers-tbody">
-                        <!-- Customers will be loaded here -->
-                    </tbody>
+                    <tbody id="customers-tbody"></tbody>
                 </table>
             </section>
 
             <section id="services" class="content-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <h3>Service Requests</h3>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <select class="form-control" style="width: 200px;" onchange="filterServices(this.value)">
-                            <option value="">All Services</option>
-                            <option value="pending">Pending</option>
-                            <option value="assigned">Assigned</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="assignBulkTechnician()">Bulk Assign</button>
-                    </div>
+                <h3>Service Requests</h3>
+                <div class="action-buttons">
+                    <select onchange="filterServices(this.value)">
+                        <option value="">All Services</option>
+                        <option value="awaiting">Awaiting</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="assignBulkTechnician()">Bulk Assign</button>
                 </div>
-
                 <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" placeholder="Search service requests..." oninput="searchServices(this.value)">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Search services..." oninput="searchServices(this.value)">
                 </div>
-
-                <table class="data-table" id="servicesTable">
+                <table class="data-table">
                     <thead>
                         <tr>
                             <th>Request ID</th>
@@ -259,22 +229,19 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="services-tbody">
-                        <!-- Services will be loaded here -->
-                    </tbody>
+                    <tbody id="services-tbody"></tbody>
                 </table>
             </section>
 
             <section id="reports" class="content-section">
                 <h3>Reports & Analytics</h3>
-
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-number" id="monthly-sales">0</div>
                         <div>Monthly Sales (KSh)</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" id="monthly-orders">0</div>
+                        <div class="stat-number" id="orders-this-month">0</div>
                         <div>Orders This Month</div>
                     </div>
                     <div class="stat-card">
@@ -286,20 +253,18 @@
                         <div>Service Completion Rate</div>
                     </div>
                 </div>
-
-                <div style="background: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
-                    <h4>Generate Reports</h4>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                <div class="content-section">
+                    <h3>Generate Reports</h3>
+                    <div class="action-buttons">
                         <button class="btn btn-primary" onclick="generateReport('sales')">Sales Report</button>
                         <button class="btn btn-primary" onclick="generateReport('inventory')">Inventory Report</button>
-                        <button class="btn btn-primary" onclick="generateReport('customers')">Customer Report</button>
-                        <button class="btn btn-primary" onclick="generateReport('services')">Service Report</button>
+                        <button class="btn btn-primary" onclick="generateReport('customer')">Customer Report</button>
+                        <button class="btn btn-primary" onclick="generateReport('service')">Service Report</button>
                     </div>
                 </div>
-
-                <div style="background: white; padding: 2rem; border-radius: 15px;">
-                    <h4>Top Performing Products</h4>
-                    <table class="data-table" id="top-products">
+                <div class="content-section">
+                    <h3>Top Performing Products</h3>
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Product</th>
@@ -309,9 +274,7 @@
                                 <th>Growth</th>
                             </tr>
                         </thead>
-                        <tbody id="top-products-tbody">
-                            <!-- Top products will be loaded here -->
-                        </tbody>
+                        <tbody id="top-products"></tbody>
                     </table>
                 </div>
             </section>
@@ -320,171 +283,144 @@
 
     <div id="productModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('productModal')">×</span>
-            <h3 id="product-modal-title">Add New Product</h3>
-            <form id="productForm" onsubmit="saveProduct(event)">
-                <input type="hidden" id="product-id" value="">
-                
-                <div class="form-group">
-                    <label>Product Images</label>
-                    <div class="image-upload" onclick="document.getElementById('product-images').click()">
-                        <p>Click to upload images</p>
-                        <input type="file" id="product-images" multiple accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
+            <div class="modal-header">
+                <h2 id="product-modal-title">Add New Product</h2>
+                <span class="close" onclick="closeModal('productModal')">×</span>
+            </div>
+            <div class="modal-body">
+                <form id="productForm" onsubmit="saveProduct(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="product-images">Product Images</label>
+                            <div class="image-upload">
+                                <p>Click to upload images</p>
+                                <input type="file" id="product-images" multiple accept="image/*" onchange="handleImageUpload(this)">
+                                <div id="image-preview" class="image-preview"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-name">Product Name *</label>
+                            <input type="text" id="product-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-category">Category *</label>
+                            <select id="product-category" class="form-control" required>
+                                <option value="">Select Category</option>
+                                <option value="Lighting">Lighting</option>
+                                <option value="Accessories">Accessories</option>
+                                <option value="Safety">Safety</option>
+                                <option value="Tools">Tools</option>
+                                <option value="Cables">Cables</option>
+                            </select>
+                            <label for="product-brand">Brand</label>
+                            <input type="text" id="product-brand" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-price">Price (KSh) *</label>
+                            <input type="number" id="product-price" class="form-control" step="0.01" required>
+                            <label for="product-discount">Discount Price (KSh)</label>
+                            <input type="number" id="product-discount" class="form-control" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-stock">Stock Quantity *</label>
+                            <input type="number" id="product-stock" class="form-control" required>
+                            <label for="product-low-stock">Low Stock Alert</label>
+                            <input type="number" id="product-low-stock" class="form-control" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-description">Product Description *</label>
+                            <textarea id="product-description" class="form-control" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-specs">Product Specifications</label>
+                            <textarea id="product-specs" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-weight">Weight (kg)</label>
+                            <input type="number" id="product-weight" class="form-control" step="0.01">
+                            <label for="product-warranty">Warranty (months)</label>
+                            <input type="number" id="product-warranty" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="product-featured"> Featured Product
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="product-active" checked> Active (visible to customers)
+                            </label>
+                        </div>
                     </div>
-                    <div id="image-preview" class="image-preview" style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>Product Name *</label>
-                    <input type="text" id="product-name" class="form-control" required>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Category *</label>
-                        <select id="product-category" class="form-control" required>
-                            <option value="">Select Category</option>
-                            <option value="lighting">Lighting</option>
-                            <option value="accessories">Accessories</option>
-                            <option value="safety">Safety</option>
-                            <option value="tools">Tools</option>
-                            <option value="cables">Cables</option>
-                        </select>
+                    <input type="hidden" id="product-id">
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Product</button>
                     </div>
-                    <div class="form-group">
-                        <label>Brand</label>
-                        <input type="text" id="product-brand" class="form-control">
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Price (KSh) *</label>
-                        <input type="number" id="product-price" class="form-control" min="0" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Discount Price (KSh)</label>
-                        <input type="number" id="product-discount" class="form-control" min="0" step="0.01">
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Stock Quantity *</label>
-                        <input type="number" id="product-stock" class="form-control" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Low Stock Alert</label>
-                        <input type="number" id="product-low-stock" class="form-control" min="0" value="10">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Product Description *</label>
-                    <textarea id="product-description" class="form-control" rows="4" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Product Specifications</label>
-                    <textarea id="product-specs" class="form-control" rows="3" placeholder="Enter specifications (one per line)"></textarea>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Weight (kg)</label>
-                        <input type="number" id="product-weight" class="form-control" min="0" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label>Warranty (months)</label>
-                        <input type="number" id="product-warranty" class="form-control" min="0">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="product-featured"> Featured Product
-                    </label>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="product-active" checked> Active (visible to customers)
-                    </label>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save Product</button>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     <div id="orderModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('orderModal')">×</span>
-            <h3>Order Details</h3>
-            <div id="order-details-content">
-                <!-- Order details will be loaded here -->
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <span class="close" onclick="closeModal('orderModal')">×</span>
             </div>
+            <div class="modal-body"></div>
         </div>
     </div>
 
     <div id="serviceModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('serviceModal')">×</span>
-            <h3>Assign Service Request</h3>
-            <form id="serviceForm" onsubmit="saveService(event)">
-                <input type="hidden" id="service-id" value="">
-                
-                <div class="form-group">
-                    <label>Request ID</label>
-                    <input type="text" id="service-request-id" class="form-control" readonly>
-                </div>
-
-                <div class="form-group">
-                    <label>Customer Name</label>
-                    <input type="text" id="service-customer" class="form-control" readonly>
-                </div>
-
-                <div class="form-group">
-                    <label>Service Type</label>
-                    <input type="text" id="service-type" class="form-control" readonly>
-                </div>
-
-                <div class="form-group">
-                    <label>Technician *</label>
-                    <select id="service-technician" class="form-control" required>
-                        <option value="">Select Technician</option>
-                    </select>
-                    <button type="button" class="btn btn-primary" style="margin-top: 0.5rem;" onclick="addTechnicianPrompt()">Add Technician</button>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Scheduled Date *</label>
-                        <input type="date" id="service-scheduled-date" class="form-control" required>
+            <div class="modal-header">
+                <h2>Assign Service Request</h2>
+                <span class="close" onclick="closeModal('serviceModal')">×</span>
+            </div>
+            <div class="modal-body">
+                <form id="serviceForm" onsubmit="saveService(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="service-id">Request ID</label>
+                            <input type="text" id="service-id" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="service-customer">Customer Name</label>
+                            <input type="text" id="service-customer" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="service-type">Service Type</label>
+                            <input type="text" id="service-type" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="service-technician">Technician *</label>
+                            <select id="service-technician" class="form-control" required>
+                                <option value="">Select Technician</option>
+                            </select>
+                            <a href="#" class="btn btn-secondary" onclick="addTechnician()">Add Technician</a>
+                        </div>
+                        <div class="form-group">
+                            <label for="service-date">Scheduled Date *</label>
+                            <input type="date" id="service-date" class="form-control" required>
+                            <label for="service-status">Status *</label>
+                            <select id="service-status" class="form-control" required>
+                                <option value="awaiting">Awaiting</option>
+                                <option value="assigned">Assigned</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="service-notes">Notes</label>
+                            <textarea id="service-notes" class="form-control"></textarea>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Status *</label>
-                        <select id="service-status" class="form-control" required>
-                            <option value="pending">Pending</option>
-                            <option value="assigned">Assigned</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                        </select>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Service Request</button>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Notes</label>
-                    <textarea id="service-notes" class="form-control" rows="4" placeholder="Add any additional notes..."></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save Service Request</button>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-    
-
-
-    <script src="AdminDashboard.js"></script>
 </body>
 </html>

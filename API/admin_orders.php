@@ -1,5 +1,12 @@
 <?php
-// Database connection
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET');
+header('Access-Control-Allow-Headers: Content-Type');
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 $host = 'localhost';
 $user = 'root';
 $pass = '';
@@ -7,108 +14,149 @@ $dbname = 'jowaki_db';
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
-    die('Database connection failed: ' . $conn->connect_error);
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Database connection failed: ' . $conn->connect_error]);
+    exit;
 }
 
-// Fetch all orders
-$sql = "SELECT id, customer_info, cart, subtotal, tax, delivery_fee, total, delivery_method, delivery_address, payment_method, order_date, status 
-        FROM orders 
-        ORDER BY order_date DESC";
-$result = $conn->query($sql);
-?>
+try {
+    // First, let's check if the orders table exists and has data
+    $tableCheck = $conn->query("SHOW TABLES LIKE 'orders'");
+    if ($tableCheck->num_rows === 0) {
+        echo json_encode(['success' => false, 'error' => 'Orders table does not exist']);
+        exit;
+    }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Orders | Jowaki Store</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 2rem; background: #f5f5f5; }
-        h1 { text-align: center; color: #2c3e50; }
-        .orders-table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .orders-table th, .orders-table td { padding: 1rem; border: 1px solid #ecf0f1; text-align: left; }
-        .orders-table th { background: #3498db; color: white; }
-        .orders-table tr:nth-child(even) { background: #f9f9f9; }
-        .order-details { margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-primary { background: #3498db; color: white; }
-        .btn-secondary { background: #95a5a6; color: white; }
-    </style>
-</head>
-<body>
-    <h1>Admin - Customer Orders</h1>
-    <table class="orders-table">
-        <thead>
-            <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Order Date</th>
-                <th>Total (KSh)</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if ($result && $result->num_rows > 0): ?>
-                <?php while ($order = $result->fetch_assoc()): ?>
-                    <?php
-                        $customer_info = json_decode($order['customer_info'], true);
-                        $customer_name = $customer_info['firstName'] . ' ' . $customer_info['lastName'];
-                        $order_date = date('Y-m-d H:i:s', strtotime($order['order_date']));
-                    ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($order['id']); ?></td>
-                        <td><?php echo htmlspecialchars($customer_name); ?></td>
-                        <td><?php echo htmlspecialchars($order_date); ?></td>
-                        <td><?php echo number_format($order['total'], 0); ?></td>
-                        <td><?php echo htmlspecialchars($order['status']); ?></td>
-                        <td>
-                            <button class="btn btn-primary" onclick="toggleDetails(<?php echo $order['id']; ?>)">View Details</button>
-                        </td>
-                    </tr>
-                    <tr id="details-<?php echo $order['id']; ?>" style="display: none;">
-                        <td colspan="6">
-                            <div class="order-details">
-                                <h3>Order #<?php echo htmlspecialchars($order['id']); ?> Details</h3>
-                                <p><strong>Customer:</strong> <?php echo htmlspecialchars($customer_name); ?></p>
-                                <p><strong>Email:</strong> <?php echo htmlspecialchars($customer_info['email']); ?></p>
-                                <p><strong>Phone:</strong> <?php echo htmlspecialchars($customer_info['phone']); ?></p>
-                                <p><strong>Address:</strong> <?php echo htmlspecialchars($customer_info['address'] . ', ' . $customer_info['city'] . ($customer_info['postalCode'] ? ', ' . $customer_info['postalCode'] : '')); ?></p>
-                                <p><strong>Delivery Method:</strong> <?php echo htmlspecialchars(ucfirst($order['delivery_method'])); ?></p>
-                                <p><strong>Delivery Address:</strong> <?php echo htmlspecialchars($order['delivery_address']); ?></p>
-                                <p><strong>Payment Method:</strong> <?php echo htmlspecialchars(ucfirst($order['payment_method'])); ?></p>
-                                <h4>Items:</h4>
-                                <ul>
-                                    <?php
-                                        $cart = json_decode($order['cart'], true);
-                                        foreach ($cart as $item):
-                                    ?>
-                                        <li><?php echo htmlspecialchars($item['name']); ?> x<?php echo $item['quantity']; ?> - KSh <?php echo number_format($item['price'] * $item['quantity'], 0); ?></li>
-                                    <?php endforeach; ?>
-                                </ul>
-                                <p><strong>Subtotal:</strong> KSh <?php echo number_format($order['subtotal'], 0); ?></p>
-                                <p><strong>Tax (16%):</strong> KSh <?php echo number_format($order['tax'], 0); ?></p>
-                                <p><strong>Delivery Fee:</strong> KSh <?php echo number_format($order['delivery_fee'], 0); ?></p>
-                                <p><strong>Total:</strong> KSh <?php echo number_format($order['total'], 0); ?></p>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="6" style="text-align: center;">No orders found</td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
+    // Check table structure
+    $structureResult = $conn->query("DESCRIBE orders");
+    $columns = [];
+    while ($row = $structureResult->fetch_assoc()) {
+        $columns[] = $row['Field'];
+    }
 
-    <script>
-        function toggleDetails(orderId) {
-            const detailsRow = document.getElementById(`details-${orderId}`);
-            detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+    // Count total orders
+    $countResult = $conn->query("SELECT COUNT(*) as total FROM orders");
+    $totalOrders = $countResult->fetch_assoc()['total'];
+
+    // If no orders, return early with debug info
+    if ($totalOrders == 0) {
+        echo json_encode([
+            'success' => true, 
+            'data' => [],
+            'message' => 'No orders found in database',
+            'debug' => [
+                'table_exists' => true,
+                'total_orders' => $totalOrders,
+                'columns' => $columns
+            ]
+        ]);
+        exit;
+    }
+
+    // Fetch orders with all available columns
+    $stmt = $conn->prepare("SELECT * FROM orders ORDER BY order_date DESC");
+    if (!$stmt) {
+        throw new Exception('Prepare failed: ' . $conn->error);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $orders = [];
+
+    while ($order = $result->fetch_assoc()) {
+        // Try to parse customer_info
+        $customer_info = [];
+        if (isset($order['customer_info']) && !empty($order['customer_info'])) {
+            $customer_info = json_decode($order['customer_info'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // If JSON parsing fails, create default structure
+                $customer_info = [
+                    'firstName' => 'Unknown',
+                    'lastName' => 'Customer', 
+                    'email' => '',
+                    'phone' => '',
+                    'address' => '',
+                    'city' => '',
+                    'postalCode' => ''
+                ];
+            }
+        } else {
+            // Try alternative column names or create defaults
+            $customer_info = [
+                'firstName' => $order['customer_name'] ?? $order['name'] ?? 'Unknown',
+                'lastName' => '',
+                'email' => $order['customer_email'] ?? $order['email'] ?? '',
+                'phone' => $order['customer_phone'] ?? $order['phone'] ?? '',
+                'address' => $order['customer_address'] ?? $order['address'] ?? '',
+                'city' => $order['customer_city'] ?? $order['city'] ?? '',
+                'postalCode' => $order['postal_code'] ?? ''
+            ];
         }
-    </script>
-</body>
-</html>
-<?php $conn->close(); ?>
+
+        // Try to parse cart/items
+        $cart = [];
+        if (isset($order['cart']) && !empty($order['cart'])) {
+            $cart = json_decode($order['cart'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $cart = [];
+            }
+        } else if (isset($order['items']) && !empty($order['items'])) {
+            $cart = json_decode($order['items'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $cart = [];
+            }
+        }
+
+        // Build the customer address
+        $addressParts = array_filter([
+            $customer_info['address'] ?? '',
+            $customer_info['city'] ?? '',
+            $customer_info['postalCode'] ?? ''
+        ]);
+        $customerAddress = implode(', ', $addressParts);
+
+        // Build order array with fallbacks for different column naming conventions
+        $orders[] = [
+            'id' => $order['id'],
+            'customer_name' => trim(($customer_info['firstName'] ?? '') . ' ' . ($customer_info['lastName'] ?? '')),
+            'customer_email' => $customer_info['email'] ?? '',
+            'customer_phone' => $customer_info['phone'] ?? '',
+            'customer_address' => $customerAddress,
+            'order_date' => $order['order_date'] ?? $order['created_at'] ?? date('Y-m-d H:i:s'),
+            'items' => $cart,
+            'subtotal' => floatval($order['subtotal'] ?? $order['sub_total'] ?? 0),
+            'tax' => floatval($order['tax'] ?? 0),
+            'shipping' => floatval($order['delivery_fee'] ?? $order['shipping_fee'] ?? $order['shipping'] ?? 0),
+            'total_amount' => floatval($order['total'] ?? $order['total_amount'] ?? 0),
+            'payment_method' => $order['payment_method'] ?? 'Not specified',
+            'shipping_method' => $order['delivery_method'] ?? $order['shipping_method'] ?? 'Not specified',
+            'status' => $order['status'] ?? 'pending'
+        ];
+    }
+
+    echo json_encode([
+        'success' => true,
+        'data' => $orders,
+        'debug' => [
+            'total_orders_in_db' => $totalOrders,
+            'orders_returned' => count($orders),
+            'table_columns' => $columns,
+            'sample_raw_order' => isset($orders[0]) ? 'Available' : 'None'
+        ]
+    ]);
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Failed to fetch orders: ' . $e->getMessage(),
+        'debug' => [
+            'columns' => $columns ?? [],
+            'total_orders' => $totalOrders ?? 0
+        ]
+    ]);
+}
+
+$stmt->close();
+$conn->close();
+?>
