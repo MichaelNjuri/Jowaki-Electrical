@@ -8,35 +8,8 @@
     <link rel="stylesheet" href="service.css">
 </head>
 <body>
-   <header>
-        <div class="container">
-            <div class="header-content">
-                <!-- Logo and Name -->
-                <div class="logo">
-                    
-                    <span class="logo-text">JOWAKI ELECTRICAL SERVICES LTD</span>
-                </div>
-                <!-- Navigation -->
-                <nav class="main-nav">
-                    <a href="Index.html" class="nav-link">Home</a>
-                    <a href="Service.html" class="nav-link">Services</a>
-                    <a href="Store.html" class="nav-link shop-link">🛒 Shop</a>
-                    <a href="login.html" class="nav-link login-link">👤 Login</a>
-                </nav>
-                <!-- Contact Info -->
-                <div class="contact-quick">
-                    <div class="contact-item">
-                        <span>📞</span>
-                        <span>0721 442 248</span>
-                    </div>
-                    <div class="contact-item">
-                        <span>✉️</span>
-                        <span>kibukush@gmail.com</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+   <?php include 'header.php'; ?>
+
 
     <main>
         <div class="container">

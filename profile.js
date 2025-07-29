@@ -142,7 +142,7 @@ function displayRecentOrders(orders) {
         recentOrdersList.innerHTML = `
             <div class="no-orders">
                 <p>No orders found.</p>
-                <a href="/jowaki_electrical_srvs/Store.html" class="start-shopping-btn">Start Shopping</a>
+                <a href="/jowaki_electrical_srvs/Store.php" class="start-shopping-btn">Start Shopping</a>
             </div>
         `;
         return;
@@ -166,7 +166,7 @@ function displayAllOrders(orders) {
         allOrdersList.innerHTML = `
             <div class="no-orders">
                 <p>No orders found.</p>
-                <a href="/jowaki_electrical_srvs/Store.html" class="start-shopping-btn">Start Shopping</a>
+                <a href="/jowaki_electrical_srvs/Store.php" class="start-shopping-btn">Start Shopping</a>
             </div>
         `;
         return;

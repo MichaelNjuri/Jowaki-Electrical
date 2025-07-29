@@ -45,14 +45,66 @@ let notifications = [];
     
 
 function toggleNotifications() {
-    const notificationList = document.getElementById('notifications-list');
-    if (notificationList) {
-        notificationList.style.display = notificationList.style.display === 'none' ? 'block' : 'none';
-    } else {
-        console.error('Notifications list element not found!');
-        showNotification('Notifications list not found', 'error');
+    const dropdown = document.getElementById('notification-dropdown');
+    if (!dropdown) {
+        console.error('ERROR: Notifications dropdown not found');
+        return;
     }
+
+    // Toggle the display
+    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
 }
+
+function renderNotifications() {
+    const notificationList = document.getElementById('notification-dropdown');
+    const notificationCount = document.getElementById('notification-count');
+    
+    if (!notificationList || !notificationCount) {
+        console.error('Notification elements not found!');
+        return;
+    }
+    
+    notificationList.innerHTML = '';
+    notificationCount.textContent = notifications.length;
+    
+    if (notifications.length === 0) {
+        notificationList.innerHTML = '<p style="text-align: center; padding: 0.5rem; color: #666;">No notifications</p>';
+        return;
+    }
+    
+    notifications.forEach(notification => {
+        const div = document.createElement('div');
+        div.className = `notification ${notification.type}`;
+        div.textContent = notification.message;
+        notificationList.appendChild(div);
+    });
+}
+
+// Ensure fetchNotifications calls renderNotifications after fetching
+function fetchNotifications() {
+    fetch('api/get_notifications_admin.php')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false && Array.isArray(data)) {
+                notifications = data.map(notification => processNotificationData(notification));
+                renderNotifications();
+            } else {
+                throw new Error(data.error || 'Failed to fetch notifications');
+            }
+        })
+        .catch(error => {
+            console.error('Notifications fetch error:', error);
+            showNotification('Error fetching notifications: ' + error.message, 'error');
+            renderNotifications(); // Render empty state on error
+        });
+}
+
+
 
 // Helper function to sanitize HTML to prevent XSS
 function sanitizeHTML(str) {

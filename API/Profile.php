@@ -141,43 +141,29 @@ $conn->close();
     <link rel="stylesheet" href="/jowaki_electrical_srvs/profile.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <!-- Logo and Name -->
-                <div class="logo">
-                    <img src="/jowaki_electrical_srvs/Logo.jpg" alt="Jowaki Logo" class="logo-img" />
-                    <span class="logo-text">JOWAKI ELECTRICAL SERVICES LTD</span>
-                </div>
-                <!-- Navigation -->
-                <nav class="main-nav">
-                    <a href="/jowaki_electrical_srvs/Index.html" class="nav-link">Home</a>
-                    <a href="/jowaki_electrical_srvs/Service.html" class="nav-link">Services</a>
-                    <a href="/jowaki_electrical_srvs/Store.html" class="nav-link shop-link">🛒 Shop</a>
-                    <a href="/jowaki_electrical_srvs/api/logout.php" class="nav-link logout-link">🚪 Logout</a>
-                    <a href="/jowaki_electrical_srvs/api/Profile.php" class="nav-link profile-link">👤 Profile</a>
-                </nav>
-                <!-- Contact Info -->
-                <div class="contact-quick">
-                    <div class="contact-item">
-                        <span>📞 </span>
-                        <span id="contact-phone">0721442248</span>
-                    </div>
-                    <div class="contact-item">
-                        <span>✉️</span>
-                        <span id="contact-email"><?php echo htmlspecialchars($userEmail); ?></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    <?php 
+    // Include header file - FIXED: Proper PHP syntax
+    $header_file = __DIR__ . '/../header.php';
+    if (file_exists($header_file)) {
+        include($header_file);
+    } else {
+        echo "<!-- Header file not found at: " . htmlspecialchars($header_file) . " -->";
+        // Fallback header
+        echo '<header><div class="container"><h1>JOWAKI ELECTRICAL SERVICES LTD</h1></div></header>';
+    }
+    ?>
 
     <main>
         <section class="section">
             <div class="container">
                 <div class="welcome-message">
-                    <h1>Welcome back, <?php echo htmlspecialchars($user['first_name']); ?>!</h1>
-                    <p>Last login: <?php echo isset($_SESSION['login_time']) ? date('F j, Y g:i A', $_SESSION['login_time']) : 'Unknown'; ?></p>
+                    <div class="welcome-header">
+                        <div>
+                            <h1>Welcome back, <?php echo htmlspecialchars($user['first_name']); ?>!</h1>
+                            <p>Last login: <?php echo isset($_SESSION['login_time']) ? date('F j, Y g:i A', $_SESSION['login_time']) : 'Unknown'; ?></p>
+                        </div>
+                        <button onclick="logout()" class="logout-btn">🚪 Logout</button>
+                    </div>
                 </div>
                 
                 <h2 class="section-title">Profile Overview</h2>
@@ -278,6 +264,33 @@ $conn->close();
 
     <script src="/jowaki_electrical_srvs/api/profile.js"></script>
     <script>
+    // Logout function
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            // Clear any client-side data if needed
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Make logout request
+            fetch('/jowaki_electrical_srvs/api/logout.php', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                // Redirect regardless of response
+                window.location.href = '/jowaki_electrical_srvs/api/login_form.php?message=' + encodeURIComponent('You have been logged out successfully.');
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Still redirect even if there's an error
+                window.location.href = '/jowaki_electrical_srvs/api/login_form.php?message=' + encodeURIComponent('Logged out.');
+            });
+        }
+    }
+
     // Add session timeout warning
     let sessionWarningShown = false;
     const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -311,8 +324,58 @@ $conn->close();
     // Auto-logout after session timeout
     setTimeout(() => {
         alert('Your session has expired. You will be redirected to the login page.');
-        window.location.href = '/jowaki_electrical_srvs/login.html?error=' + encodeURIComponent('Session expired. Please log in again.');
+        window.location.href = '/jowaki_electrical_srvs/api/login_form.php?error=' + encodeURIComponent('Session expired. Please log in again.');
     }, SESSION_TIMEOUT);
     </script>
+    
+    <style>
+    /* Logout button styles */
+    .welcome-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    
+    .logout-btn {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        flex-shrink: 0;
+    }
+    
+    .logout-btn:hover {
+        background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    }
+    
+    .logout-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 10px rgba(231, 76, 60, 0.3);
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .welcome-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .logout-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+    }
+    </style>
 </body>
 </html>

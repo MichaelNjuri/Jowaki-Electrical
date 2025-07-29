@@ -3,10 +3,22 @@ session_start();
 require 'db_connection.php';
 
 // Function to display error message
-function displayError($message) {
-    echo "<!DOCTYPE html><html><head><title>Error</title></head><body>";
-    echo "<h2>Error</h2><p>" . htmlspecialchars($message) . "</p>";
-    echo "<a href='login.html'>Back to Login</a></body></html>";
+function displayError($message, $redirect_params = '') {
+    $redirect_url = "login.html?error=" . urlencode($message);
+    if (!empty($redirect_params)) {
+        $redirect_url .= "&" . $redirect_params;
+    }
+    header("Location: " . $redirect_url);
+    exit;
+}
+
+// Function to display success message with redirect
+function displaySuccess($message, $redirect_params = '') {
+    $redirect_url = "login.html?success=true&message=" . urlencode($message);
+    if (!empty($redirect_params)) {
+        $redirect_url .= "&" . $redirect_params;
+    }
+    header("Location: " . $redirect_url);
     exit;
 }
 
@@ -19,6 +31,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirmPassword'] ?? '';
     $terms = isset($_POST['terms']);
+    
+    // Get redirect parameters
+    $redirect = $_POST['redirect'] ?? '';
+    $return_to_checkout = $_POST['return_to_checkout'] ?? '';
+    
+    // Build redirect parameters string
+    $redirect_params = '';
+    if (!empty($redirect)) {
+        $redirect_params .= "redirect=" . urlencode($redirect);
+    }
+    if (!empty($return_to_checkout)) {
+        $redirect_params .= ($redirect_params ? "&" : "") . "return_to_checkout=" . urlencode($return_to_checkout);
+    }
 
     // Initialize errors array
     $errors = [];
@@ -77,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($errors)) {
         $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
         if (!$check) {
-            displayError("Database error: " . $conn->error);
+            displayError("Database error: " . $conn->error, $redirect_params);
         }
         $check->bind_param("s", $email);
         $check->execute();
@@ -92,26 +117,45 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // If there are errors, redirect back with error message
     if (!empty($errors)) {
         $errorMessage = implode(" ", $errors);
-        header("Location: login.html?error=" . urlencode($errorMessage));
-        exit;
+        displayError($errorMessage, $redirect_params);
     }
 
     // Hash password
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     
     // Insert user
-    $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, phone, password) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, phone, password, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
     if (!$stmt) {
-        displayError("Database error: " . $conn->error);
+        displayError("Database error: " . $conn->error, $redirect_params);
     }
     $stmt->bind_param("sssss", $firstName, $lastName, $email, $phone, $hashedPassword);
 
     if ($stmt->execute()) {
-        // Redirect to login page with success message
-        header("Location: login.html?success=true&message=" . urlencode("Account created successfully! Please login."));
+        // Account created successfully - now auto-login the user if returning to checkout
+        if ($redirect === 'store' && $return_to_checkout === 'true') {
+            // Get the new user ID
+            $user_id = $conn->insert_id;
+            
+            // Set up session for auto-login
+            $_SESSION['user_id'] = $user_id;
+            $_SESSION['user_email'] = $email;
+            $_SESSION['user_name'] = $firstName . ' ' . $lastName;
+            $_SESSION['logged_in'] = true;
+            $_SESSION['login_time'] = time();
+            $_SESSION['last_activity'] = time();
+            
+            session_regenerate_id(true);
+            
+            // Redirect directly to store with checkout return
+            header("Location: store.php?return_to_checkout=true&new_account=true");
+            exit;
+        } else {
+            // Regular signup - redirect to login page with success message
+            displaySuccess("Account created successfully! Please login.", $redirect_params);
+        }
     } else {
         error_log("Database insertion error: " . $stmt->error);
-        displayError("Something went wrong. Please try again.");
+        displayError("Something went wrong. Please try again.", $redirect_params);
     }
 
     $stmt->close();

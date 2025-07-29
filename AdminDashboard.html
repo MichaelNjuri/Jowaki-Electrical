@@ -52,16 +52,17 @@
 
         <main class="main-content">
             <header class="header">
-                <h2 id="page-title">Dashboard</h2>
-                <div class="user-info">
-                    <span>Welcome</span>
-                    <span class="notification-bell" onclick="toggleNotifications()">🔔<span id="notification-count"></span></span>
-                    <div id="notification-dropdown" class="notification-dropdown">
-                        <div id="notifications-list"></div>
-                    </div>
-                    <button class="btn btn-danger" onclick="logout()">Logout</button>
-                </div>
-            </header>
+    <h2 id="page-title">Dashboard</h2>
+    <div class="user-info">
+        <div class="notification-bell" onclick="toggleNotifications()">
+            Welcome 🔔 <span id="notification-count">0</span> 1 orders are pending confirmation
+        </div>
+        <div id="notification-dropdown" class="notification-dropdown">
+            <!-- Notifications will be populated here by JavaScript -->
+        </div>
+        <button class="btn btn-danger">Logout</button>
+    </div>
+</header>
 
             <section id="dashboard" class="content-section active">
                 <div class="stats-grid">

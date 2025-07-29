@@ -8,26 +8,8 @@
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="logo.png" alt="" class="logo-img">
-                    <span class="Logo.jpg">JOWAKI ELECTRICAL SERVICES LTD</span>
-                </div>
-                <nav class="main-nav">
-                    <a href="Index.html" class="nav-link">Home</a>
-                    <a href="Service.html" class="nav-link">Services</a>
-                    <a href="Store.html" class="nav-link shop-link">🛒 Shop</a>
-                    <a href="login.html" class="nav-link">👤 Login</a>
-                </nav>
-                <div class="search-container">
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search products...">
-                    <button class="search-btn">🔍</button>
-                </div>
-            </div>
-        </div>
-    </header>
+   <?php include 'store_header.php'; ?>
+
 
     <div id="app">
         <!-- Notification -->

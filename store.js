@@ -80,6 +80,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         } else {
             console.warn('Search input element not found');
         }
+
+        // Check if returning from login/register and restore checkout state
+        checkReturnFromAuth();
     } catch (error) {
         console.error('Error loading products:', error);
         window.storeProducts = [];
@@ -87,6 +90,37 @@ document.addEventListener('DOMContentLoaded', async function () {
         showNotification(`Failed to load products: ${error.message}`, 'error');
     }
 });
+
+// Add this function to check if user is logged in
+function checkUserLogin() {
+    return fetch('/jowaki_electrical_srvs/api/check_login.php')
+        .then(response => response.json())
+        .then(data => data.logged_in)
+        .catch(() => false);
+}
+
+// Check if returning from authentication and restore checkout state
+function checkReturnFromAuth() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromAuth = urlParams.get('from_auth');
+    const shouldCheckout = localStorage.getItem('should_checkout');
+    
+    if (fromAuth === 'true' && shouldCheckout === 'true') {
+        localStorage.removeItem('should_checkout');
+        // Remove the URL parameter
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Small delay to ensure everything is loaded
+        setTimeout(() => {
+            checkUserLogin().then(isLoggedIn => {
+                if (isLoggedIn && cart.length > 0) {
+                    showNotification('Welcome back! Continuing with your checkout...', 'success');
+                    startCheckout();
+                }
+            });
+        }, 500);
+    }
+}
 
 function isInStock(stock) {
     return stock > 0;
@@ -449,8 +483,6 @@ function showNotification(message, type = 'success') {
         document.head.appendChild(styles);
     }
 
-  
-   setTimeout(() => notification.remove(), 15000);
     // Automatically remove the notification after 15 seconds
     setTimeout(() => {
         if (notification.parentElement) {
@@ -459,21 +491,95 @@ function showNotification(message, type = 'success') {
     }, 15000);
 }
 
+// Updated startCheckout function with login check
 function startCheckout() {
     if (cart.length === 0) {
         showNotification('Your cart is empty!', 'error');
         return;
     }
 
-    currentCheckoutStep = 1;
-    customerInfo = {};
-    const checkoutModal = document.getElementById('checkoutModal');
-    if (checkoutModal) {
-        checkoutModal.classList.remove('hidden');
-        showCheckoutStep(1);
-    } else {
-        console.warn('Checkout modal element not found');
-    }
+    // Check if user is logged in before proceeding with checkout
+    checkUserLogin().then(isLoggedIn => {
+        if (!isLoggedIn) {
+            showLoginRequiredModal();
+            return;
+        }
+        
+        // User is logged in, proceed with checkout
+        currentCheckoutStep = 1;
+        customerInfo = {};
+        // Load user info for pre-population
+        loadUserInfo().then(() => {
+            const checkoutModal = document.getElementById('checkoutModal');
+            if (checkoutModal) {
+                checkoutModal.classList.remove('hidden');
+                showCheckoutStep(1);
+            } else {
+                console.warn('Checkout modal element not found');
+            }
+        });
+    });
+}
+
+// Add function to show login required modal
+function showLoginRequiredModal() {
+    const modalContent = `
+        <div style="text-align: center; padding: 2rem;">
+            <h3 style="color: #e74c3c; margin-bottom: 1rem;">🔒 Login Required</h3>
+            <p style="margin-bottom: 2rem; color: #7f8c8d;">
+                You need to be logged in to place an order. Please log in or create an account to continue with your purchase.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="redirectToLogin()">Login</button>
+                <button class="btn btn-secondary" onclick="redirectToRegister()">Create Account</button>
+                <button class="btn btn-secondary" onclick="hideModal('loginRequiredModal')">Continue Shopping</button>
+            </div>
+        </div>
+    `;
+    showModal('Authentication Required', modalContent, 'loginRequiredModal');
+}
+
+// Add redirect functions
+function redirectToLogin() {
+    // Store current cart and checkout intent
+    saveCart();
+    localStorage.setItem('should_checkout', 'true');
+    window.location.href = '/jowaki_electrical_srvs/login.php?redirect=store&from=checkout';
+}
+
+function redirectToRegister() {
+    // Store current cart and checkout intent
+    saveCart();
+    localStorage.setItem('should_checkout', 'true');
+    window.location.href = '/jowaki_electrical_srvs/register.php?redirect=store&from=checkout';
+}
+
+// Add function to load user info
+function loadUserInfo() {
+    return checkUserLogin().then(isLoggedIn => {
+        if (isLoggedIn) {
+            return fetch('/jowaki_electrical_srvs/api/get_user_info.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.user) {
+                        // Pre-populate customer info with user data
+                        customerInfo = {
+                            firstName: data.user.first_name || '',
+                            lastName: data.user.last_name || '',
+                            email: data.user.email || '',
+                            phone: data.user.phone || '',
+                            address: data.user.address || '',
+                            city: data.user.city || '',
+                            postalCode: data.user.postal_code || ''
+                        };
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading user info:', error);
+                });
+        }
+        return Promise.resolve();
+    });
 }
 
 function hideCheckout() {
@@ -739,43 +845,57 @@ function getConfirmationStep() {
     `;
 }
 
+// Updated placeOrder function with double authentication check
 function placeOrder() {
-    fetch('/jowaki_electrical_srvs/api/place_order.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(orderData)
-    })
-    .then(response => {
-        console.log('Raw response status:', response.status);
-        return response.text().then(text => {
-            console.log('Raw response text:', text);
-            if (!response.ok) {
-                throw new Error(`HTTP error ${response.status}: ${text}`);
-            }
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                throw new Error(`Failed to parse JSON: ${text}`);
-            }
-        });
-    })
-    .then(data => {
-        if (data.success) {
-            showNotification('Order placed successfully! You will receive a confirmation email soon.', 'success');
-            cart = [];
-            saveCart();
-            updateCartDisplay();
+    // Double-check authentication before placing order
+    checkUserLogin().then(isLoggedIn => {
+        if (!isLoggedIn) {
+            showNotification('You must be logged in to place an order!', 'error');
             hideCheckout();
-            customerInfo = {};
-            orderData = {};
-        } else {
-            showNotification(data.error || 'Failed to place order. Please try again.', 'error');
+            showLoginRequiredModal();
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Error placing order:', error);
-        showNotification(`An error occurred while placing your order: ${error.message}`, 'error');
+
+        // Proceed with order placement
+        fetch('/jowaki_electrical_srvs/api/place_order.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderData)
+        })
+        .then(response => {
+            console.log('Raw response status:', response.status);
+            return response.text().then(text => {
+                console.log('Raw response text:', text);
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}: ${text}`);
+                }
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Failed to parse JSON: ${text}`);
+                }
+            });
+        })
+        .then(data => {
+            if (data.success) {
+                showNotification('Order placed successfully! You will receive a confirmation email soon.', 'success');
+                cart = [];
+                saveCart();
+                updateCartDisplay();
+                hideCheckout();
+                customerInfo = {};
+                orderData = {};
+                // Clear checkout intent
+                localStorage.removeItem('should_checkout');
+            } else {
+                showNotification(data.error || 'Failed to place order. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error placing order:', error);
+            showNotification(`An error occurred while placing your order: ${error.message}`, 'error');
+        });
     });
 }

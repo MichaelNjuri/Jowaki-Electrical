@@ -19,7 +19,7 @@ try {
 }
 
 error_log("Session ID: " . session_id(), 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
-error_log("Starting login.php", 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
+error_log("Starting api/login.php", 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
 
 header('Content-Type: application/json');
 
@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     sendError("Invalid request method", 405);
 }
 
-// Check if db_connection.php exists
+// Check if db_connection.php exists - FIXED PATH
 $db_file = __DIR__ . DIRECTORY_SEPARATOR . 'db_connection.php';
 if (!file_exists($db_file)) {
     error_log("db_connection.php not found at: " . $db_file, 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
@@ -83,11 +83,15 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     // Fallback to FormData
     $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'] ?? '';
-    error_log("Using FormData - Email: $email", 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
+    $redirect = $_POST['redirect'] ?? '';
+    $return_to_checkout = $_POST['return_to_checkout'] ?? '';
+    error_log("Using FormData - Email: '$email', Password: " . (empty($password) ? 'empty' : 'non-empty'), 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
 } else {
     $email = filter_var($input['email'] ?? '', FILTER_SANITIZE_EMAIL);
     $password = $input['password'] ?? '';
-    error_log("Using JSON data - Email: $email", 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
+    $redirect = $input['redirect'] ?? '';
+    $return_to_checkout = $input['return_to_checkout'] ?? '';
+    error_log("Using JSON data - Email: '$email', Password: " . (empty($password) ? 'empty' : 'non-empty'), 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
 }
 
 if (empty($email) || empty($password)) {
@@ -169,12 +173,26 @@ try {
         session_regenerate_id(true);
         error_log("Login successful for user: $email", 3, __DIR__ . DIRECTORY_SEPARATOR . 'php_errors.log');
         
+        // Determine redirect URL
+        $redirectUrl = '/jowaki_electrical_srvs/api/Profile.php';
+        
+        if ($redirect === 'store') {
+            $redirectUrl = '/jowaki_electrical_srvs/store.php';
+            if ($return_to_checkout === 'true') {
+                $redirectUrl .= '?return_to_checkout=true';
+            }
+        }
+        
         // Clear output buffer and send response
         if (ob_get_level()) {
             ob_clean();
         }
         
-        echo json_encode(['success' => true, 'redirect' => '/jowaki_electrical_srvs/api/Profile.php']);
+        echo json_encode([
+            'success' => true, 
+            'redirect' => $redirectUrl,
+            'message' => 'Login successful!'
+        ]);
         exit;
         
     } else {
