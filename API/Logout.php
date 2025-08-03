@@ -29,6 +29,6 @@ if (ini_get("session.use_cookies")) {
 session_destroy();
 
 // Redirect to login page with success message
-header("Location: /jowaki_electrical_srvs/login.html?message=" . urlencode("You have been successfully logged out"));
+header("Location: /jowaki_electrical_srvs/login_form.php?message=" . urlencode("You have been successfully logged out"));
 exit;
 ?>

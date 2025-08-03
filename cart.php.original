@@ -1,0 +1,67 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+$subtotal = 0;
+$tax_rate = 0.16; // 16% VAT
+$delivery_fee = count($cart) > 0 ? 500 : 0; // Flat delivery fee
+foreach ($cart as $item) {
+    $subtotal += $item['price'] * $item['quantity'];
+}
+$tax = $subtotal * $tax_rate;
+$total = $subtotal + $tax + $delivery_fee;
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jowaki Store - Cart</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <link rel="stylesheet" href="assets/css/mockup.css">
+    <script src="assets/js/mockup.js" defer></script>
+</head>
+<body>
+    <?php include 'store_header.php'; ?>
+    <div class="cart-section">
+        <h1>Your Cart</h1>
+        <?php if (empty($cart)): ?>
+            <p class="notification">Your cart is empty. <a href="Store.php">Start shopping</a>.</p>
+        <?php else: ?>
+            <div class="cart-items">
+                <?php foreach ($cart as $index => $item): ?>
+                    <div class="cart-item" data-id="<?php echo htmlspecialchars($item['id']); ?>">
+                        <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                        <div class="cart-item-details">
+                            <div class="cart-item-title"><?php echo htmlspecialchars($item['name']); ?></div>
+                            <div class="cart-item-price">KSh <?php echo number_format($item['price'], 2); ?></div>
+                            <div class="cart-item-quantity">
+                                <button class="btn qty-decrease">-</button>
+                                <input type="number" value="<?php echo $item['quantity']; ?>" min="1">
+                                <button class="btn qty-increase">+</button>
+                            </div>
+                            <button class="btn remove-item">Remove</button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="cart-summary">
+                <div>Subtotal: KSh <?php echo number_format($subtotal, 2); ?></div>
+                <div>Tax (16%): KSh <?php echo number_format($tax, 2); ?></div>
+                <div>Delivery Fee: KSh <?php echo number_format($delivery_fee, 2); ?></div>
+                <div><strong>Total: KSh <?php echo number_format($total, 2); ?></strong></div>
+                <div class="cart-actions">
+                    <a href="Store.php" class="btn btn-secondary">Continue Shopping</a>
+                    <a href="checkout.php" class="btn btn-primary">Proceed to Checkout</a>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+</body>
+</html>

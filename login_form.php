@@ -8,33 +8,7 @@
 </head>
 <body>
     <!-- Header -->
-    <header>
-        <div class="header-content">
-            <div class="logo">
-                <img src="logo.png" alt="Jowaki Electrical Services" class="logo-img">
-                <span class="logo-text">Jowaki Electrical Services</span>
-            </div>
-            
-            <nav class="main-nav">
-                <a href="index.php" class="nav-link">Home</a>
-                <a href="services.php" class="nav-link">Services</a>
-                <a href="about.php" class="nav-link">About</a>
-                <a href="shop.php" class="nav-link shop-link">Shop</a>
-                <a href="#" class="nav-link login-link" id="auth-link">Sign Up</a>
-            </nav>
-            
-            <div class="contact-quick">
-                <div class="contact-item">
-                    <span>📞</span>
-                    <span>+254 123 456 789</span>
-                </div>
-                <div class="contact-item">
-                    <span>✉️</span>
-                    <span>info@jowaki.com</span>
-                </div>
-            </div>
-        </div>
-    </header>
+    <?php include 'header.php'; ?>
 
     <main>
         <div class="form-container">

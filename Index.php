@@ -57,6 +57,24 @@
             </div>
         </section>
 
+        <!-- Product Showcase Section -->
+        <section id="product-showcase" class="section">
+            <div class="container">
+                <h2 class="section-title">Featured Products</h2>
+                <p class="text-center text-gray-600 mb-8">Discover our top-quality electrical and security products, professionally selected for your needs.</p>
+                <div id="product-list" class="product-showcase-grid">
+                    <!-- Loading indicator -->
+                    <div id="products-loading" class="text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-gray-500">Loading products...</p>
+                    </div>
+                </div>
+                <div class="text-center mt-8">
+                    <a href="Store.php" class="cta-button">View All Products</a>
+                </div>
+            </div>
+        </section>
+
         <!-- Gallery Section -->
         <section class="section gallery-section">
             <div class="container">
@@ -164,12 +182,12 @@
                             <p class="lead">Established in June 2011 and incorporated in June 2013, we have grown from identifying market gaps in security services to becoming a trusted name in the industry.</p>
                         </div>
                         <div class="about-image">
-                            <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600" alt="Jowaki Team at Work">
+                            <img src="IMG_11.JPG" alt="Jowaki Team at Work">
                         </div>
                     </div>
                     <div class="about-row">
                         <div class="about-image">
-                            <img src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=600" alt="Professional Installation">
+                            <img src="IMG-8.JPG" alt="Professional Installation">
                         </div>
                         <div class="about-highlights">
                             <div class="highlight-item">
@@ -272,6 +290,6 @@
         </div>
     </footer>
 
-    <script src="index.js"></script>
+    <script src="assets/js/index.js"></script>
 </body>
 </html>

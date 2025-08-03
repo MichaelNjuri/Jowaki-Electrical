@@ -1,76 +1,131 @@
 <?php
+// Test database connection and table structure
+error_reporting(E_ALL);
 ini_set('display_errors', 1);
-ini_set('error_reporting', E_ALL);
 
-echo "Testing database connection...\n";
+echo "<h1>Database Connection Test</h1>";
 
-// Check if db_connection.php exists
-$db_file = __DIR__ . DIRECTORY_SEPARATOR . 'db_connection.php';
-echo "Looking for db_connection.php at: " . $db_file . "\n";
-
-if (!file_exists($db_file)) {
-    die("ERROR: db_connection.php not found!\n");
-}
-
-echo "db_connection.php found. Including file...\n";
+// Database connection
+$host = 'localhost';
+$user = 'root';
+$pass = '';
+$dbname = 'jowaki_db';
 
 try {
-    require $db_file;
-    echo "db_connection.php included successfully.\n";
-} catch (Exception $e) {
-    die("ERROR including db_connection.php: " . $e->getMessage() . "\n");
-} catch (Error $e) {
-    die("FATAL ERROR in db_connection.php: " . $e->getMessage() . "\n");
-}
+    $conn = new mysqli($host, $user, $pass, $dbname);
 
-// Check if $conn variable exists
-if (!isset($conn)) {
-    die("ERROR: \$conn variable is not set after including db_connection.php\n");
-}
-
-if (!$conn) {
-    die("ERROR: \$conn is false or null\n");
-}
-
-echo "Connection variable exists and is truthy.\n";
-
-// Test connection
-if (method_exists($conn, 'ping')) {
-    if ($conn->ping()) {
-        echo "Database connection is alive (ping successful).\n";
-    } else {
-        echo "WARNING: Database connection ping failed.\n";
+    if ($conn->connect_error) {
+        throw new Exception('Database connection failed: ' . $conn->connect_error);
     }
-}
 
-// Test a simple query
-try {
-    $result = $conn->query("SELECT 1 as test");
-    if ($result) {
-        echo "Simple query test successful.\n";
-        $row = $result->fetch_assoc();
-        echo "Query result: " . $row['test'] . "\n";
+    echo "<h2>✅ Database Connection Successful</h2>";
+    echo "<p>Connected to database: $dbname</p>";
+
+    // Check if users table exists
+    $tableExists = $conn->query("SHOW TABLES LIKE 'users'");
+    if ($tableExists->num_rows === 0) {
+        echo "<h2>❌ Users table does not exist</h2>";
     } else {
-        echo "ERROR: Simple query failed: " . $conn->error . "\n";
-    }
-} catch (Exception $e) {
-    echo "ERROR: Exception during query test: " . $e->getMessage() . "\n";
-}
-
-// Test users table structure
-try {
-    $result = $conn->query("DESCRIBE users");
-    if ($result) {
-        echo "\nUsers table structure:\n";
+        echo "<h2>✅ Users table exists</h2>";
+        
+        // Show users table structure
+        $result = $conn->query("DESCRIBE users");
+        echo "<h3>Users table structure:</h3>";
+        echo "<table border='1'>";
+        echo "<tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>";
         while ($row = $result->fetch_assoc()) {
-            echo "- " . $row['Field'] . " (" . $row['Type'] . ")\n";
+            echo "<tr>";
+            echo "<td>" . $row['Field'] . "</td>";
+            echo "<td>" . $row['Type'] . "</td>";
+            echo "<td>" . $row['Null'] . "</td>";
+            echo "<td>" . $row['Key'] . "</td>";
+            echo "<td>" . $row['Default'] . "</td>";
+            echo "<td>" . $row['Extra'] . "</td>";
+            echo "</tr>";
         }
-    } else {
-        echo "ERROR: Could not describe users table: " . $conn->error . "\n";
+        echo "</table>";
+        
+        // Show sample users
+        $users = $conn->query("SELECT * FROM users LIMIT 5");
+        echo "<h3>Sample users:</h3>";
+        echo "<table border='1'>";
+        if ($users->num_rows > 0) {
+            $first = true;
+            while ($row = $users->fetch_assoc()) {
+                if ($first) {
+                    echo "<tr>";
+                    foreach ($row as $key => $value) {
+                        echo "<th>$key</th>";
+                    }
+                    echo "</tr>";
+                    $first = false;
+                }
+                echo "<tr>";
+                foreach ($row as $value) {
+                    echo "<td>" . htmlspecialchars($value) . "</td>";
+                }
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='10'>No users found</td></tr>";
+        }
+        echo "</table>";
     }
-} catch (Exception $e) {
-    echo "ERROR: Exception while checking users table: " . $e->getMessage() . "\n";
-}
 
-echo "\nDatabase test completed.\n";
+    // Check if orders table exists
+    $tableExists = $conn->query("SHOW TABLES LIKE 'orders'");
+    if ($tableExists->num_rows === 0) {
+        echo "<h2>❌ Orders table does not exist</h2>";
+    } else {
+        echo "<h2>✅ Orders table exists</h2>";
+        
+        // Show orders table structure
+        $result = $conn->query("DESCRIBE orders");
+        echo "<h3>Orders table structure:</h3>";
+        echo "<table border='1'>";
+        echo "<tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>";
+        while ($row = $result->fetch_assoc()) {
+            echo "<tr>";
+            echo "<td>" . $row['Field'] . "</td>";
+            echo "<td>" . $row['Type'] . "</td>";
+            echo "<td>" . $row['Null'] . "</td>";
+            echo "<td>" . $row['Key'] . "</td>";
+            echo "<td>" . $row['Default'] . "</td>";
+            echo "<td>" . $row['Extra'] . "</td>";
+            echo "</tr>";
+        }
+        echo "</table>";
+        
+        // Show sample orders
+        $orders = $conn->query("SELECT * FROM orders LIMIT 5");
+        echo "<h3>Sample orders:</h3>";
+        echo "<table border='1'>";
+        if ($orders->num_rows > 0) {
+            $first = true;
+            while ($row = $orders->fetch_assoc()) {
+                if ($first) {
+                    echo "<tr>";
+                    foreach ($row as $key => $value) {
+                        echo "<th>$key</th>";
+                    }
+                    echo "</tr>";
+                    $first = false;
+                }
+                echo "<tr>";
+                foreach ($row as $value) {
+                    echo "<td>" . htmlspecialchars($value) . "</td>";
+                }
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='10'>No orders found</td></tr>";
+        }
+        echo "</table>";
+    }
+
+    $conn->close();
+    
+} catch (Exception $e) {
+    echo "<h2>❌ Error: " . $e->getMessage() . "</h2>";
+}
 ?>

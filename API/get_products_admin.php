@@ -74,6 +74,7 @@ if ($result->num_rows > 0) {
                 'discount_price' => !empty($row['discount_price']) ? floatval($row['discount_price']) : null,
                 'stock' => intval($row['stock']),
                 'is_active' => intval($row['is_active']),
+                'status' => intval($row['is_active']) ? 'active' : 'inactive', // Convert for frontend compatibility
                 'category' => mb_convert_encoding($row['category'] ?? '', 'UTF-8', 'UTF-8'),
                 'brand' => mb_convert_encoding($row['brand'] ?? '', 'UTF-8', 'UTF-8'),
                 'specifications' => $specifications,

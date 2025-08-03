@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Test - Clean Design</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px; 
+            background-color: #ffffff;
+            color: #1e293b;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .store-preview {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .product-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            border-color: #2563eb;
+        }
+        .product-image {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            background-color: #f8fafc;
+        }
+        .product-content {
+            padding: 20px;
+        }
+        .product-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .product-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #dc2626;
+        }
+        .btn-primary {
+            padding: 12px 20px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        /* WhatsApp Button Preview */
+        .whatsapp-preview {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border: 2px solid white;
+        }
+        
+        .whatsapp-preview:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+            background: linear-gradient(135deg, #128c7e, #25d366);
+        }
+        
+        /* Cart Button Preview */
+        .cart-preview {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 60px;
+            height: 60px;
+            border: 2px solid white;
+            position: relative;
+        }
+        
+        .cart-preview:hover {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>Store Test Page - Clean White Design</h1>
+    
+    <div class="test-section">
+        <h3>✅ Design Improvements Applied:</h3>
+        <ul>
+            <li>✅ Clean white background throughout</li>
+            <li>✅ Modern blue accent color (#2563eb)</li>
+            <li>✅ Beautiful WhatsApp button with gradient</li>
+            <li>✅ Improved cart button with better styling</li>
+            <li>✅ Clean cart page design</li>
+            <li>✅ Removed dark blue header</li>
+            <li>✅ Professional product cards</li>
+            <li>✅ Smooth hover effects</li>
+        </ul>
+    </div>
+    
+    <div class="store-preview">
+        <h3>Store Preview - How it should look:</h3>
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="IMG_1.jpg" alt="Product" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="product-content">
+                    <h3 class="product-title">CCTV Camera System</h3>
+                    <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">Professional security camera with night vision</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span class="product-price">KSh 15,000</span>
+                        <span style="color: #f59e0b; font-size: 14px;">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <button class="btn-primary">
+                        <i class="fas fa-shopping-cart"></i>
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="IMG_5.jpg" alt="Product" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="product-content">
+                    <h3 class="product-title">Electric Fencing Kit</h3>
+                    <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">Complete electric fencing installation kit</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span class="product-price">KSh 25,000</span>
+                        <span style="color: #f59e0b; font-size: 14px;">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <button class="btn-primary">
+                        <i class="fas fa-shopping-cart"></i>
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="IMG_7.jpg" alt="Product" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="product-content">
+                    <h3 class="product-title">Alarm System</h3>
+                    <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">Wireless home security alarm system</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span class="product-price">KSh 8,500</span>
+                        <span style="color: #f59e0b; font-size: 14px;">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <button class="btn-primary">
+                        <i class="fas fa-shopping-cart"></i>
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- WhatsApp Button Preview -->
+    <div class="whatsapp-preview">
+        <i class="fab fa-whatsapp"></i>
+    </div>
+    
+    <!-- Cart Button Preview -->
+    <div class="cart-preview">
+        <i class="fas fa-shopping-cart"></i>
+        <div class="cart-count">3</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>1. Test API Endpoints</h3>
+        <button onclick="testAPI('get_products.php')">Test Products API</button>
+        <button onclick="testAPI('get_categories.php')">Test Categories API</button>
+        <div id="api-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Store Page</h3>
+        <a href="Store.php" target="_blank" style="color: #2563eb; text-decoration: none;">Open Store Page</a>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test Cart Page</h3>
+        <a href="cart.php" target="_blank" style="color: #2563eb; text-decoration: none;">Open Cart Page</a>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Test CSS Loading</h3>
+        <button onclick="testCSS()">Test CSS Files</button>
+        <div id="css-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>5. Test JavaScript Loading</h3>
+        <button onclick="testJS()">Test JS Files</button>
+        <div id="js-result"></div>
+    </div>
+
+    <script>
+        async function testAPI(endpoint) {
+            const resultDiv = document.getElementById('api-result');
+            try {
+                const response = await fetch(`API/${endpoint}`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ ${endpoint} working! Response: ${JSON.stringify(data).substring(0, 200)}...</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ ${endpoint} failed: ${error.message}</div>`;
+            }
+        }
+        
+        function testCSS() {
+            const resultDiv = document.getElementById('css-result');
+            const cssFiles = ['store.css', 'index.css'];
+            let results = '';
+            
+            cssFiles.forEach(file => {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = file;
+                link.onload = () => results += `<div class="success">✅ ${file} loaded</div>`;
+                link.onerror = () => results += `<div class="error">❌ ${file} failed to load</div>`;
+                document.head.appendChild(link);
+            });
+            
+            setTimeout(() => {
+                resultDiv.innerHTML = results;
+            }, 1000);
+        }
+        
+        function testJS() {
+            const resultDiv = document.getElementById('js-result');
+            const jsFiles = ['store.js'];
+            let results = '';
+            
+            jsFiles.forEach(file => {
+                const script = document.createElement('script');
+                script.src = file;
+                script.onload = () => results += `<div class="success">✅ ${file} loaded</div>`;
+                script.onerror = () => results += `<div class="error">❌ ${file} failed to load</div>`;
+                document.head.appendChild(script);
+            });
+            
+            setTimeout(() => {
+                resultDiv.innerHTML = results;
+            }, 1000);
+        }
+    </script>
+</body>
+</html> 

@@ -1,160 +1,220 @@
-let storeProducts = [];
-let cart = [];
-let currentFilter = 'all';
-let currentCheckoutStep = 1;
-let customerInfo = {};
-let orderData = {};
+// Global variables
+let storeProducts = []; // Array to store all products fetched from the API
+let cart = []; // Array to store items in the cart
+let currentFilter = 'all'; // Current filter applied to products
+let currentCheckoutStep = 1; // Current step in the checkout process
+let customerInfo = {}; // Object to store customer information during checkout
+let orderData = {}; // Object to store order data during checkout
+let cartCount = 0;  // To keep track of the cart item count
 
-document.addEventListener('DOMContentLoaded', async function () {
-    let localProducts = [];
-    try {
-        console.log('Starting product fetch at', new Date().toISOString());
-        const res = await fetch('/jowaki_electrical_srvs/api/get_products.php');
-        if (!res.ok) {
-            const errorText = await res.text();
-            console.error(`Fetch error: Status ${res.status}, Response: ${errorText}`);
-            throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
-        }
-
-        const contentType = res.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await res.text();
-            console.error('Unexpected content type:', contentType, 'Response:', text);
-            throw new Error('Response is not JSON');
-        }
-
-        const data = await res.json();
-        console.log('Raw response data:', data);
-
-        if (data.success && Array.isArray(data.products)) {
-            localProducts = data.products;
-        } else if (Array.isArray(data)) {
-            localProducts = data;
-        } else if (data.products && Array.isArray(data.products)) {
-            localProducts = data.products;
-        } else {
-            console.error('Invalid response structure:', data);
-            localProducts = [];
-            showNotification('No products available at the moment.', 'error');
-        }
-
-        if (!Array.isArray(localProducts)) {
-            console.error('localProducts is not an array:', localProducts);
-            localProducts = [];
-            showNotification('Failed to load products: Invalid data format.', 'error');
-        }
-
-        console.log('Products before processing:', localProducts);
-
-        localProducts.forEach(p => {
-            try {
-                p.stock = parseInt(p.stock) || 0;
-                p.features = Array.isArray(p.features) ? p.features : [];
-                p.specifications = typeof p.specifications === 'object' ? p.specifications : {};
-            } catch (e) {
-                console.warn(`Invalid product JSON fields for product ID ${p.id || 'unknown'}:`, p, e);
-                p.features = [];
-                p.specifications = {};
-                p.stock = 0;
-            }
-        });
-
-        console.log('Processed products:', localProducts);
-        window.storeProducts = localProducts;
-        loadProducts();
-        updateCartDisplay();
-
-        const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
-        if (savedCart.length > 0) {
-            cart = savedCart;
-            updateCartDisplay();
-        }
-
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    searchProducts();
-                }
-            });
-        } else {
-            console.warn('Search input element not found');
-        }
-
-        // Check if returning from login/register and restore checkout state
-        checkReturnFromAuth();
-    } catch (error) {
-        console.error('Error loading products:', error);
-        window.storeProducts = [];
-        loadProducts();
-        showNotification(`Failed to load products: ${error.message}`, 'error');
+// Mobile filter functionality
+function toggleMobileFilters() {
+    const filterPanel = document.getElementById('categoryFilter');
+    if (filterPanel) {
+        filterPanel.classList.toggle('active');
     }
-});
-
-// Add this function to check if user is logged in
-function checkUserLogin() {
-    return fetch('/jowaki_electrical_srvs/api/check_login.php')
-        .then(response => response.json())
-        .then(data => data.logged_in)
-        .catch(() => false);
 }
 
-// Check if returning from authentication and restore checkout state
-function checkReturnFromAuth() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const fromAuth = urlParams.get('from_auth');
-    const shouldCheckout = localStorage.getItem('should_checkout');
+// Category scrolling functionality
+function scrollCategories(direction) {
+    const scrollContainer = document.getElementById('categoryScroll');
+    const scrollAmount = 300;
     
-    if (fromAuth === 'true' && shouldCheckout === 'true') {
-        localStorage.removeItem('should_checkout');
-        // Remove the URL parameter
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Small delay to ensure everything is loaded
-        setTimeout(() => {
-            checkUserLogin().then(isLoggedIn => {
-                if (isLoggedIn && cart.length > 0) {
-                    showNotification('Welcome back! Continuing with your checkout...', 'success');
-                    startCheckout();
-                }
-            });
-        }, 500);
+    if (direction === 'left') {
+        scrollContainer.scrollBy({
+            left: -scrollAmount,
+            behavior: 'smooth'
+        });
+    } else {
+        scrollContainer.scrollBy({
+            left: scrollAmount,
+            behavior: 'smooth'
+        });
     }
 }
 
+
+
+// Cart Functions
+/**
+ * Adds an item to the cart.
+ * @param {number} productId - The ID of the product to add.
+ * @param {number} [quantity=1] - The quantity of the product to add.
+ */
+async function addToCart(productId, quantity = 1) {
+    const product = storeProducts.find(p => String(p.id) === String(productId));
+    if (!product) {
+        showNotification('Product not found!', 'error');
+        return;
+    }
+
+    if (!isInStock(product.stock)) {
+        showNotification(`${product.name} is out of stock!`, 'error');
+        return;
+    }
+
+    const actualPrice = parseFloat(product.discount_price) || parseFloat(product.price);
+    const imageSrc = product.image || 'placeholder.jpg';
+    
+    // Update cart count
+    cartCount += quantity;
+    const floatingCountElement = document.querySelector('#floatingCartCount');
+    if (floatingCountElement) {
+        floatingCountElement.innerText = cartCount;
+        floatingCountElement.style.display = 'block';
+    }
+    toggleCartPulse();
+    
+    // Send to PHP session cart
+    fetch('/jowaki_electrical_srvs/api/add_to_cart.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: productId,
+            name: product.name,
+            price: actualPrice,
+            quantity: quantity,
+            image: imageSrc
+        })
+    })
+    .then(response => response.json())
+    .then(async data => {
+        if (data.success) {
+            // Update local cart for UI
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: productId,
+                    name: product.name,
+                    price: actualPrice,
+                    quantity: quantity,
+                    image: imageSrc,
+                    features: product.features
+                });
+            }
+
+            // Display popup with item details
+            displayCartPopup(product, quantity, imageSrc);
+            
+            updateCartDisplay();
+            await saveCart();
+            showNotification(`${product.name} added to cart!`);
+        } else {
+            showNotification(data.error || 'Failed to add item to cart', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+        showNotification('Error adding item to cart', 'error');
+    });
+}
+
+/**
+ * Removes an item from the cart.
+ * @param {number} productId - The ID of the product to remove.
+ */
+async function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    updateCartDisplay();
+    await saveCart();
+    showNotification('Item removed from cart');
+}
+
+/**
+ * Updates the quantity of an item in the cart.
+ * @param {number} productId - The ID of the product to update.
+ * @param {number} change - The change in quantity (positive or negative).
+ */
+async function updateQuantity(productId, change) {
+    const item = cart.find(item => item.id === productId);
+    const product = storeProducts.find(p => p.id === productId);
+    if (!item || !product) return;
+
+    const newQuantity = item.quantity + change;
+    if (newQuantity <= 0) {
+        await removeFromCart(productId);
+        return;
+    }
+
+    if (newQuantity > product.stock) {
+        showNotification(`Cannot add more ${product.name} - only ${product.stock} in stock!`, 'error');
+        return;
+    }
+
+    item.quantity = newQuantity;
+    updateCartDisplay();
+    await saveCart();
+}
+
+/**
+ * Clears the cart.
+ */
+async function clearCart() {
+    if (cart.length === 0) {
+        showNotification('Cart is already empty!', 'error');
+        return;
+    }
+
+    if (confirm('Are you sure you want to clear your cart?')) {
+        cart = [];
+        updateCartDisplay();
+        await saveCart();
+        showNotification('Cart cleared successfully!');
+    }
+}
+
+/**
+ * Saves the cart to local storage.
+ */
+async function saveCart() {
+    try {
+        const response = await fetch('/jowaki_electrical_srvs/api/sync_cart.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cart: cart })
+        });
+        
+        const data = await response.json();
+        if (!data.success) {
+            console.error('Failed to save cart to server:', data.error);
+        }
+    } catch (error) {
+        console.error('Error saving cart:', error);
+    }
+}
+
+// Product Functions
+/**
+ * Checks if a product is in stock.
+ * @param {number} stock - The stock quantity of the product.
+ * @returns {boolean} - True if the product is in stock, false otherwise.
+ */
 function isInStock(stock) {
     return stock > 0;
 }
 
-function showHome() {
-    const storeView = document.getElementById('storeView');
-    const servicesView = document.getElementById('servicesView');
-    if (storeView && servicesView) {
-        storeView.classList.remove('hidden');
-        servicesView.classList.add('hidden');
-    }
-    if (event) event.preventDefault();
-}
-
-function showServices() {
-    const storeView = document.getElementById('storeView');
-    const servicesView = document.getElementById('servicesView');
-    if (storeView && servicesView) {
-        storeView.classList.add('hidden');
-        servicesView.classList.remove('hidden');
-    }
-    if (event) event.preventDefault();
-}
-
-function loadProducts(filteredProducts = window.storeProducts.filter(p => p.active)) {
+/**
+ * Loads products into the products grid.
+ * @param {Array} filteredProducts - The array of products to load.
+ */
+function loadProducts(filteredProducts = storeProducts) {
     const grid = document.getElementById('productsGrid');
     if (!grid) {
         console.warn('Products grid element not found');
         return;
     }
+
+    // Clear grid
     grid.innerHTML = '';
 
-    if (!filteredProducts || !Array.isArray(filteredProducts) || filteredProducts.length === 0) {
+    // Load products with lazy loading and transition effects
+    if (!filteredProducts || filteredProducts.length === 0) {
         grid.innerHTML = '<p style="text-align: center; color: #2c3e50; grid-column: 1/-1;">No products found</p>';
         return;
     }
@@ -162,31 +222,78 @@ function loadProducts(filteredProducts = window.storeProducts.filter(p => p.acti
     filteredProducts.forEach(product => {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
-
         const originalPrice = parseFloat(product.price);
         const sellingPrice = parseFloat(product.discount_price) || originalPrice;
         const imageSrc = product.image || 'placeholder.jpg';
+        const discountPercentage = sellingPrice < originalPrice ? Math.round(((originalPrice - sellingPrice) / originalPrice) * 100) : 0;
+        
+        // Generate stock status
+        const stockStatus = product.stock > 0 ? 'In Stock' : 'Out of Stock';
+        
+        // Generate badges
+        const badges = [];
+        if (discountPercentage > 0) {
+            badges.push(`<div class="product-badge sale">-${discountPercentage}%</div>`);
+        }
+        if (product.stock > 0 && product.stock <= 10) {
+            badges.push('<div class="product-badge hot">Hot</div>');
+        }
+        if (product.category && product.category.toLowerCase().includes('new')) {
+            badges.push('<div class="product-badge new">New</div>');
+        }
+        
 
+        
         const priceHtml = sellingPrice < originalPrice
             ? `<div class="product-price">
-                   <span class="original-price">KSh ${originalPrice.toLocaleString()}</span>
-                   KSh ${sellingPrice.toLocaleString()}
-               </div>`
-            : `<div class="product-price">KSh ${sellingPrice.toLocaleString()}</div>`;
+                <span class="current-price">KSh ${sellingPrice.toLocaleString()}</span>
+                <span class="original-price">KSh ${originalPrice.toLocaleString()}</span>
+                <span class="discount-percentage">-${discountPercentage}%</span>
+            </div>`
+            : `<div class="product-price">
+                <span class="current-price">KSh ${sellingPrice.toLocaleString()}</span>
+            </div>`;
 
         productCard.innerHTML = `
             <div class="product-image">
-                <img src="${imageSrc}" alt="${product.name}" class="product-thumb" style="max-width: 100%; height: auto;">
+                <img src="${imageSrc}" alt="${product.name}" class="product-thumb" loading="lazy">
+                <div class="product-badges">
+                    ${badges.join('')}
+                </div>
+                <div class="stock-badge ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}">
+                    ${stockStatus}
+                </div>
+                <div class="product-actions-overlay">
+                    <button class="action-btn wishlist" onclick="event.stopPropagation(); toggleWishlist(${product.id})" title="Add to Wishlist">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <button class="action-btn quick-view" onclick="event.stopPropagation(); showProductDetail(${product.id})" title="Quick View">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn share" onclick="event.stopPropagation(); shareProduct(${product.id})" title="Share">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
             </div>
-            <div class="product-info">
+            <div class="product-content">
+                <div class="product-category">${product.category || 'General'}</div>
                 <h3 class="product-title">${product.name}</h3>
                 <p class="product-description">${product.description}</p>
-                ${priceHtml}
+
+                <div class="product-meta">
+                    ${priceHtml}
+                </div>
                 <div class="product-actions">
-                    <button class="btn btn-primary" onclick="addToCart(${product.id})" ${!isInStock(product.stock) ? 'disabled' : ''}>
+                    <button class="btn btn-primary add-to-cart-btn" onclick="event.stopPropagation(); addToCart(${product.id})" ${!isInStock(product.stock) ? 'disabled' : ''}>
                         ${!isInStock(product.stock) ? 'Out of Stock' : 'Add to Cart'}
                     </button>
-                    <button class="btn btn-secondary" onclick="viewProduct(${product.id})">Details</button>
+                    <button class="btn btn-quick-view" onclick="event.stopPropagation(); showProductDetail(${product.id})" title="Quick View">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-whatsapp" onclick="event.stopPropagation(); orderByWhatsApp(${product.id})" title="Order via WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                        Order Now
+                    </button>
                 </div>
             </div>
         `;
@@ -194,45 +301,134 @@ function loadProducts(filteredProducts = window.storeProducts.filter(p => p.acti
     });
 }
 
+/**
+ * Filters products based on the selected category.
+ * @param {string} category - The category to filter by.
+ */
 function filterProducts(category) {
     currentFilter = category;
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    if (event && event.target) {
-        event.target.classList.add('active');
+    // Find and activate the clicked filter button
+    const activeButton = document.querySelector(`[onclick*="filterProducts('${category}')"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
     }
 
     const filteredProducts = category === 'all'
-        ? window.storeProducts.filter(p => p.active)
-        : window.storeProducts.filter(p => p.category === category && p.active);
+        ? storeProducts
+        : storeProducts.filter(p => p.category.toUpperCase() === category.toUpperCase());
     loadProducts(filteredProducts);
 }
 
+/**
+ * Searches for products based on the search term.
+ */
 function searchProducts() {
-    const searchInput = document.getElementById('searchInput');
+    const searchInput = document.getElementById('productSearch') || document.getElementById('searchInput');
     if (!searchInput) {
         console.warn('Search input element not found');
         return;
     }
+
     const searchTerm = searchInput.value.toLowerCase().trim();
     if (!searchTerm) {
         filterProducts(currentFilter);
         return;
     }
 
-    const filteredProducts = window.storeProducts.filter(product =>
+    const filteredProducts = storeProducts.filter(product =>
         (product.name.toLowerCase().includes(searchTerm) ||
-         product.description.toLowerCase().includes(searchTerm) ||
-         product.category.toLowerCase().includes(searchTerm)) &&
-        product.active
+        product.description.toLowerCase().includes(searchTerm) ||
+        product.category.toLowerCase().includes(searchTerm))
     );
+
     loadProducts(filteredProducts);
     showNotification(`Found ${filteredProducts.length} products matching "${searchTerm}"`);
 }
 
+/**
+ * Sorts products based on the selected option.
+ */
+function sortProducts() {
+    const sortSelect = document.getElementById('sortSelect');
+    if (!sortSelect) {
+        console.warn('Sort select element not found');
+        return;
+    }
+
+    const sortValue = sortSelect.value;
+    let sortedProducts = [...storeProducts];
+
+    switch(sortValue) {
+        case 'name':
+            sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+        case 'price-low':
+            sortedProducts.sort((a, b) => {
+                const priceA = parseFloat(a.discount_price) || parseFloat(a.price);
+                const priceB = parseFloat(b.discount_price) || parseFloat(b.price);
+                return priceA - priceB;
+            });
+            break;
+        case 'price-high':
+            sortedProducts.sort((a, b) => {
+                const priceA = parseFloat(a.discount_price) || parseFloat(a.price);
+                const priceB = parseFloat(b.discount_price) || parseFloat(b.price);
+                return priceB - priceA;
+            });
+            break;
+        case 'featured':
+            // Assuming featured products have a 'featured' property or use discount_price
+            sortedProducts.sort((a, b) => {
+                const featuredA = a.featured || (a.discount_price && parseFloat(a.discount_price) < parseFloat(a.price));
+                const featuredB = b.featured || (b.discount_price && parseFloat(b.discount_price) < parseFloat(b.price));
+                return featuredB - featuredA;
+            });
+            break;
+        default:
+            break;
+    }
+
+    loadProducts(sortedProducts);
+}
+
+/**
+ * Sets the view mode (grid or list).
+ * @param {string} viewMode - The view mode to set ('grid' or 'list').
+ */
+function setView(viewMode) {
+    const productsGrid = document.getElementById('productsGrid');
+    const viewButtons = document.querySelectorAll('.view-btn');
+    
+    if (!productsGrid) {
+        console.warn('Products grid element not found');
+        return;
+    }
+
+    // Update button states
+    viewButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('onclick').includes(viewMode)) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Update grid class
+    if (viewMode === 'list') {
+        productsGrid.classList.add('list-view');
+    } else {
+        productsGrid.classList.remove('list-view');
+    }
+}
+
+/**
+ * Displays the details of a product in a modal.
+ * @param {number} productId - The ID of the product to view.
+ */
 function viewProduct(productId) {
-    const product = window.storeProducts.find(p => String(p.id) === String(productId));
+    const product = storeProducts.find(p => String(p.id) === String(productId));
     if (!product) {
         showNotification('Product not found!', 'error');
         return;
@@ -275,139 +471,89 @@ function viewProduct(productId) {
     showModal('Product Details', modalContent, 'productModal');
 }
 
-function addToCart(productId, quantity = 1) {
-    const product = window.storeProducts.find(p => String(p.id) === String(productId));
-    if (!product) {
-        showNotification('Product not found!', 'error');
-        return;
-    }
-
-    if (!isInStock(product.stock)) {
-        showNotification(`${product.name} is out of stock!`, 'error');
-        return;
-    }
-
-    const actualPrice = parseFloat(product.discount_price) || parseFloat(product.price);
-    const imageSrc = product.image || 'placeholder.jpg';
-
-    const existingItem = cart.find(item => item.id === productId);
-
-    if (existingItem) {
-        if (existingItem.quantity + quantity > product.stock) {
-            showNotification(`Cannot add more ${product.name} - only ${product.stock} in stock!`, 'error');
-            return;
-        }
-        existingItem.quantity += quantity;
-    } else {
-        if (quantity > product.stock) {
-            showNotification(`Cannot add ${product.name} - only ${product.stock} in stock!`, 'error');
-            return;
-        }
-        cart.push({
-            id: productId,
-            name: product.name,
-            price: actualPrice,
-            quantity: quantity,
-            image: imageSrc
-        });
-    }
-
-    updateCartDisplay();
-    saveCart();
-    showNotification(`${product.name} added to cart!`);
-}
-
-function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    updateCartDisplay();
-    saveCart();
-    showNotification('Item removed from cart');
-}
-
-function updateQuantity(productId, change) {
-    const item = cart.find(item => item.id === productId);
-    const product = window.storeProducts.find(p => p.id === productId);
-
-    if (!item || !product) return;
-
-    const newQuantity = item.quantity + change;
-
-    if (newQuantity <= 0) {
-        removeFromCart(productId);
-        return;
-    }
-
-    if (newQuantity > product.stock) {
-        showNotification(`Cannot add more ${product.name} - only ${product.stock} in stock!`, 'error');
-        return;
-    }
-
-    item.quantity = newQuantity;
-    updateCartDisplay();
-    saveCart();
-}
-
-function clearCart() {
-    if (cart.length === 0) {
-        showNotification('Cart is already empty!', 'error');
-        return;
-    }
-
-    if (confirm('Are you sure you want to clear your cart?')) {
-        cart = [];
-        updateCartDisplay();
-        saveCart();
-        showNotification('Cart cleared successfully!');
-    }
-}
-
+// UI Functions
+/**
+ * Updates the display of the cart in both header and floating button.
+ */
 function updateCartDisplay() {
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
+    // Update header cart count
+    const headerCartCounts = document.querySelectorAll('.cart-count');
+    headerCartCounts.forEach(cartCount => {
+        cartCount.textContent = totalItems;
+        cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
+    });
+    
+    // Update floating cart button
+    const floatingCartCount = document.getElementById('floatingCartCount');
+    const floatingCartButton = document.getElementById('floatingCartButton');
+    
+    if (floatingCartCount) {
+        floatingCartCount.textContent = totalItems;
+        floatingCartCount.style.display = totalItems > 0 ? 'flex' : 'none';
+    }
+    
+    if (floatingCartButton) {
+        floatingCartButton.style.display = totalItems > 0 ? 'flex' : 'none';
+        
+        // Add pulse animation when item is added
+        floatingCartButton.classList.add('cart-pulse');
+        setTimeout(() => {
+            floatingCartButton.classList.remove('cart-pulse');
+        }, 600);
+    }
+    
+    // Update cart modal/sidebar if exists
     const cartCount = document.getElementById('cartCount');
     const cartItems = document.getElementById('cartItems');
     const cartSubtotal = document.getElementById('cartSubtotal');
     const cartTax = document.getElementById('cartTax');
     const cartTotalAmount = document.getElementById('cartTotalAmount');
 
-    if (!cartCount || !cartItems || !cartSubtotal || !cartTax || !cartTotalAmount) {
-        console.warn('Cart display elements not found');
-        return;
+    if (cartCount) {
+        cartCount.textContent = totalItems;
+        cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
     }
 
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartCount.textContent = totalItems;
-    cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
-
-    if (cart.length === 0) {
-        cartItems.innerHTML = '<p style="text-align: center; padding: 20px; color: #7f8c8d;">Your cart is empty</p>';
-    } else {
-        cartItems.innerHTML = cart.map(item => `
-            <div class="cart-item">
-                <div class="cart-item-image">
-                    <img src="${item.image}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+    if (cartItems) {
+        if (cart.length === 0) {
+            cartItems.innerHTML = '<p style="text-align: center; padding: 20px; color: #7f8c8d;">Your cart is empty</p>';
+        } else {
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <img src="${item.image}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                    </div>
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">KSh ${(item.price * item.quantity).toLocaleString()}</div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">−</button>
+                        <span>${item.quantity}</span>
+                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                        <button class="btn btn-secondary" onclick="removeFromCart(${item.id})" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem;">×</button>
+                    </div>
                 </div>
-                <div class="cart-item-info">
-                    <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-price">KSh ${(item.price * item.quantity).toLocaleString()}</div>
-                </div>
-                <div class="cart-item-controls">
-                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">−</button>
-                    <span>${item.quantity}</span>
-                    <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
-                    <button class="btn btn-secondary" onclick="removeFromCart(${item.id})" style="margin-left: 0.5rem; padding: 0.25rem 0.5rem;">×</button>
-                </div>
-            </div>
-        `).join('');
+            `).join('');
+        }
     }
 
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = subtotal * 0.16;
-    const total = subtotal + tax;
+    if (cartSubtotal && cartTax && cartTotalAmount) {
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const tax = subtotal * 0.16;
+        const total = subtotal + tax;
 
-    cartSubtotal.textContent = `KSh ${subtotal.toLocaleString()}`;
-    cartTax.textContent = `KSh ${Math.round(tax).toLocaleString()}`;
-    cartTotalAmount.textContent = `KSh ${Math.round(total).toLocaleString()}`;
+        cartSubtotal.textContent = `KSh ${subtotal.toLocaleString()}`;
+        cartTax.textContent = `KSh ${Math.round(tax).toLocaleString()}`;
+        cartTotalAmount.textContent = `KSh ${Math.round(total).toLocaleString()}`;
+    }
 }
 
+/**
+ * Toggles the cart sidebar.
+ */
 function toggleCart() {
     const cartSidebar = document.getElementById('cartSidebar');
     if (cartSidebar) {
@@ -417,10 +563,54 @@ function toggleCart() {
     }
 }
 
-function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(cart));
+/**
+ * Shows a notification message.
+ * @param {string} message - The message to display.
+ * @param {string} [type='success'] - The type of notification (success or error).
+ */
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    if (!document.getElementById('notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 2rem;
+                border-radius: 5px;
+                color: white;
+                z-index: 10001;
+                animation: slideIn 0.5s ease-out, slideOut 0.5s ease-out 2.5s forwards;
+            }
+            .notification.success { background: #2ecc71; }
+            .notification.error { background: #e74c3c; }
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+
+    setTimeout(() => notification.remove(), 3000);
 }
 
+/**
+ * Shows a modal with the given content.
+ * @param {string} title - The title of the modal.
+ * @param {string} content - The content of the modal.
+ * @param {string} modalId - The ID of the modal.
+ */
 function showModal(title, content, modalId) {
     const existingModal = document.getElementById(modalId);
     if (existingModal) {
@@ -442,146 +632,39 @@ function showModal(title, content, modalId) {
     document.body.appendChild(modal);
 }
 
+/**
+ * Hides the modal with the given ID.
+ * @param {string} modalId - The ID of the modal to hide.
+ */
 function hideModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) modal.remove();
 }
 
-function showNotification(message, type = 'success') {
-    console.log(`Notification [${type}]: ${message}`); // Log to console for debugging
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" style="margin-left: 1rem; background: none; border: none; color: white; cursor: pointer;">✕</button>
-    `;
-    document.body.appendChild(notification);
-
-    if (!document.getElementById('notification-styles')) {
-        const styles = document.createElement('style');
-        styles.id = 'notification-styles';
-        styles.textContent = `
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 1rem 2rem;
-                border-radius: 5px;
-                color: white;
-                z-index: 10001;
-                animation: slideIn 0.5s ease-out;
-                display: flex;
-                align-items: center;
-            }
-            .notification.success { background: #2ecc71; }
-            .notification.error { background: #e74c3c; }
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(styles);
-    }
-
-    // Automatically remove the notification after 15 seconds
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 15000);
-}
-
-// Updated startCheckout function with login check
+// Checkout Functions
+/**
+ * Starts the checkout process.
+ */
 function startCheckout() {
     if (cart.length === 0) {
         showNotification('Your cart is empty!', 'error');
         return;
     }
 
-    // Check if user is logged in before proceeding with checkout
-    checkUserLogin().then(isLoggedIn => {
-        if (!isLoggedIn) {
-            showLoginRequiredModal();
-            return;
-        }
-        
-        // User is logged in, proceed with checkout
-        currentCheckoutStep = 1;
-        customerInfo = {};
-        // Load user info for pre-population
-        loadUserInfo().then(() => {
-            const checkoutModal = document.getElementById('checkoutModal');
-            if (checkoutModal) {
-                checkoutModal.classList.remove('hidden');
-                showCheckoutStep(1);
-            } else {
-                console.warn('Checkout modal element not found');
-            }
-        });
-    });
+    currentCheckoutStep = 1;
+    customerInfo = {};
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (checkoutModal) {
+        checkoutModal.classList.remove('hidden');
+        showCheckoutStep(1);
+    } else {
+        console.warn('Checkout modal element not found');
+    }
 }
 
-// Add function to show login required modal
-function showLoginRequiredModal() {
-    const modalContent = `
-        <div style="text-align: center; padding: 2rem;">
-            <h3 style="color: #e74c3c; margin-bottom: 1rem;">🔒 Login Required</h3>
-            <p style="margin-bottom: 2rem; color: #7f8c8d;">
-                You need to be logged in to place an order. Please log in or create an account to continue with your purchase.
-            </p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <button class="btn btn-primary" onclick="redirectToLogin()">Login</button>
-                <button class="btn btn-secondary" onclick="redirectToRegister()">Create Account</button>
-                <button class="btn btn-secondary" onclick="hideModal('loginRequiredModal')">Continue Shopping</button>
-            </div>
-        </div>
-    `;
-    showModal('Authentication Required', modalContent, 'loginRequiredModal');
-}
-
-// Add redirect functions
-function redirectToLogin() {
-    // Store current cart and checkout intent
-    saveCart();
-    localStorage.setItem('should_checkout', 'true');
-    window.location.href = '/jowaki_electrical_srvs/login.php?redirect=store&from=checkout';
-}
-
-function redirectToRegister() {
-    // Store current cart and checkout intent
-    saveCart();
-    localStorage.setItem('should_checkout', 'true');
-    window.location.href = '/jowaki_electrical_srvs/register.php?redirect=store&from=checkout';
-}
-
-// Add function to load user info
-function loadUserInfo() {
-    return checkUserLogin().then(isLoggedIn => {
-        if (isLoggedIn) {
-            return fetch('/jowaki_electrical_srvs/api/get_user_info.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.user) {
-                        // Pre-populate customer info with user data
-                        customerInfo = {
-                            firstName: data.user.first_name || '',
-                            lastName: data.user.last_name || '',
-                            email: data.user.email || '',
-                            phone: data.user.phone || '',
-                            address: data.user.address || '',
-                            city: data.user.city || '',
-                            postalCode: data.user.postal_code || ''
-                        };
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading user info:', error);
-                });
-        }
-        return Promise.resolve();
-    });
-}
-
+/**
+ * Hides the checkout modal.
+ */
 function hideCheckout() {
     const checkoutModal = document.getElementById('checkoutModal');
     if (checkoutModal) {
@@ -589,16 +672,18 @@ function hideCheckout() {
     }
 }
 
+/**
+ * Shows the specified step in the checkout process.
+ * @param {number} step - The step to show.
+ */
 function showCheckoutStep(step) {
     currentCheckoutStep = step;
-
     const steps = document.querySelectorAll('.step');
     steps.forEach((stepEl, index) => {
         stepEl.classList.toggle('active', index + 1 === step);
     });
 
     let content = '';
-
     switch(step) {
         case 1:
             content = getCustomerInfoStep();
@@ -637,6 +722,10 @@ function showCheckoutStep(step) {
     }
 }
 
+/**
+ * Gets the HTML content for the customer information step.
+ * @returns {string} - The HTML content for the customer information step.
+ */
 function getCustomerInfoStep() {
     return `
         <div class="checkout-section">
@@ -680,6 +769,10 @@ function getCustomerInfoStep() {
     `;
 }
 
+/**
+ * Saves the customer information and proceeds to the next step.
+ * @param {Event} event - The form submission event.
+ */
 function saveCustomerInfo(event) {
     event.preventDefault();
     const form = event.target;
@@ -695,6 +788,10 @@ function saveCustomerInfo(event) {
     showCheckoutStep(2);
 }
 
+/**
+ * Gets the HTML content for the delivery step.
+ * @returns {string} - The HTML content for the delivery step.
+ */
 function getDeliveryStep() {
     return `
         <div class="checkout-section">
@@ -730,6 +827,10 @@ function getDeliveryStep() {
     `;
 }
 
+/**
+ * Saves the delivery information and proceeds to the next step.
+ * @param {Event} event - The form submission event.
+ */
 function saveDeliveryInfo(event) {
     event.preventDefault();
     const form = event.target;
@@ -738,6 +839,10 @@ function saveDeliveryInfo(event) {
     showCheckoutStep(3);
 }
 
+/**
+ * Gets the HTML content for the payment step.
+ * @returns {string} - The HTML content for the payment step.
+ */
 function getPaymentStep() {
     return `
         <div class="checkout-section">
@@ -748,8 +853,12 @@ function getPaymentStep() {
                     <p>Pay with M-Pesa</p>
                 </div>
                 <div class="payment-method ${customerInfo.paymentMethod === 'card' ? 'selected' : ''}" data-method="card">
-                    <img src="/jowaki_electrical_srvs/visa-logo.jpeg" alt="Visa/Credit Card" style="width: 100px; height: auto;">
-                    <p>Pay with Visa/Credit Card</p>
+                    <img src="/jowaki_electrical_srvs/card-logo.png" alt="Card" style="width: 100px; height: auto;">
+                    <p>Pay with Credit/Debit Card</p>
+                </div>
+                <div class="payment-method ${customerInfo.paymentMethod === 'paypal' ? 'selected' : ''}" data-method="paypal">
+                    <img src="/jowaki_electrical_srvs/paypal-logo.png" alt="PayPal" style="width: 100px; height: auto;">
+                    <p>Pay with PayPal</p>
                 </div>
             </div>
             <div style="display: flex; gap: 1rem;">
@@ -760,14 +869,17 @@ function getPaymentStep() {
     `;
 }
 
+/**
+ * Processes the payment and proceeds to the confirmation step.
+ */
 function processPayment() {
     const selectedMethod = document.querySelector('.payment-method.selected');
     if (!selectedMethod) {
         showNotification('Please select a payment method', 'error');
         return;
     }
-    customerInfo.paymentMethod = selectedMethod.dataset.method;
 
+    customerInfo.paymentMethod = selectedMethod.dataset.method;
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const tax = subtotal * 0.16;
     const deliveryFee = customerInfo.deliveryMethod === 'express' ? 500 : 0;
@@ -789,6 +901,10 @@ function processPayment() {
     showCheckoutStep(4);
 }
 
+/**
+ * Gets the HTML content for the confirmation step.
+ * @returns {string} - The HTML content for the confirmation step.
+ */
 function getConfirmationStep() {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const tax = subtotal * 0.16;
@@ -845,57 +961,457 @@ function getConfirmationStep() {
     `;
 }
 
-// Updated placeOrder function with double authentication check
+/**
+ * Places the order by sending the order data to the server.
+ */
 function placeOrder() {
-    // Double-check authentication before placing order
-    checkUserLogin().then(isLoggedIn => {
-        if (!isLoggedIn) {
-            showNotification('You must be logged in to place an order!', 'error');
-            hideCheckout();
-            showLoginRequiredModal();
-            return;
-        }
-
-        // Proceed with order placement
-        fetch('/jowaki_electrical_srvs/api/place_order.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(orderData)
-        })
-        .then(response => {
-            console.log('Raw response status:', response.status);
+    fetch('/jowaki_electrical_srvs/api/place_order.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => {
+        if (!response.ok) {
             return response.text().then(text => {
-                console.log('Raw response text:', text);
-                if (!response.ok) {
-                    throw new Error(`HTTP error ${response.status}: ${text}`);
-                }
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    throw new Error(`Failed to parse JSON: ${text}`);
-                }
+                throw new Error(`HTTP error ${response.status}: ${text}`);
             });
-        })
-        .then(data => {
-            if (data.success) {
-                showNotification('Order placed successfully! You will receive a confirmation email soon.', 'success');
-                cart = [];
-                saveCart();
-                updateCartDisplay();
-                hideCheckout();
-                customerInfo = {};
-                orderData = {};
-                // Clear checkout intent
-                localStorage.removeItem('should_checkout');
-            } else {
-                showNotification(data.error || 'Failed to place order. Please try again.', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error placing order:', error);
-            showNotification(`An error occurred while placing your order: ${error.message}`, 'error');
-        });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Order placed successfully! You will receive a confirmation email soon.', 'success');
+            cart = [];
+            saveCart();
+            updateCartDisplay();
+            hideCheckout();
+            customerInfo = {};
+            orderData = {};
+        } else {
+            showNotification(data.error || 'Failed to place order. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error placing order:', error);
+        showNotification(`An error occurred while placing your order: ${error.message}`, 'error');
     });
 }
+
+/**
+ * Loads categories dynamically from the API
+ */
+async function loadCategories() {
+    try {
+        const response = await fetch('/jowaki_electrical_srvs/api/get_categories.php');
+        if (!response.ok) {
+            console.error('Failed to load categories');
+            return;
+        }
+        
+        const data = await response.json();
+        if (data.success && data.categories) {
+            const filterButtons = document.querySelector('.filter-buttons');
+            if (filterButtons) {
+                // Clear existing buttons except "All Products"
+                filterButtons.innerHTML = '<button class="filter-btn active" onclick="filterProducts(\'all\')">All Products</button>';
+                
+                // Add category buttons
+                data.categories.forEach(category => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-btn';
+                    button.onclick = () => filterProducts(category.name);
+                    button.textContent = category.display_name;
+                    filterButtons.appendChild(button);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+/**
+ * Loads the current cart count from PHP session
+ */
+async function loadCartCount() {
+    try {
+        const response = await fetch('/jowaki_electrical_srvs/api/get_cart_count.php');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update all cart count displays
+            const headerCartCounts = document.querySelectorAll('.cart-count');
+            headerCartCounts.forEach(cartCount => {
+                cartCount.textContent = data.cart_count;
+                cartCount.style.display = data.cart_count > 0 ? 'flex' : 'none';
+            });
+            
+            // Update floating cart button
+            const floatingCartCount = document.getElementById('floatingCartCount');
+            const floatingCartButton = document.getElementById('floatingCartButton');
+            
+            if (floatingCartCount) {
+                floatingCartCount.textContent = data.cart_count;
+                floatingCartCount.style.display = data.cart_count > 0 ? 'flex' : 'none';
+            }
+            
+            if (floatingCartButton) {
+                floatingCartButton.style.display = data.cart_count > 0 ? 'flex' : 'none';
+            }
+            
+            // Load cart items from server to sync local cart
+            if (data.cart_count > 0) {
+                await loadCartItems();
+            }
+        }
+    } catch (error) {
+        console.error('Error loading cart count:', error);
+    }
+}
+
+async function loadCartItems() {
+    try {
+        const response = await fetch('/jowaki_electrical_srvs/api/sync_cart.php');
+        const data = await response.json();
+        
+        if (data.success && data.cart_items) {
+            cart = data.cart_items;
+            updateCartDisplay();
+        }
+    } catch (error) {
+        console.error('Error loading cart items:', error);
+    }
+}
+
+// Missing functions to add
+function toggleCartPulse() {
+    const cartButton = document.getElementById('floatingCartButton');
+    if (cartButton) {
+        cartButton.classList.add('cart-pulse');
+        setTimeout(() => {
+            cartButton.classList.remove('cart-pulse');
+        }, 600);
+    }
+}
+
+function displayCartPopup(product, quantity, imageSrc) {
+    // Create a temporary popup showing the added item
+    const popup = document.createElement('div');
+    popup.className = 'cart-popup';
+    popup.innerHTML = `
+        <div class="popup-content">
+            <img src="${imageSrc}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+            <div>
+                <h4>${product.name}</h4>
+                <p>Added ${quantity} to cart</p>
+            </div>
+        </div>
+    `;
+    
+    // Add popup styles if not already added
+    if (!document.getElementById('popup-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'popup-styles';
+        styles.textContent = `
+            .cart-popup {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--primary-color);
+                color: white;
+                padding: 1rem;
+                border-radius: 8px;
+                box-shadow: var(--shadow-lg);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+            }
+            .popup-content {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+            .popup-content h4 {
+                margin: 0;
+                font-size: 0.9rem;
+            }
+            .popup-content p {
+                margin: 0;
+                font-size: 0.8rem;
+                opacity: 0.9;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.appendChild(popup);
+    
+    // Remove popup after 3 seconds
+    setTimeout(() => {
+        popup.remove();
+    }, 3000);
+}
+
+// WhatsApp Order Function
+function orderByWhatsApp(productId = null) {
+    let message = "Hello Jowaki Electrical, I would like to inquire about your products.";
+    
+    if (productId) {
+        const product = storeProducts.find(p => String(p.id) === String(productId));
+        
+        if (product) {
+            const price = parseFloat(product.discount_price) || parseFloat(product.price);
+            message = `Hello Jowaki Electrical, I would like to order:\n\nProduct: ${product.name}\nPrice: KSh ${price.toLocaleString()}\n\nPlease provide more details about this product.`;
+        }
+    }
+    
+    const whatsappUrl = `https://wa.me/0721442248?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+}
+
+// Make function globally available
+window.orderByWhatsApp = orderByWhatsApp;
+
+// Wishlist functionality
+function toggleWishlist(productId) {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    const index = wishlist.indexOf(productId);
+    
+    if (index > -1) {
+        wishlist.splice(index, 1);
+        showNotification('Removed from wishlist', 'info');
+    } else {
+        wishlist.push(productId);
+        showNotification('Added to wishlist', 'success');
+    }
+    
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    updateWishlistButton(productId, index === -1);
+}
+
+function updateWishlistButton(productId, isInWishlist) {
+    const wishlistBtn = document.querySelector(`[onclick*="toggleWishlist(${productId})"]`);
+    if (wishlistBtn) {
+        const icon = wishlistBtn.querySelector('i');
+        if (icon) {
+            icon.className = isInWishlist ? 'fas fa-heart' : 'far fa-heart';
+            wishlistBtn.style.color = isInWishlist ? '#e74c3c' : '#666';
+        }
+    }
+}
+
+// Share product functionality
+function shareProduct(productId) {
+    const product = storeProducts.find(p => String(p.id) === String(productId));
+    if (!product) {
+        showNotification('Product not found!', 'error');
+        return;
+    }
+    
+    const shareData = {
+        title: product.name,
+        text: `Check out this amazing product: ${product.name}`,
+        url: window.location.href
+    };
+    
+    if (navigator.share) {
+        navigator.share(shareData)
+            .then(() => showNotification('Shared successfully!', 'success'))
+            .catch(err => {
+                console.log('Error sharing:', err);
+                fallbackShare(shareData);
+            });
+    } else {
+        fallbackShare(shareData);
+    }
+}
+
+function fallbackShare(shareData) {
+    const text = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text)
+            .then(() => showNotification('Link copied to clipboard!', 'success'))
+            .catch(() => showNotification('Failed to copy link', 'error'));
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showNotification('Link copied to clipboard!', 'success');
+    }
+}
+
+// Make functions globally available
+window.toggleWishlist = toggleWishlist;
+window.shareProduct = shareProduct;
+window.showProductDetail = showProductDetail;
+window.hideProductDetail = hideProductDetail;
+
+// Product Detail Functions
+function showProductDetail(productId) {
+    const product = storeProducts.find(p => String(p.id) === String(productId));
+    if (!product) {
+        showNotification('Product not found!', 'error');
+        return;
+    }
+
+    const actualPrice = parseFloat(product.discount_price) || parseFloat(product.price);
+    const originalPrice = parseFloat(product.price);
+    const imageSrc = product.image_paths ? 
+        (Array.isArray(JSON.parse(product.image_paths)) ? JSON.parse(product.image_paths)[0] : product.image_paths) 
+        : 'placeholder.jpg';
+    
+    const stockStatus = product.stock > 0 ? 'in-stock' : 'out-of-stock';
+    const stockText = product.stock > 0 ? 'In Stock' : 'Out of Stock';
+
+    const modalContent = `
+        <div class="product-detail-content">
+            <div class="product-detail-image">
+                <img src="${imageSrc}" alt="${product.name}">
+                <div class="stock-badge ${stockStatus}">${stockText}</div>
+            </div>
+            <div class="product-detail-info">
+                <h3>${product.name}</h3>
+                <div class="product-detail-price">
+                    ${actualPrice < originalPrice ? `<span style="text-decoration: line-through; color: #95a5a6; font-size: 1rem;">KSh ${originalPrice.toLocaleString()}</span> ` : ''}
+                    KSh ${actualPrice.toLocaleString()}
+                </div>
+                <div class="product-detail-description">
+                    ${product.description || 'No description available.'}
+                </div>
+                <div class="product-detail-specs">
+                    <h4>Product Specifications</h4>
+                    <div class="spec-item">
+                        <span class="spec-label">Category:</span>
+                        <span class="spec-value">${product.category || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Brand:</span>
+                        <span class="spec-value">${product.brand || 'N/A'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Stock:</span>
+                        <span class="spec-value">${product.stock} units</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Warranty:</span>
+                        <span class="spec-value">${product.warranty_months || 0} months</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Weight:</span>
+                        <span class="spec-value">${product.weight_kg || 0} kg</span>
+                    </div>
+                </div>
+                <div class="product-detail-actions">
+                    <button class="btn btn-primary" onclick="addToCart(${product.id}); hideProductDetail();" ${product.stock <= 0 ? 'disabled' : ''}>
+                        ${product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
+                    <button class="btn btn-whatsapp" onclick="orderByWhatsApp(${product.id})">
+                        <i class="fab fa-whatsapp"></i>
+                        Order via WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('productDetailTitle').textContent = product.name;
+    document.getElementById('productDetailContent').innerHTML = modalContent;
+    showModal('Product Details', '', 'productDetailModal');
+}
+
+function hideProductDetail() {
+    hideModal('productDetailModal');
+}
+
+
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        console.log('Starting product fetch at', new Date().toISOString());
+        
+        // Load cart count from PHP session first
+        await loadCartCount();
+        
+        // Load categories first
+        await loadCategories();
+        
+        const res = await fetch('/jowaki_electrical_srvs/api/get_products.php');
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error(`Fetch error: Status ${res.status}, Response: ${errorText}`);
+            throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
+        }
+
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await res.text();
+            console.error('Unexpected content type:', contentType, 'Response:', text);
+            throw new Error('Response is not JSON');
+        }
+
+        const data = await res.json();
+        console.log('Raw response data:', data);
+
+        if (data.success && Array.isArray(data.products)) {
+            storeProducts = data.products;
+        } else if (Array.isArray(data)) {
+            storeProducts = data;
+        } else if (data.products && Array.isArray(data.products)) {
+            storeProducts = data.products;
+        } else {
+            console.error('Invalid response structure:', data);
+            storeProducts = [];
+            showNotification('No products available at the moment.', 'error');
+        }
+
+        if (!Array.isArray(storeProducts)) {
+            console.error('storeProducts is not an array:', storeProducts);
+            storeProducts = [];
+            showNotification('Failed to load products: Invalid data format.', 'error');
+        }
+
+        console.log('Products before processing:', storeProducts);
+        storeProducts.forEach(p => {
+            try {
+                p.stock = parseInt(p.stock) || 0;
+                p.features = Array.isArray(p.features) ? p.features : [];
+                p.specifications = typeof p.specifications === 'object' ? p.specifications : {};
+            } catch (e) {
+                console.warn(`Invalid product JSON fields for product ID ${p.id || 'unknown'}:`, p, e);
+                p.features = [];
+                p.specifications = {};
+                p.stock = 0;
+            }
+        });
+
+        console.log('Processed products:', storeProducts);
+        loadProducts();
+        updateCartDisplay();
+
+        // Load cart from server instead of localStorage
+        await loadCartItems();
+
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchProducts();
+                }
+            });
+        } else {
+            console.warn('Search input element not found');
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+        storeProducts = [];
+        loadProducts();
+        showNotification(`Failed to load products: ${error.message}`, 'error');
+    }
+});

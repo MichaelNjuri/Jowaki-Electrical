@@ -3,425 +3,1579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOWAKI ELECTRICAL - Admin Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="AdminDashboard.css">
-    <script src="AdminDashboard.js" defer></script>
+    <title>Jowaki Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS Variables */
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --border-color: #e5e7eb;
+            --border-light: #f3f4f6;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --sidebar-width: 260px;
+            --header-height: 64px;
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            overflow-x: hidden;
+        }
+
+        /* Layout Structure */
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        .logo {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .logo h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .logo p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0 0.75rem 0.25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-icon {
+            margin-right: 0.75rem;
+            width: 1.25rem;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            height: var(--header-height);
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Language Switcher */
+        #language-switcher {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        /* Notification Bell */
+        .notification-bell {
+            position: relative;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+
+        .notification-bell:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .notification-bell i {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        #notification-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--danger-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 1rem;
+            min-width: 1.25rem;
+            text-align: center;
+        }
+
+        /* Notification Dropdown */
+        #notification-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        #notification-dropdown.show {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .notification {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            transition: all 0.2s ease;
+        }
+
+        .notification:hover {
+            background: var(--bg-secondary);
+        }
+
+        .notification:last-child {
+            border-bottom: none;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .dashboard-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .dashboard-card h3 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-card p {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Form Controls */
+        .form-control {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Data Table */
+        .table-container {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: rgb(251 191 36 / 0.1);
+            color: #d97706;
+        }
+
+        .status-processing {
+            background: rgb(37 99 235 / 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-shipped {
+            background: rgb(16 185 129 / 0.1);
+            color: var(--success-color);
+        }
+
+        .status-delivered {
+            background: rgb(16 185 129 / 0.2);
+            color: #059669;
+        }
+
+        .status-cancelled {
+            background: rgb(239 68 68 / 0.1);
+            color: var(--danger-color);
+        }
+
+        /* Notification Popup */
+        .notification-popup {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            box-shadow: var(--shadow-lg);
+            min-width: 320px;
+            max-width: 400px;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .notification-popup.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+
+        .notification-popup.notification-error {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .notification-popup.notification-success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification-popup.notification-warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .notification-popup.notification-info {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .form-help {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="admin-container">
-        <aside class="sidebar">
+        <!-- Sidebar -->
+        <div class="sidebar">
             <div class="logo">
-                <h1>JOWAKI ELECTRICAL</h1>
-                <p>Admin Panel</p>
+                <h1>Jowaki</h1>
+                <p>Admin Dashboard</p>
             </div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-section="dashboard" onclick="showSection('dashboard')">
-                        <i class="fas fa-tachometer-alt nav-icon"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-section="products" onclick="showSection('products')">
-                        <i class="fas fa-box nav-icon"></i> Products
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-section="orders" onclick="showSection('orders')">
-                        <i class="fas fa-shopping-cart nav-icon"></i> Orders
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-section="customers" onclick="showSection('customers')">
-                        <i class="fas fa-users nav-icon"></i> Customers
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-section="services" onclick="showSection('services')">
-                        <i class="fas fa-wrench nav-icon"></i> Service Requests
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-section="reports" onclick="showSection('reports')">
-                        <i class="fas fa-chart-line nav-icon"></i> Reports
-                    </a>
-                </li>
-            </ul>
-        </aside>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-section="dashboard">
+                            <i class="nav-icon fas fa-home"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="orders">
+                            <i class="nav-icon fas fa-shopping-cart"></i>
+                            Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="products">
+                            <i class="nav-icon fas fa-box"></i>
+                            Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="customers">
+                            <i class="nav-icon fas fa-users"></i>
+                            Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="categories">
+                            <i class="nav-icon fas fa-tags"></i>
+                            Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="analytics">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="settings">
+                            <i class="nav-icon fas fa-cog"></i>
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
 
-        <main class="main-content">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
             <header class="header">
-    <h2 id="page-title">Dashboard</h2>
-    <div class="user-info">
-        <div class="notification-bell" onclick="toggleNotifications()">
-            Welcome 🔔 <span id="notification-count">0</span> 1 orders are pending confirmation
+                <h2 id="page-title">Dashboard</h2>
+                <div class="header-actions">
+                    <button class="notification-bell" onclick="adminModules.toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span id="notification-count">0</span>
+                        <div id="notification-dropdown">
+                            <div class="notification-header">Notifications</div>
+                        </div>
+                    </button>
+                    <button class="btn btn-danger" onclick="adminModules.logout()" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main class="content-area">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="content-section active">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>Total Products</h3>
+                            <p id="total-products">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Pending Orders</h3>
+                            <p id="pending-orders">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Total Customers</h3>
+                            <p id="total-customers">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Monthly Revenue</h3>
+                            <p>$<span id="monthly-revenue">0.00</span></p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Monthly Sales</h3>
+                            <p id="monthly-sales">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Orders This Month</h3>
+                            <p id="orders-this-month">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>New Customers</h3>
+                            <p id="new-customers">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Service Completion</h3>
+                            <p id="service-completion">0%</p>
+                        </div>
+                        <div class="dashboard-card" style="border-left: 4px solid #f59e0b;">
+                            <h3>Low Stock Alerts</h3>
+                            <p id="low-stock-products" style="color: #f59e0b;">0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Orders Section -->
+                <section id="orders" class="content-section">
+                    <div class="section-header">
+                        <h3>Orders Management</h3>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search orders..." id="order-search">
+                            <select class="form-control" id="order-status-filter">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="processing">Processing</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="refunded">Refunded</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-order-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Order
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Items</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading orders...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Products Section -->
+                <section id="products" class="content-section">
+                    <div class="section-header">
+                        <h3>Products Management</h3>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search products..." id="product-search">
+                            <select class="form-control" id="product-category-filter">
+                                <option value="">All Categories</option>
+                            </select>
+                            <select class="form-control" id="product-stock-filter">
+                                <option value="">All Stock Levels</option>
+                                <option value="in-stock">In Stock</option>
+                                <option value="low-stock">Low Stock</option>
+                                <option value="out-of-stock">Out of Stock</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-product-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Product
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>SKU</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading products...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Customers Section -->
+                <section id="customers" class="content-section">
+                    <div class="section-header">
+                        <h3>Customers Management</h3>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search customers..." id="customer-search">
+                            <select class="form-control" id="customer-loyalty-filter">
+                                <option value="">All Loyalty Tiers</option>
+                                <option value="Bronze">Bronze</option>
+                                <option value="Silver">Silver</option>
+                                <option value="Gold">Gold</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-customer-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Customer
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Orders</th>
+                                    <th>Total Spent</th>
+                                    <th>Loyalty Tier</th>
+                                    <th>Last Order</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-tbody">
+                                <tr>
+                                    <td colspan="9" style="text-align: center; padding: 20px; color: #666;">Loading customers...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Categories Section -->
+                <section id="categories" class="content-section">
+                    <div class="section-header">
+                        <h3>Categories Management</h3>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search categories..." id="category-search">
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-category-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Category
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Products</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categories-tbody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 20px; color: #666;">Loading categories...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Analytics Section -->
+                <section id="analytics" class="content-section">
+                    <div class="section-header">
+                        <h3>Analytics & Reports</h3>
+                        <div class="section-controls">
+                            <select class="form-control" id="report-period">
+                                <option value="day">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                            <input type="date" class="form-control" id="start-date" style="display: none;">
+                            <input type="date" class="form-control" id="end-date" style="display: none;">
+                            <select class="form-control" id="report-category">
+                                <option value="">All Categories</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="adminModules.generateReport()">
+                                <i class="fas fa-chart-bar"></i>
+                                Generate Report
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Sales Overview -->
+                    <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                        <div class="dashboard-card">
+                            <h3>Total Revenue</h3>
+                            <p id="total-revenue">KSh 0.00</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Total Orders</h3>
+                            <p id="total-orders">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Items Sold</h3>
+                            <p id="items-sold">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Average Order Value</h3>
+                            <p id="avg-order-value">KSh 0.00</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Total Tax</h3>
+                            <p id="total-tax">KSh 0.00</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Delivery Fees</h3>
+                            <p id="total-delivery">KSh 0.00</p>
+                        </div>
+                    </div>
+
+                    <!-- Top Products -->
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <div class="section-header" style="padding: 1rem; margin: 0;">
+                            <h4 style="margin: 0;">Top Selling Products</h4>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Revenue</th>
+                                    <th>Orders</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-products-tbody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Sales by Category -->
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <div class="section-header" style="padding: 1rem; margin: 0;">
+                            <h4 style="margin: 0;">Sales by Category</h4>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Orders</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="category-sales-tbody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Payment Analysis -->
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <div class="section-header" style="padding: 1rem; margin: 0;">
+                            <h4 style="margin: 0;">Payment Method Analysis</h4>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Payment Method</th>
+                                    <th>Orders</th>
+                                    <th>Revenue</th>
+                                    <th>Average Order Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payment-analysis-tbody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Customer Analysis -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>Unique Customers</h3>
+                            <p id="unique-customers">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>New Customers (30d)</h3>
+                            <p id="new-customers-30d">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>New Customers (7d)</h3>
+                            <p id="new-customers-7d">0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings" class="content-section">
+                    <div class="section-header">
+                        <h3>System Settings</h3>
+                    </div>
+                    
+                    <!-- Admin Management -->
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <div class="section-header" style="padding: 1rem; margin: 0;">
+                            <h4 style="margin: 0;">Admin Management</h4>
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-admin-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add New Admin
+                            </button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admins-tbody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 20px; color: #666;">Loading admins...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" onclick="adminModules.showModal('general-settings-modal')" style="cursor: pointer;">
+                            <h3>General Settings</h3>
+                            <p>Configure system preferences</p>
+                            <i class="fas fa-cogs" style="font-size: 2rem; color: var(--primary-color); margin-top: 1rem;"></i>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showModal('payment-settings-modal')" style="cursor: pointer;">
+                            <h3>Payment Settings</h3>
+                            <p>Configure payment methods</p>
+                            <i class="fas fa-credit-card" style="font-size: 2rem; color: var(--success-color); margin-top: 1rem;"></i>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showModal('shipping-settings-modal')" style="cursor: pointer;">
+                            <h3>Shipping Settings</h3>
+                            <p>Configure shipping options</p>
+                            <i class="fas fa-shipping-fast" style="font-size: 2rem; color: var(--warning-color); margin-top: 1rem;"></i>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showModal('backup-settings-modal')" style="cursor: pointer;">
+                            <h3>Backup & Security</h3>
+                            <p>Database backup and security</p>
+                            <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--danger-color); margin-top: 1rem;"></i>
+                        </div>
+                    </div>
+                </section>
+            </main>
         </div>
-        <div id="notification-dropdown" class="notification-dropdown">
-            <!-- Notifications will be populated here by JavaScript -->
-        </div>
-        <button class="btn btn-danger">Logout</button>
     </div>
-</header>
 
-            <section id="dashboard" class="content-section active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-products">0</div>
-                        <div>Total Products</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="pending-orders">0</div>
-                        <div>Pending Orders</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-customers">0</div>
-                        <div>Total Customers</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="monthly-revenue">0</div>
-                        <div>Monthly Revenue (KSh)</div>
-                    </div>
+    <!-- Modals -->
+    <!-- Add Order Modal -->
+    <div id="add-order-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Order</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-order-modal')">&times;</button>
+            </div>
+            <form id="add-order-form">
+                <div class="form-group">
+                    <label class="form-label">Customer Name</label>
+                    <input type="text" class="form-input" name="customer_name" required>
                 </div>
-                <div class="content-section">
-                    <h3>Quick Actions</h3>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" onclick="openModal('productModal')">Add Product</button>
-                        <button class="btn btn-secondary" onclick="exportData('products')">Export Products</button>
-                        <button class="btn btn-warning" onclick="bulkUpdatePrices()">Update Prices</button>
-                        <button class="btn btn-danger" onclick="viewLowStock()">Low Stock Alert</button>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Customer Email</label>
+                    <input type="email" class="form-input" name="customer_email" required>
                 </div>
-                <div class="content-section">
-                    <h3>Recent Activities</h3>
-                    <div class="data-table">
-                        <div id="recent-activities"></div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Customer Phone</label>
+                    <input type="tel" class="form-input" name="customer_phone">
                 </div>
-            </section>
-
-            <section id="products" class="content-section">
-                <h3>Product Management</h3>
-                <div class="action-buttons">
-                    <button class="btn btn-primary" onclick="openModal('productModal')">Add Product</button>
-                    <button class="btn btn-secondary" onclick="importProducts()">Import CSV</button>
-                    <button class="btn btn-secondary" onclick="exportData('products')">Export</button>
+                <div class="form-group">
+                    <label class="form-label">Total Amount</label>
+                    <input type="number" class="form-input" name="total_amount" step="0.01" required>
                 </div>
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" placeholder="Search products..." oninput="searchProducts(this.value)">
-                </div>
-                <div class="action-buttons">
-                    <select onchange="filterProducts(this.value)">
-                        <option value="">All Categories</option>
-                        <option value="Lighting">Lighting</option>
-                        <option value="Accessories">Accessories</option>
-                        <option value="Safety">Safety</option>
-                        <option value="Tools">Tools</option>
-                        <option value="Cables">Cables</option>
-                    </select>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Price (KSh)</th>
-                            <th>Stock</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="products-tbody"></tbody>
-                </table>
-            </section>
-
-            <section id="orders" class="content-section">
-                <h3>Orders Management</h3>
-                <div class="action-buttons">
-                    <select onchange="filterOrders(this.value)">
-                        <option value="">All Orders</option>
-                        <option value="awaiting">Awaiting Confirmation</option>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" name="status">
+                        <option value="pending">Pending</option>
                         <option value="processing">Processing</option>
                         <option value="shipped">Shipped</option>
                         <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
                     </select>
-                    <button class="btn btn-secondary" onclick="exportData('orders')">Export Orders</button>
                 </div>
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" placeholder="Search orders..." oninput="searchOrders(this.value)">
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-order-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Order</button>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Date</th>
-                            <th>Items</th>
-                            <th>Amount (KSh)</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orders-tbody">
-                        <tr>
-                            <td colspan="7">No orders found</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
+            </form>
+        </div>
+    </div>
 
-            <section id="customers" class="content-section">
-                <h3>Customer Management</h3>
-                <div class="action-buttons">
-                    <button class="btn btn-secondary" onclick="exportData('customers')">Export Customers</button>
-                    <button class="btn btn-primary" onclick="sendNewsletter()">Send Newsletter</button>
+    <!-- Add Product Modal -->
+    <div id="add-product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Product</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-product-modal')">&times;</button>
+            </div>
+            <form id="add-product-form">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-input" name="name" required>
                 </div>
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" placeholder="Search customers..." oninput="searchCustomers(this.value)">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" class="form-input" name="category" placeholder="e.g., Electrical Components" required>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Location</th>
-                            <th>Orders</th>
-                            <th>Total Spent (KSh)</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customers-tbody"></tbody>
-                </table>
-            </section>
+                <div class="form-group">
+                    <label class="form-label">Price</label>
+                    <input type="number" class="form-input" name="price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock Quantity</label>
+                    <input type="number" class="form-input" name="stock_quantity" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Low Stock Alert Threshold</label>
+                    <input type="number" class="form-input" name="low_stock_threshold" value="10" min="1" required>
+                    <small class="form-help">Get notified when stock falls below this number</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Brand (Optional)</label>
+                    <input type="text" class="form-input" name="brand">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discount Price (Optional)</label>
+                    <input type="number" class="form-input" name="discount_price" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Weight (kg)</label>
+                    <input type="number" class="form-input" name="weight_kg" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warranty (months)</label>
+                    <input type="number" class="form-input" name="warranty_months">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Product Images</label>
+                    <input type="file" class="form-input" name="images[]" multiple accept="image/*" id="product-images">
+                    <small class="form-help">You can select multiple images (JPG, PNG, GIF, WebP - Max 5MB each)</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="is_featured" style="margin-right: 8px;">
+                        Featured Product
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="is_active" checked style="margin-right: 8px;">
+                        Active (Show to customers)
+                    </label>
+                    <small class="form-help">Uncheck to hide this product from customers without deleting</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-product-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-            <section id="services" class="content-section">
-                <h3>Service Requests</h3>
-                <div class="action-buttons">
-                    <select onchange="filterServices(this.value)">
-                        <option value="">All Services</option>
-                        <option value="awaiting">Awaiting</option>
-                        <option value="assigned">Assigned</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="completed">Completed</option>
+    <!-- Add Customer Modal -->
+    <div id="add-customer-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Customer</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-customer-modal')">&times;</button>
+            </div>
+            <form id="add-customer-form">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" class="form-input" name="phone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <textarea class="form-input" name="address" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-customer-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="add-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Category</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-category-modal')">&times;</button>
+            </div>
+            <form id="add-category-form">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-category-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="order-details-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Order Details</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('order-details-modal')">&times;</button>
+            </div>
+            <div id="order-details-content">
+                <div style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <p>Loading order details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Management Modal -->
+    <div id="stock-management-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Stock Management</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('stock-management-modal')">&times;</button>
+            </div>
+            <form id="stock-management-form">
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    <input type="text" class="form-input" id="stock-product-name" readonly>
+                    <input type="hidden" id="stock-product-id">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Current Stock</label>
+                    <input type="number" class="form-input" id="current-stock" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Operation</label>
+                    <select class="form-input" id="stock-operation" required>
+                        <option value="set">Set Stock Level</option>
+                        <option value="add">Add Stock</option>
+                        <option value="subtract">Subtract Stock</option>
                     </select>
-                    <button class="btn btn-primary" onclick="assignBulkTechnician()">Bulk Assign</button>
                 </div>
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" placeholder="Search services..." oninput="searchServices(this.value)">
+                <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" class="form-input" id="stock-quantity" min="1" required>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>Customer</th>
-                            <th>Service Type</th>
-                            <th>Date Requested</th>
-                            <th>Scheduled Date</th>
-                            <th>Technician</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="services-tbody"></tbody>
-                </table>
-            </section>
-
-            <section id="reports" class="content-section">
-                <h3>Reports & Analytics</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" id="monthly-sales">0</div>
-                        <div>Monthly Sales (KSh)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="orders-this-month">0</div>
-                        <div>Orders This Month</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="new-customers">0</div>
-                        <div>New Customers</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="service-completion">0%</div>
-                        <div>Service Completion Rate</div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Reason</label>
+                    <textarea class="form-input" id="stock-reason" rows="3" placeholder="e.g., Restock, Sale, Return, etc."></textarea>
                 </div>
-                <div class="content-section">
-                    <h3>Generate Reports</h3>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" onclick="generateReport('sales')">Sales Report</button>
-                        <button class="btn btn-primary" onclick="generateReport('inventory')">Inventory Report</button>
-                        <button class="btn btn-primary" onclick="generateReport('customer')">Customer Report</button>
-                        <button class="btn btn-primary" onclick="generateReport('service')">Service Report</button>
-                    </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('stock-management-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Stock</button>
                 </div>
-                <div class="content-section">
-                    <h3>Top Performing Products</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Category</th>
-                                <th>Units Sold</th>
-                                <th>Revenue (KSh)</th>
-                                <th>Growth</th>
-                            </tr>
-                        </thead>
-                        <tbody id="top-products"></tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
+            </form>
+        </div>
     </div>
 
-    <div id="productModal" class="modal">
+    <!-- Edit Product Modal -->
+    <div id="edit-product-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="product-modal-title">Add New Product</h2>
-                <span class="close" onclick="closeModal('productModal')">×</span>
+                <h3 class="modal-title">Edit Product</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('edit-product-modal')">&times;</button>
             </div>
-            <div class="modal-body">
-                <form id="productForm" onsubmit="saveProduct(event)">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="product-images">Product Images</label>
-                            <div class="image-upload">
-                                <p>Click to upload images</p>
-                                <input type="file" id="product-images" multiple accept="image/*" onchange="handleImageUpload(this)">
-                                <div id="image-preview" class="image-preview"></div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="product-name">Product Name *</label>
-                            <input type="text" id="product-name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="product-category">Category *</label>
-                            <select id="product-category" class="form-control" required>
-                                <option value="">Select Category</option>
-                                <option value="Lighting">Lighting</option>
-                                <option value="Accessories">Accessories</option>
-                                <option value="Safety">Safety</option>
-                                <option value="Tools">Tools</option>
-                                <option value="Cables">Cables</option>
-                            </select>
-                            <label for="product-brand">Brand</label>
-                            <input type="text" id="product-brand" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="product-price">Price (KSh) *</label>
-                            <input type="number" id="product-price" class="form-control" step="0.01" required>
-                            <label for="product-discount">Discount Price (KSh)</label>
-                            <input type="number" id="product-discount" class="form-control" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label for="product-stock">Stock Quantity *</label>
-                            <input type="number" id="product-stock" class="form-control" required>
-                            <label for="product-low-stock">Low Stock Alert</label>
-                            <input type="number" id="product-low-stock" class="form-control" value="10">
-                        </div>
-                        <div class="form-group">
-                            <label for="product-description">Product Description *</label>
-                            <textarea id="product-description" class="form-control" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="product-specs">Product Specifications</label>
-                            <textarea id="product-specs" class="form-control"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="product-weight">Weight (kg)</label>
-                            <input type="number" id="product-weight" class="form-control" step="0.01">
-                            <label for="product-warranty">Warranty (months)</label>
-                            <input type="number" id="product-warranty" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="product-featured"> Featured Product
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="product-active" checked> Active (visible to customers)
-                            </label>
-                        </div>
-                    </div>
-                    <input type="hidden" id="product-id">
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save Product</button>
-                    </div>
-                </form>
+            <form id="edit-product-form">
+                <input type="hidden" id="edit-product-id">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-input" id="edit-product-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-input" id="edit-product-category" name="category" required>
+                        <option value="">Select Category</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price (KSh)</label>
+                    <input type="number" class="form-input" id="edit-product-price" name="price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock Quantity</label>
+                    <input type="number" class="form-input" id="edit-product-stock" name="stock" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" id="edit-product-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" id="edit-product-status" name="status" required>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SKU</label>
+                    <input type="text" class="form-input" id="edit-product-sku" name="sku" placeholder="Stock Keeping Unit">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('edit-product-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Details Modal -->
+    <div id="customer-details-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Customer Details</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('customer-details-modal')">&times;</button>
+            </div>
+            <div id="customer-details-content">
+                <div style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <p>Loading customer details...</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="orderModal" class="modal">
+    <!-- General Settings Modal -->
+    <div id="general-settings-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Order Details</h2>
-                <span class="close" onclick="closeModal('orderModal')">×</span>
+                <h3 class="modal-title">General Settings</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('general-settings-modal')">&times;</button>
             </div>
-            <div class="modal-body"></div>
+            <form id="general-settings-form">
+                <div class="form-group">
+                    <label class="form-label">Tax Rate (%)</label>
+                    <input type="number" class="form-input" name="tax_rate" min="0" max="100" step="0.01" value="16" required>
+                    <small class="form-help">Current tax rate applied to all orders</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Standard Delivery Fee (KSh)</label>
+                    <input type="number" class="form-input" name="standard_delivery_fee" min="0" step="0.01" value="0" required>
+                    <small class="form-help">Default delivery fee for standard shipping</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Express Delivery Fee (KSh)</label>
+                    <input type="number" class="form-input" name="express_delivery_fee" min="0" step="0.01" value="500" required>
+                    <small class="form-help">Delivery fee for express shipping</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Name</label>
+                    <input type="text" class="form-input" name="store_name" value="Jowaki Electrical Services" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Email</label>
+                    <input type="email" class="form-input" name="store_email" value="info@jowaki.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Phone</label>
+                    <input type="tel" class="form-input" name="store_phone" value="+254721442248" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Address</label>
+                    <textarea class="form-input" name="store_address" rows="3" placeholder="Enter store address"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('general-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div id="serviceModal" class="modal">
+    <!-- Payment Settings Modal -->
+    <div id="payment-settings-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Assign Service Request</h2>
-                <span class="close" onclick="closeModal('serviceModal')">×</span>
+                <h3 class="modal-title">Payment Settings</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('payment-settings-modal')">&times;</button>
             </div>
-            <div class="modal-body">
-                <form id="serviceForm" onsubmit="saveService(event)">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="service-id">Request ID</label>
-                            <input type="text" id="service-id" class="form-control" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="service-customer">Customer Name</label>
-                            <input type="text" id="service-customer" class="form-control" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="service-type">Service Type</label>
-                            <input type="text" id="service-type" class="form-control" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="service-technician">Technician *</label>
-                            <select id="service-technician" class="form-control" required>
-                                <option value="">Select Technician</option>
-                            </select>
-                            <a href="#" class="btn btn-secondary" onclick="addTechnician()">Add Technician</a>
-                        </div>
-                        <div class="form-group">
-                            <label for="service-date">Scheduled Date *</label>
-                            <input type="date" id="service-date" class="form-control" required>
-                            <label for="service-status">Status *</label>
-                            <select id="service-status" class="form-control" required>
-                                <option value="awaiting">Awaiting</option>
-                                <option value="assigned">Assigned</option>
-                                <option value="in-progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="service-notes">Notes</label>
-                            <textarea id="service-notes" class="form-control"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save Service Request</button>
-                    </div>
-                </form>
-            </div>
+            <form id="payment-settings-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_mpesa" checked style="margin-right: 8px;">
+                        Enable M-Pesa Payments
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">M-Pesa Business Number</label>
+                    <input type="text" class="form-input" name="mpesa_business_number" value="254721442248">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_card" checked style="margin-right: 8px;">
+                        Enable Card Payments
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_whatsapp" checked style="margin-right: 8px;">
+                        Enable WhatsApp Orders
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Number</label>
+                    <input type="text" class="form-input" name="whatsapp_number" value="254721442248">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('payment-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- Shipping Settings Modal -->
+    <div id="shipping-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Shipping Settings</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('shipping-settings-modal')">&times;</button>
+            </div>
+            <form id="shipping-settings-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_standard_delivery" checked style="margin-right: 8px;">
+                        Enable Standard Delivery
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Standard Delivery Time</label>
+                    <input type="text" class="form-input" name="standard_delivery_time" value="3-5 business days">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_express_delivery" checked style="margin-right: 8px;">
+                        Enable Express Delivery
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Express Delivery Time</label>
+                    <input type="text" class="form-input" name="express_delivery_time" value="1-2 business days">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_pickup" checked style="margin-right: 8px;">
+                        Enable Store Pickup
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pickup Location</label>
+                    <textarea class="form-input" name="pickup_location" rows="3" placeholder="Enter pickup location details"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('shipping-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Backup Settings Modal -->
+    <div id="backup-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Backup & Security</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('backup-settings-modal')">&times;</button>
+            </div>
+            <form id="backup-settings-form">
+                <div class="form-group">
+                    <label class="form-label">Database Backup</label>
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.backupDatabase()">
+                        <i class="fas fa-download"></i> Download Backup
+                    </button>
+                    <small class="form-help">Download a complete backup of your database</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">System Logs</label>
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.downloadLogs()">
+                        <i class="fas fa-file-alt"></i> Download Logs
+                    </button>
+                    <small class="form-help">Download system activity logs</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Security Settings</label>
+                    <div style="margin-top: 0.5rem;">
+                        <label style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <input type="checkbox" name="enable_2fa" style="margin-right: 8px;">
+                            Enable Two-Factor Authentication
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <input type="checkbox" name="enable_login_notifications" style="margin-right: 8px;">
+                            Login Notifications
+                        </label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="enable_audit_log" checked style="margin-right: 8px;">
+                            Audit Logging
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('backup-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+
 </body>
 </html>

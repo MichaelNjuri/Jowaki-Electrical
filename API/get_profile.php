@@ -1,51 +1,107 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-if (!is_writable(session_save_path())) {
-    error_log("Session save path not writable: " . session_save_path());
-    die(json_encode(['error' => 'Server configuration error']));
-}
 session_start();
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET');
+header('Access-Control-Allow-Headers: Content-Type');
 
-require 'db_connection.php';
+// Error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-if (!isset($_SESSION['user_id']) || !$_SESSION['logged_in']) {
-    error_log("Session not found for user_id: " . ($_SESSION['user_id'] ?? 'none'));
-    http_response_code(401);
-    echo json_encode(['error' => 'Session not found. Please log in again.']);
-    exit;
-}
+// Database connection
+$host = 'localhost';
+$user = 'root';
+$pass = '';
+$dbname = 'jowaki_db';
 
-$id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT first_name, last_name, email, phone, created_at, address, postal_code, city FROM users WHERE id = ?");
-if (!$stmt) {
-    error_log("Prepare failed: " . $conn->error);
+try {
+    $conn = new mysqli($host, $user, $pass, $dbname);
+
+    if ($conn->connect_error) {
+        throw new Exception('Database connection failed: ' . $conn->connect_error);
+    }
+
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id']) || !isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'User not logged in']);
+        exit;
+    }
+
+    $user_id = $_SESSION['user_id'];
+
+    // First, check what columns exist in the users table
+    $checkColumns = $conn->query("DESCRIBE users");
+    $existingColumns = [];
+    while ($row = $checkColumns->fetch_assoc()) {
+        $existingColumns[] = $row['Field'];
+    }
+
+    // Build query based on existing columns
+    $selectColumns = ['first_name', 'last_name', 'email', 'created_at'];
+    $availableColumns = [];
+    
+    foreach ($selectColumns as $column) {
+        if (in_array($column, $existingColumns)) {
+            $availableColumns[] = $column;
+        }
+    }
+
+    // Add optional columns if they exist
+    $optionalColumns = ['phone', 'address', 'city', 'postal_code'];
+    foreach ($optionalColumns as $column) {
+        if (in_array($column, $existingColumns)) {
+            $availableColumns[] = $column;
+        }
+    }
+
+    $columnsString = implode(', ', $availableColumns);
+    
+    // Get user information
+    $stmt = $conn->prepare("SELECT $columnsString FROM users WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database prepare failed: ' . $conn->error);
+    }
+    
+    $stmt->bind_param("i", $user_id);
+    
+    if (!$stmt->execute()) {
+        throw new Exception('Database execute failed: ' . $stmt->error);
+    }
+    
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+        
+        // Format the response with safe defaults
+        $response = [
+            'success' => true,
+            'fullName' => trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')),
+            'email' => $user['email'] ?? '',
+            'phone' => $user['phone'] ?? '',
+            'address' => $user['address'] ?? '',
+            'city' => $user['city'] ?? '',
+            'postal_code' => $user['postal_code'] ?? '',
+            'memberSince' => $user['created_at'] ?? null
+        ];
+        
+        echo json_encode($response);
+    } else {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'User not found']);
+    }
+    
+    $stmt->close();
+    
+} catch (Exception $e) {
+    error_log('Get profile error: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Database error']);
-    exit;
+    echo json_encode(['success' => false, 'error' => 'Failed to fetch profile information: ' . $e->getMessage()]);
+} finally {
+    if (isset($conn)) {
+        $conn->close();
+    }
 }
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($row = $result->fetch_assoc()) {
-    echo json_encode([
-        'fullName' => $row['first_name'] . ' ' . $row['last_name'],
-        'email' => $row['email'],
-        'phone' => $row['phone'],
-        'memberSince' => $row['created_at'],
-        'address' => $row['address'] ?? 'Not provided yet',
-        'postal_code' => $row['postal_code'] ?? 'Not provided yet',
-        'city' => $row['city'] ?? 'Not provided yet'
-    ]);
-} else {
-    error_log("User not found for ID: $id");
-    http_response_code(404);
-    echo json_encode(['error' => 'User not found']);
-}
-
-$stmt->close();
-$conn->close();
 ?>
