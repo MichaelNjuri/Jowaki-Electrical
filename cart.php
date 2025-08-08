@@ -1,13 +1,19 @@
 <?php
 session_start();
+require_once 'API/db_connection.php';
+require_once 'API/load_settings.php';
+
 $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+
+// Load store settings
+$store_settings = getStoreSettings($conn);
 
 // Calculate totals
 $subtotal = array_reduce($cart, function($sum, $item) {
     return $sum + ($item['price'] * $item['quantity']);
 }, 0);
-$tax = $subtotal * 0.16;
-$delivery_fee = 0;
+$tax = $subtotal * ($store_settings['tax_rate'] / 100);
+$delivery_fee = 0; // Will be calculated based on delivery method
 $total = $subtotal + $tax + $delivery_fee;
 ?>
 <!DOCTYPE html>
@@ -311,7 +317,7 @@ $total = $subtotal + $tax + $delivery_fee;
                     <span>KSh <?php echo number_format($subtotal, 2); ?></span>
                 </div>
                 <div class="summary-row">
-                    <span>Tax (16%)</span>
+                    <span>Tax (<?php echo $store_settings['tax_rate']; ?>%)</span>
                     <span>KSh <?php echo number_format($tax, 2); ?></span>
                 </div>
                 <div class="summary-row">

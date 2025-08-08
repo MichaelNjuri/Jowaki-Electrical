@@ -57,9 +57,76 @@ function initializeAddOrderForm(state) {
     }
 }
 
+async function loadStoreCategoriesForProduct() {
+    try {
+        const response = await fetch('/jowaki_electrical_srvs/API/store_categories.php');
+        if (!response.ok) {
+            console.error('Failed to load store categories for product form');
+            return;
+        }
+        
+        const data = await response.json();
+        if (data.success && data.categories) {
+            // Load categories for both add and edit product forms
+            const categorySelects = [
+                document.getElementById('product-category-select'),
+                document.getElementById('edit-product-category')
+            ];
+            
+            categorySelects.forEach(categorySelect => {
+                if (categorySelect) {
+                    // Clear existing options except the first one
+                    categorySelect.innerHTML = '<option value="">Select a category...</option>';
+                    
+                    // Add store categories
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.name; // Use the display name as the value
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                    
+                    // Add a separator option
+                    const separatorOption = document.createElement('option');
+                    separatorOption.value = '';
+                    separatorOption.textContent = '─────────── Custom Categories ───────────';
+                    separatorOption.disabled = true;
+                    categorySelect.appendChild(separatorOption);
+                    
+                    // Add common custom categories
+                    const customCategories = [
+                        'Electrical Components',
+                        'Security Equipment',
+                        'CCTV Systems',
+                        'Access Control',
+                        'Fire Safety',
+                        'Lighting',
+                        'Wiring',
+                        'Tools',
+                        'Spare Parts',
+                        'Installation Services'
+                    ];
+                    
+                    customCategories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        categorySelect.appendChild(option);
+                    });
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error loading store categories for product form:', error);
+    }
+}
+
 function initializeAddProductForm(state) {
     const addProductForm = document.getElementById('add-product-form');
     if (addProductForm) {
+        // Load store categories when the form is initialized
+        loadStoreCategoriesForProduct();
+        
         addProductForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(addProductForm);

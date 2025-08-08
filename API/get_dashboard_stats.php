@@ -47,7 +47,10 @@ try {
     $result = $conn->query("SELECT COUNT(DISTINCT customer_info) as count FROM orders WHERE customer_info IS NOT NULL AND customer_info != '' AND MONTH(order_date) = MONTH(CURRENT_DATE()) AND YEAR(order_date) = YEAR(CURRENT_DATE())");
     $stats['new_customers'] = $result ? $result->fetch_assoc()['count'] : 0;
     
-    $stats['service_completion'] = '95%'; // Placeholder
+    // Get contact messages count
+    $result = $conn->query("SELECT COUNT(*) as count FROM contact_messages");
+    $stats['contact_messages_count'] = $result ? $result->fetch_assoc()['count'] : 0;
+    
     $stats['success'] = true;
     
     echo json_encode($stats);

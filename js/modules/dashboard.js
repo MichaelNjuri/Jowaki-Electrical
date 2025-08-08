@@ -1,7 +1,7 @@
 import { showNotification } from './notifications.js';
 
 export function fetchDashboardStats(state) {
-    return fetch('api/get_dashboard_stats.php')
+    return fetch('API/get_dashboard_stats.php')
         .then(response => {
             if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return response.json();
@@ -16,7 +16,7 @@ export function fetchDashboardStats(state) {
                     'monthly-sales': data.monthly_sales || '0',
                     'orders-this-month': data.orders_this_month || 0,
                     'new-customers': data.new_customers || '0',
-                    'service-completion': data.service_completion || '0%'
+                    'contact-messages-count': data.contact_messages_count || 0
                 }, state);
             } else {
                 updateDashboardStatsFromLocal(state);
@@ -52,7 +52,7 @@ function updateDashboardStatsFromLocal(state) {
         'monthly-sales': state.orders.length,
         'orders-this-month': state.orders.length,
         'new-customers': state.customers.length,
-        'service-completion': '0%'
+        'contact-messages-count': 0
     }, state);
 }
 

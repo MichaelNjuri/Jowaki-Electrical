@@ -1,6 +1,37 @@
 import { sanitizeHTML, formatStatusText } from './utils.js';
 import { showNotification } from './notifications.js';
 
+// Initialize global functions immediately
+if (typeof window !== 'undefined') {
+    window.adminModules = window.adminModules || {};
+}
+
+// Placeholder functions that will be replaced when the actual functions are defined
+window.adminModules.updateOrderStatus = function(orderId, state) {
+    console.warn('updateOrderStatus not yet initialized');
+};
+window.adminModules.viewOrder = function(orderId, state) {
+    console.warn('viewOrder not yet initialized');
+};
+window.adminModules.editOrder = function(orderId, state) {
+    console.warn('editOrder not yet initialized');
+};
+window.adminModules.deleteOrder = function(orderId, state) {
+    console.warn('deleteOrder not yet initialized');
+};
+window.adminModules.confirmOrder = function(orderId, state) {
+    console.warn('confirmOrder not yet initialized');
+};
+window.adminModules.cancelOrder = function(orderId, state) {
+    console.warn('cancelOrder not yet initialized');
+};
+window.adminModules.shipOrder = function(orderId, state) {
+    console.warn('shipOrder not yet initialized');
+};
+window.adminModules.deliverOrder = function(orderId, state) {
+    console.warn('deliverOrder not yet initialized');
+};
+
 function processOrderData(order) {
     return {
         id: parseInt(order.id) || 0,
@@ -47,7 +78,7 @@ export function renderOrders(ordersToRender, state) {
         const itemCount = order.items ? order.items.length : 0;
         
         // Generate action buttons based on order status
-        const actionButtons = generateOrderActionButtons(order);
+        const actionButtons = generateOrderActionButtons(order, state);
         
         tr.innerHTML = `
             <td>#${order.id}</td>
@@ -65,7 +96,7 @@ export function renderOrders(ordersToRender, state) {
     });
 }
 
-function generateOrderActionButtons(order) {
+function generateOrderActionButtons(order, state) {
     const buttons = [];
     
     // Always show view button
@@ -78,22 +109,22 @@ function generateOrderActionButtons(order) {
     // Status-specific action buttons
     if (order.status === 'pending') {
         buttons.push(`
-            <button class="btn btn-success btn-sm" onclick="window.adminModules.confirmOrder(${order.id})" title="Confirm Order">
+            <button class="btn btn-success btn-sm" onclick="window.adminModules.confirmOrder(${order.id}, window.adminState)" title="Confirm Order">
                 <i class="fas fa-check"></i>
             </button>
-            <button class="btn btn-danger btn-sm" onclick="window.adminModules.cancelOrder(${order.id})" title="Cancel Order">
+            <button class="btn btn-danger btn-sm" onclick="window.adminModules.cancelOrder(${order.id}, window.adminState)" title="Cancel Order">
                 <i class="fas fa-times"></i>
             </button>
         `);
     } else if (order.status === 'confirmed' || order.status === 'processing') {
         buttons.push(`
-            <button class="btn btn-info btn-sm" onclick="window.adminModules.shipOrder(${order.id})" title="Mark as Shipped">
+            <button class="btn btn-info btn-sm" onclick="window.adminModules.shipOrder(${order.id}, window.adminState)" title="Mark as Shipped">
                 <i class="fas fa-shipping-fast"></i>
             </button>
         `);
     } else if (order.status === 'shipped') {
         buttons.push(`
-            <button class="btn btn-success btn-sm" onclick="window.adminModules.deliverOrder(${order.id})" title="Mark as Delivered">
+            <button class="btn btn-success btn-sm" onclick="window.adminModules.deliverOrder(${order.id}, window.adminState)" title="Mark as Delivered">
                 <i class="fas fa-box-check"></i>
             </button>
         `);
@@ -101,7 +132,7 @@ function generateOrderActionButtons(order) {
     
     // Always show status update button
     buttons.push(`
-        <button class="btn btn-warning btn-sm" onclick="window.adminModules.updateOrderStatus(${order.id})" title="Update Status">
+        <button class="btn btn-warning btn-sm" onclick="window.adminModules.updateOrderStatus(${order.id}, window.adminState)" title="Update Status">
             <i class="fas fa-edit"></i>
         </button>
     `);
@@ -110,15 +141,18 @@ function generateOrderActionButtons(order) {
 }
 
 export function fetchOrders(state) {
-    return fetch('./api/admin_orders.php')
+    return fetch('./API/admin_orders.php')
         .then(response => {
             if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return response.json();
         })
         .then(data => {
             if (data.success !== false && Array.isArray(data.data)) {
-                state.orders = data.data.map(order => processOrderData(order));
-                renderOrders(state.orders, state);
+                // Safely update state if it exists
+                if (state && typeof state === 'object') {
+                    state.orders = data.data.map(order => processOrderData(order));
+                }
+                renderOrders(data.data.map(order => processOrderData(order)), state);
             } else {
                 throw new Error(data.error || 'Failed to fetch orders');
             }
@@ -148,11 +182,11 @@ export function viewOrder(orderId, state) {
         modal.classList.add('show');
         
         // Fetch detailed order information
-        fetch(`./api/order_details.php?id=${orderId}`)
+        fetch(`./API/order_details.php?id=${orderId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    renderOrderDetails(data.data, content);
+                    renderOrderDetails(data.data, content, state);
                 } else {
                     throw new Error(data.error || 'Failed to load order details');
                 }
@@ -169,12 +203,12 @@ export function viewOrder(orderId, state) {
     }
 }
 
-function renderOrderDetails(order, content) {
+function renderOrderDetails(order, content, state) {
     const statusHistory = order.status_history || [];
     const items = order.items || [];
     
     // Generate action buttons based on order status
-    const actionButtons = generateOrderDetailActionButtons(order);
+    const actionButtons = generateOrderDetailActionButtons(order, state);
     
     content.innerHTML = `
         <div class="order-details-container">
@@ -274,28 +308,28 @@ function renderOrderDetails(order, content) {
     `;
 }
 
-function generateOrderDetailActionButtons(order) {
+function generateOrderDetailActionButtons(order, state) {
     const buttons = [];
     
     // Status-specific action buttons
     if (order.status === 'pending') {
         buttons.push(`
-            <button class="btn btn-success btn-sm" onclick="window.adminModules.confirmOrder(${order.order_id})" title="Confirm Order">
+            <button class="btn btn-success btn-sm" onclick="window.adminModules.confirmOrder(${order.order_id}, window.adminState)" title="Confirm Order">
                 <i class="fas fa-check"></i> Confirm
             </button>
-            <button class="btn btn-danger btn-sm" onclick="window.adminModules.cancelOrder(${order.order_id})" title="Cancel Order">
+            <button class="btn btn-danger btn-sm" onclick="window.adminModules.cancelOrder(${order.order_id}, window.adminState)" title="Cancel Order">
                 <i class="fas fa-times"></i> Cancel
             </button>
         `);
     } else if (order.status === 'confirmed' || order.status === 'processing') {
         buttons.push(`
-            <button class="btn btn-info btn-sm" onclick="window.adminModules.shipOrder(${order.order_id})" title="Mark as Shipped">
+            <button class="btn btn-info btn-sm" onclick="window.adminModules.shipOrder(${order.order_id}, window.adminState)" title="Mark as Shipped">
                 <i class="fas fa-shipping-fast"></i> Ship
             </button>
         `);
     } else if (order.status === 'shipped') {
         buttons.push(`
-            <button class="btn btn-success btn-sm" onclick="window.adminModules.deliverOrder(${order.order_id})" title="Mark as Delivered">
+            <button class="btn btn-success btn-sm" onclick="window.adminModules.deliverOrder(${order.order_id}, window.adminState)" title="Mark as Delivered">
                 <i class="fas fa-box-check"></i> Deliver
             </button>
         `);
@@ -303,7 +337,7 @@ function generateOrderDetailActionButtons(order) {
     
     // Always show status update button
     buttons.push(`
-        <button class="btn btn-warning btn-sm" onclick="window.adminModules.updateOrderStatus(${order.order_id})" title="Update Status">
+        <button class="btn btn-warning btn-sm" onclick="window.adminModules.updateOrderStatus(${order.order_id}, window.adminState)" title="Update Status">
             <i class="fas fa-edit"></i> Update Status
         </button>
     `);
@@ -311,168 +345,418 @@ function generateOrderDetailActionButtons(order) {
     return buttons.join('');
 }
 
-export function confirmOrder(orderId, state) {
-    if (!confirm('Are you sure you want to confirm this order? This will change the status to "confirmed".')) {
-        return;
-    }
+export function updateOrderStatus(orderId, newStatus, state) {
+    // Create a modal for status update
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Update Order Status</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Order ID: #${orderId}</label>
+                </div>
+                <div class="form-group">
+                    <label for="status-select">New Status:</label>
+                    <select id="status-select" class="form-control">
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="status-notes">Notes (Optional):</label>
+                    <textarea id="status-notes" class="form-control" rows="3" placeholder="Enter any additional notes..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="tracking-number">Tracking Number (Optional):</label>
+                    <input type="text" id="tracking-number" class="form-control" placeholder="Enter tracking number...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitStatusUpdate(${orderId}, this.closest('.modal-overlay'))">Update Status</button>
+            </div>
+        </div>
+    `;
     
-    fetch('./API/confirm_order.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            id: orderId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Order #${orderId} confirmed successfully!`, 'success');
-            fetchOrders(state);
-        } else {
-            throw new Error(data.error || 'Failed to confirm order');
+    document.body.appendChild(modal);
+    
+    // Store state in global scope for the modal function
+    window.currentOrderState = state;
+    
+    // Add global function for submission
+    window.submitStatusUpdate = async (orderId, modal) => {
+        const statusSelect = modal.querySelector('#status-select');
+        const notesTextarea = modal.querySelector('#status-notes');
+        const trackingInput = modal.querySelector('#tracking-number');
+        
+        const newStatus = statusSelect.value;
+        const notes = notesTextarea.value;
+        const tracking = trackingInput.value;
+        
+        // Combine notes and tracking
+        let combinedNotes = notes;
+        if (tracking) {
+            combinedNotes = combinedNotes ? `${notes} | Tracking: ${tracking}` : `Tracking: ${tracking}`;
         }
-    })
-    .catch(error => {
-        console.error('Error confirming order:', error);
-        showNotification(`Error confirming order: ${error.message}`, 'error');
-    });
+        
+        try {
+            // Show loading state
+            const submitBtn = modal.querySelector('.btn-primary');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+            
+            const response = await fetch('./API/update_order_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    order_id: parseInt(orderId),
+                    status: newStatus,
+                    notes: combinedNotes,
+                    updated_by: 'admin'
+                })
+            });
+            
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const responseText = await response.text();
+            console.log('Response text:', responseText);
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                throw new Error('Server returned invalid JSON response');
+            }
+            
+            if (data.success) {
+                showNotification(`Order #${orderId} status updated to ${newStatus}!`, 'success');
+                modal.remove();
+                await fetchOrders(window.currentOrderState);
+            } else {
+                throw new Error(data.error || 'Failed to update order status');
+            }
+            
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            showNotification(`Error updating order status: ${error.message}`, 'error');
+            
+            // Reset button
+            const submitBtn = modal.querySelector('.btn-primary');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Update Status';
+        }
+    };
+}
+
+export function confirmOrder(orderId, state) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Confirm Order</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to confirm Order #${orderId}?</p>
+                <div class="form-group">
+                    <label for="confirm-notes">Notes (Optional):</label>
+                    <textarea id="confirm-notes" class="form-control" rows="3" placeholder="Enter any notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                <button class="btn btn-success" onclick="submitOrderConfirmation(${orderId}, this.closest('.modal-overlay'))">Confirm Order</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Store state in global scope for the modal function
+    window.currentOrderState = state;
+    
+    window.submitOrderConfirmation = async (orderId, modal) => {
+        const notes = modal.querySelector('#confirm-notes').value;
+        
+        try {
+            const submitBtn = modal.querySelector('.btn-success');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Confirming...';
+            
+            const response = await fetch('./API/confirm_order.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    notes: notes
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification(`Order #${orderId} confirmed successfully!`, 'success');
+                modal.remove();
+                await fetchOrders(window.currentOrderState);
+            } else {
+                throw new Error(data.error || 'Failed to confirm order');
+            }
+            
+        } catch (error) {
+            console.error('Error confirming order:', error);
+            showNotification(`Error confirming order: ${error.message}`, 'error');
+            
+            const submitBtn = modal.querySelector('.btn-success');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Confirm Order';
+        }
+    };
 }
 
 export function cancelOrder(orderId, state) {
-    const reason = prompt('Please enter a reason for cancellation (optional):');
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Cancel Order</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel Order #${orderId}?</p>
+                <div class="form-group">
+                    <label for="cancel-reason">Reason for Cancellation:</label>
+                    <textarea id="cancel-reason" class="form-control" rows="3" placeholder="Enter reason for cancellation..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Keep Order</button>
+                <button class="btn btn-danger" onclick="submitOrderCancellation(${orderId}, this.closest('.modal-overlay'))">Cancel Order</button>
+            </div>
+        </div>
+    `;
     
-    fetch('./API/update_order_status.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            order_id: orderId,
-            status: 'cancelled',
-            notes: reason || 'Order cancelled by admin',
-            updated_by: 'admin'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Order #${orderId} cancelled successfully!`, 'success');
-            fetchOrders(state);
-        } else {
-            throw new Error(data.error || 'Failed to cancel order');
+    document.body.appendChild(modal);
+    
+    // Store state in global scope for the modal function
+    window.currentOrderState = state;
+    
+    window.submitOrderCancellation = async (orderId, modal) => {
+        const reason = modal.querySelector('#cancel-reason').value;
+        
+        if (!reason.trim()) {
+            showNotification('Please provide a reason for cancellation', 'error');
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Error cancelling order:', error);
-        showNotification(`Error cancelling order: ${error.message}`, 'error');
-    });
+        
+        try {
+            const submitBtn = modal.querySelector('.btn-danger');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Cancelling...';
+            
+            const response = await fetch('./API/update_order_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    status: 'cancelled',
+                    notes: reason,
+                    updated_by: 'admin'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification(`Order #${orderId} cancelled successfully!`, 'success');
+                modal.remove();
+                await fetchOrders(window.currentOrderState);
+            } else {
+                throw new Error(data.error || 'Failed to cancel order');
+            }
+            
+        } catch (error) {
+            console.error('Error cancelling order:', error);
+            showNotification(`Error cancelling order: ${error.message}`, 'error');
+            
+            const submitBtn = modal.querySelector('.btn-danger');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Cancel Order';
+        }
+    };
 }
 
 export function shipOrder(orderId, state) {
-    const trackingNumber = prompt('Enter tracking number (optional):');
-    const notes = prompt('Enter shipping notes (optional):');
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Ship Order</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Mark Order #${orderId} as shipped</p>
+                <div class="form-group">
+                    <label for="tracking-number">Tracking Number:</label>
+                    <input type="text" id="tracking-number" class="form-control" placeholder="Enter tracking number...">
+                </div>
+                <div class="form-group">
+                    <label for="shipping-notes">Shipping Notes:</label>
+                    <textarea id="shipping-notes" class="form-control" rows="3" placeholder="Enter shipping notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitOrderShipment(${orderId}, this.closest('.modal-overlay'))">Mark as Shipped</button>
+            </div>
+        </div>
+    `;
     
-    const statusNotes = [];
-    if (trackingNumber) statusNotes.push(`Tracking: ${trackingNumber}`);
-    if (notes) statusNotes.push(notes);
+    document.body.appendChild(modal);
     
-    fetch('./API/update_order_status.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            order_id: orderId,
-            status: 'shipped',
-            notes: statusNotes.join(' | '),
-            updated_by: 'admin'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Order #${orderId} marked as shipped!`, 'success');
-            fetchOrders(state);
-        } else {
-            throw new Error(data.error || 'Failed to update order status');
+    // Store state in global scope for the modal function
+    window.currentOrderState = state;
+    
+    window.submitOrderShipment = async (orderId, modal) => {
+        const tracking = modal.querySelector('#tracking-number').value;
+        const notes = modal.querySelector('#shipping-notes').value;
+        
+        const statusNotes = [];
+        if (tracking) statusNotes.push(`Tracking: ${tracking}`);
+        if (notes) statusNotes.push(notes);
+        
+        try {
+            const submitBtn = modal.querySelector('.btn-primary');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Shipping...';
+            
+            const response = await fetch('./API/update_order_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    status: 'shipped',
+                    notes: statusNotes.join(' | '),
+                    updated_by: 'admin'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification(`Order #${orderId} marked as shipped!`, 'success');
+                modal.remove();
+                await fetchOrders(window.currentOrderState);
+            } else {
+                throw new Error(data.error || 'Failed to update order status');
+            }
+            
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            showNotification(`Error updating order status: ${error.message}`, 'error');
+            
+            const submitBtn = modal.querySelector('.btn-primary');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Mark as Shipped';
         }
-    })
-    .catch(error => {
-        console.error('Error updating order status:', error);
-        showNotification(`Error updating order status: ${error.message}`, 'error');
-    });
+    };
 }
 
 export function deliverOrder(orderId, state) {
-    const notes = prompt('Enter delivery notes (optional):');
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Deliver Order</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Mark Order #${orderId} as delivered</p>
+                <div class="form-group">
+                    <label for="delivery-notes">Delivery Notes:</label>
+                    <textarea id="delivery-notes" class="form-control" rows="3" placeholder="Enter delivery notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                <button class="btn btn-success" onclick="submitOrderDelivery(${orderId}, this.closest('.modal-overlay'))">Mark as Delivered</button>
+            </div>
+        </div>
+    `;
     
-    fetch('./API/update_order_status.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            order_id: orderId,
-            status: 'delivered',
-            notes: notes || 'Order delivered successfully',
-            updated_by: 'admin'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Order #${orderId} marked as delivered!`, 'success');
-            fetchOrders(state);
-        } else {
-            throw new Error(data.error || 'Failed to update order status');
+    document.body.appendChild(modal);
+    
+    // Store state in global scope for the modal function
+    window.currentOrderState = state;
+    
+    window.submitOrderDelivery = async (orderId, modal) => {
+        const notes = modal.querySelector('#delivery-notes').value;
+        
+        try {
+            const submitBtn = modal.querySelector('.btn-success');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Delivering...';
+            
+            const response = await fetch('./API/update_order_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    status: 'delivered',
+                    notes: notes || 'Order delivered successfully',
+                    updated_by: 'admin'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification(`Order #${orderId} marked as delivered!`, 'success');
+                modal.remove();
+                await fetchOrders(window.currentOrderState);
+            } else {
+                throw new Error(data.error || 'Failed to update order status');
+            }
+            
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            showNotification(`Error updating order status: ${error.message}`, 'error');
+            
+            const submitBtn = modal.querySelector('.btn-success');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Mark as Delivered';
         }
-    })
-    .catch(error => {
-        console.error('Error updating order status:', error);
-        showNotification(`Error updating order status: ${error.message}`, 'error');
-    });
+    };
 }
 
-export function updateOrderStatus(orderId, state) {
-    const statusOptions = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
-    const newStatus = prompt(`Enter new status:\n${statusOptions.join(', ')}`);
-    if (!newStatus) return;
-    
-    if (!statusOptions.includes(newStatus.toLowerCase())) {
-        showNotification('Invalid status. Please use one of the valid options.', 'error');
-        return;
-    }
-    
-    const notes = prompt('Enter notes (optional):');
-    
-    fetch('../API/update_order_status.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            order_id: orderId,
-            status: newStatus.toLowerCase(),
-            notes: notes || '',
-            updated_by: 'admin'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Order status updated to ${newStatus}`, 'success');
-            fetchOrders(state);
-        } else {
-            throw new Error(data.error || 'Failed to update order status');
-        }
-    })
-    .catch(error => {
-        console.error('Error updating order status:', error);
-        showNotification(`Error updating order status: ${error.message}`, 'error');
-    });
-}
+// updateOrderStatus function is handled by main.js
 
 
 
@@ -523,13 +807,13 @@ export function initializeOrders(state) {
     console.log('Orders module initialized');
 }
 
-// Make functions available globally
-window.adminModules = window.adminModules || {};
-window.adminModules.updateOrderStatus = updateOrderStatus;
-window.adminModules.viewOrder = viewOrder;
-window.adminModules.editOrder = editOrder;
-window.adminModules.deleteOrder = deleteOrder;
-window.adminModules.confirmOrder = confirmOrder;
-window.adminModules.cancelOrder = cancelOrder;
-window.adminModules.shipOrder = shipOrder;
-window.adminModules.deliverOrder = deliverOrder;
+// Replace placeholder functions with actual implementations
+if (typeof window !== 'undefined') {
+    window.adminModules.viewOrder = viewOrder;
+    window.adminModules.editOrder = editOrder;
+    window.adminModules.deleteOrder = deleteOrder;
+    window.adminModules.confirmOrder = confirmOrder;
+    window.adminModules.cancelOrder = cancelOrder;
+    window.adminModules.shipOrder = shipOrder;
+    window.adminModules.deliverOrder = deliverOrder;
+}

@@ -1,162 +1,141 @@
 <?php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$dbname = 'jowaki_db';
-
-$conn = new mysqli($host, $user, $pass, $dbname);
-if ($conn->connect_error) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database connection failed: ' . $conn->connect_error]);
-    exit;
-}
+require_once 'db_connection.php';
 
 try {
-    // First, let's check if the orders table exists and has data
-    $tableCheck = $conn->query("SHOW TABLES LIKE 'orders'");
-    if ($tableCheck->num_rows === 0) {
-        echo json_encode(['success' => false, 'error' => 'Orders table does not exist']);
-        exit;
-    }
-
-    // Check table structure
-    $structureResult = $conn->query("DESCRIBE orders");
-    $columns = [];
-    while ($row = $structureResult->fetch_assoc()) {
-        $columns[] = $row['Field'];
-    }
-
-    // Count total orders
-    $countResult = $conn->query("SELECT COUNT(*) as total FROM orders");
-    $totalOrders = $countResult->fetch_assoc()['total'];
-
-    // If no orders, return early with debug info
-    if ($totalOrders == 0) {
-        echo json_encode([
-            'success' => true, 
-            'data' => [],
-            'message' => 'No orders found in database',
-            'debug' => [
-                'table_exists' => true,
-                'total_orders' => $totalOrders,
-                'columns' => $columns
-            ]
-        ]);
-        exit;
-    }
-
-    // Fetch orders with all available columns
-    $stmt = $conn->prepare("SELECT * FROM orders ORDER BY order_date DESC");
-    if (!$stmt) {
-        throw new Exception('Prepare failed: ' . $conn->error);
+    $method = $_SERVER['REQUEST_METHOD'];
+    
+    switch ($method) {
+        case 'GET':
+            // Get all orders with customer information
+            $sql = "SELECT 
+                        o.id,
+                        o.user_id,
+                        o.subtotal,
+                        o.tax,
+                        o.delivery_fee,
+                        o.total,
+                        o.delivery_method,
+                        o.delivery_address,
+                        o.payment_method,
+                        o.order_date,
+                        o.status,
+                        u.first_name,
+                        u.last_name,
+                        u.email,
+                        u.phone,
+                        u.address,
+                        u.city,
+                        u.postal_code
+                    FROM orders o 
+                    LEFT JOIN users u ON o.user_id = u.id
+                    ORDER BY o.order_date DESC";
+            
+            $result = $conn->query($sql);
+            $orders = [];
+            
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    // Get order items
+                    $items = [];
+                    $itemsSql = "SELECT oi.*, p.name as product_name, p.price as product_price 
+                                FROM order_items oi 
+                                LEFT JOIN products p ON oi.product_id = p.id 
+                                WHERE oi.order_id = ?";
+                    $itemsStmt = $conn->prepare($itemsSql);
+                    $itemsStmt->bind_param("i", $row['id']);
+                    $itemsStmt->execute();
+                    $itemsResult = $itemsStmt->get_result();
+                    
+                    while ($item = $itemsResult->fetch_assoc()) {
+                        $items[] = [
+                            'id' => $item['id'],
+                            'product_id' => $item['product_id'],
+                            'product_name' => $item['product_name'],
+                            'quantity' => $item['quantity'],
+                            'price' => $item['price']
+                        ];
+                    }
+                    
+                    $orders[] = [
+                        'id' => $row['id'],
+                        'user_id' => $row['user_id'],
+                        'order_date' => $row['order_date'],
+                        'customer_name' => ($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''),
+                        'customer_email' => $row['email'] ?? '',
+                        'customer_phone' => $row['phone'] ?? '',
+                        'customer_address' => ($row['address'] ?? '') . ', ' . ($row['city'] ?? '') . ' ' . ($row['postal_code'] ?? ''),
+                        'items' => $items,
+                        'subtotal' => $row['subtotal'],
+                        'shipping' => $row['delivery_fee'],
+                        'tax' => $row['tax'],
+                        'total_amount' => $row['total'],
+                        'payment_method' => $row['payment_method'],
+                        'shipping_method' => $row['delivery_method'],
+                        'status' => $row['status'] ?: 'pending'
+                    ];
+                }
+            }
+            
+            echo json_encode(['success' => true, 'data' => $orders]);
+            break;
+            
+        case 'POST':
+            // Add new order
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$data || !isset($data['user_id']) || !isset($data['total_amount'])) {
+                throw new Exception('Missing required fields: user_id and total_amount');
+            }
+            
+            $userId = (int)$data['user_id'];
+            $subtotal = isset($data['subtotal']) ? (float)$data['subtotal'] : 0;
+            $tax = isset($data['tax']) ? (float)$data['tax'] : 0;
+            $deliveryFee = isset($data['delivery_fee']) ? (float)$data['delivery_fee'] : 0;
+            $totalAmount = (float)$data['total_amount'];
+            $deliveryMethod = isset($data['delivery_method']) ? $conn->real_escape_string($data['delivery_method']) : 'standard';
+            $deliveryAddress = isset($data['delivery_address']) ? $conn->real_escape_string($data['delivery_address']) : '';
+            $paymentMethod = isset($data['payment_method']) ? $conn->real_escape_string($data['payment_method']) : 'mpesa';
+            $status = isset($data['status']) ? $conn->real_escape_string($data['status']) : 'pending';
+            
+            $sql = "INSERT INTO orders (user_id, subtotal, tax, delivery_fee, total, delivery_method, delivery_address, payment_method, order_date, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iddddsss", $userId, $subtotal, $tax, $deliveryFee, $totalAmount, $deliveryMethod, $deliveryAddress, $paymentMethod, $status);
+            
+            if ($stmt->execute()) {
+                $orderId = $conn->insert_id;
+                
+                // Add order items if provided
+                if (isset($data['items']) && is_array($data['items'])) {
+                    foreach ($data['items'] as $item) {
+                        $itemSql = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
+                        $itemStmt = $conn->prepare($itemSql);
+                        $itemStmt->bind_param("iiid", $orderId, $item['product_id'], $item['quantity'], $item['price']);
+                        $itemStmt->execute();
+                    }
+                }
+                
+                echo json_encode(['success' => true, 'message' => 'Order added successfully', 'id' => $orderId]);
+            } else {
+                throw new Exception('Failed to add order');
+            }
+            break;
+            
+        default:
+            throw new Exception('Method not allowed');
     }
     
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $orders = [];
-
-    while ($order = $result->fetch_assoc()) {
-        // Try to parse customer_info
-        $customer_info = [];
-        if (isset($order['customer_info']) && !empty($order['customer_info'])) {
-            $customer_info = json_decode($order['customer_info'], true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                // If JSON parsing fails, create default structure
-                $customer_info = [
-                    'firstName' => 'Unknown',
-                    'lastName' => 'Customer', 
-                    'email' => '',
-                    'phone' => '',
-                    'address' => '',
-                    'city' => '',
-                    'postalCode' => ''
-                ];
-            }
-        } else {
-            // Try alternative column names or create defaults
-            $customer_info = [
-                'firstName' => $order['customer_name'] ?? $order['name'] ?? 'Unknown',
-                'lastName' => '',
-                'email' => $order['customer_email'] ?? $order['email'] ?? '',
-                'phone' => $order['customer_phone'] ?? $order['phone'] ?? '',
-                'address' => $order['customer_address'] ?? $order['address'] ?? '',
-                'city' => $order['customer_city'] ?? $order['city'] ?? '',
-                'postalCode' => $order['postal_code'] ?? ''
-            ];
-        }
-
-        // Try to parse cart/items
-        $cart = [];
-        if (isset($order['cart']) && !empty($order['cart'])) {
-            $cart = json_decode($order['cart'], true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $cart = [];
-            }
-        } else if (isset($order['items']) && !empty($order['items'])) {
-            $cart = json_decode($order['items'], true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $cart = [];
-            }
-        }
-
-        // Build the customer address
-        $addressParts = array_filter([
-            $customer_info['address'] ?? '',
-            $customer_info['city'] ?? '',
-            $customer_info['postalCode'] ?? ''
-        ]);
-        $customerAddress = implode(', ', $addressParts);
-
-        // Build order array with fallbacks for different column naming conventions
-        $orders[] = [
-            'id' => $order['id'],
-            'customer_name' => trim(($customer_info['firstName'] ?? '') . ' ' . ($customer_info['lastName'] ?? '')),
-            'customer_email' => $customer_info['email'] ?? '',
-            'customer_phone' => $customer_info['phone'] ?? '',
-            'customer_address' => $customerAddress,
-            'order_date' => $order['order_date'] ?? $order['created_at'] ?? date('Y-m-d H:i:s'),
-            'items' => $cart,
-            'subtotal' => floatval($order['subtotal'] ?? $order['sub_total'] ?? 0),
-            'tax' => floatval($order['tax'] ?? 0),
-            'shipping' => floatval($order['delivery_fee'] ?? $order['shipping_fee'] ?? $order['shipping'] ?? 0),
-            'total_amount' => floatval($order['total'] ?? $order['total_amount'] ?? 0),
-            'payment_method' => $order['payment_method'] ?? 'Not specified',
-            'shipping_method' => $order['delivery_method'] ?? $order['shipping_method'] ?? 'Not specified',
-            'status' => $order['status'] ?? 'pending'
-        ];
-    }
-
-    echo json_encode([
-        'success' => true,
-        'data' => $orders,
-        'debug' => [
-            'total_orders_in_db' => $totalOrders,
-            'orders_returned' => count($orders),
-            'table_columns' => $columns,
-            'sample_raw_order' => isset($orders[0]) ? 'Available' : 'None'
-        ]
-    ]);
-
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false, 
-        'error' => 'Failed to fetch orders: ' . $e->getMessage(),
-        'debug' => [
-            'columns' => $columns ?? [],
-            'total_orders' => $totalOrders ?? 0
-        ]
-    ]);
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 
-$stmt->close();
 $conn->close();
 ?>

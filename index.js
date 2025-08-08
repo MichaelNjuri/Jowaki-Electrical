@@ -311,6 +311,80 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Product Loading
+    function loadFeaturedProducts() {
+        const productList = document.getElementById('product-list');
+        const loadingIndicator = document.getElementById('products-loading');
+        
+        if (!productList) return;
+
+        fetch('/jowaki_electrical_srvs/api/get_products.php')
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+
+                let products = [];
+                if (data.success && Array.isArray(data.products)) {
+                    products = data.products;
+                } else if (Array.isArray(data)) {
+                    products = data;
+                } else if (data.products && Array.isArray(data.products)) {
+                    products = data.products;
+                }
+
+                // Show only first 6 products as featured
+                const featuredProducts = products.slice(0, 6);
+                
+                if (featuredProducts.length === 0) {
+                    productList.innerHTML = '<p class="text-center text-gray-500 py-8">No products available at the moment.</p>';
+                    return;
+                }
+
+                const productsHTML = featuredProducts.map(product => {
+                    const originalPrice = parseFloat(product.price);
+                    const sellingPrice = parseFloat(product.discount_price) || originalPrice;
+                    const discountPercentage = sellingPrice < originalPrice ? Math.round(((originalPrice - sellingPrice) / originalPrice) * 100) : 0;
+                    const imageSrc = product.image || 'placeholder.jpg';
+                    
+                    return `
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="${imageSrc}" alt="${product.name}" loading="lazy">
+                                ${discountPercentage > 0 ? `<div class="product-badge sale">-${discountPercentage}%</div>` : ''}
+                                ${product.stock > 0 && product.stock <= 10 ? '<div class="product-badge hot">Hot</div>' : ''}
+                            </div>
+                            <div class="product-content">
+                                <h3 class="product-title">${product.name}</h3>
+                                <p class="product-description">${product.description || 'Quality product from Jowaki Electrical Services.'}</p>
+                                <div class="product-price">
+                                    <span class="current-price">KSh ${sellingPrice.toLocaleString()}</span>
+                                    ${sellingPrice < originalPrice ? `<span class="original-price">KSh ${originalPrice.toLocaleString()}</span>` : ''}
+                                </div>
+                                <div class="product-actions">
+                                    <a href="Store.php" class="btn-primary">View Details</a>
+                                    <a href="https://wa.me/0721442248?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20inquire%20about%20${encodeURIComponent(product.name)}" class="btn-secondary" target="_blank">
+                                        <i class="fab fa-whatsapp"></i> Order
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                productList.innerHTML = productsHTML;
+            })
+            .catch(error => {
+                console.error('Error loading products:', error);
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+                productList.innerHTML = '<p class="text-center text-gray-500 py-8">Failed to load products. Please try again later.</p>';
+            });
+    }
+
     // Lazy Loading
     function initLazyLoading() {
         const images = document.querySelectorAll('img[data-src]');
@@ -370,6 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initHeaderScroll();
         initFormValidation();
         initLazyLoading();
+        loadFeaturedProducts();
     }
 
     init();

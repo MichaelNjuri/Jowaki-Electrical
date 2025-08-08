@@ -42,4 +42,679 @@ Stack trace:
 #0 C:\xampp\htdocs\jowaki_electrical_srvs\API\Profile.php(88): mysqli->prepare('SELECT first_na...')
 #1 {main}
   thrown in C:\xampp\htdocs\jowaki_electrical_srvs\API\Profile.php on line 88
-Profile.php accessed - Session ID: luu7l6j76eapv83f7nkepvvaviDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession extended for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successful
+Profile.php accessed - Session ID: luu7l6j76eapv83f7nkepvvaviDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession extended for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comProfile.php accessed - Session ID: 55rns1q3vbbvrk0s3qtf37eb4mDatabase connection successfulLoading profile for user ID: 1Profile loaded successfully for: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession ID: 55rns1q3vbbvrk0s3qtf37eb4mStarting api/login.phpBefore requiring db_connection.phpDatabase connection successfulAfter requiring db_connection.phpUsing FormData - Email: 'jowakielectrical@gmail.com', Password: non-emptyChecking database connectionPreparing query for email: jowakielectrical@gmail.comUser found: {"id":1,"email":"jowakielectrical@gmail.com"}Login successful for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulupdate_order_status.php accessedDatabase connection successfulRaw input: {"order_id":5,"notes":""}Decoded input: Array
+(
+    [order_id] => 5
+    [notes] => 
+)
+Database connection successfulupdate_order_status.php accessedDatabase connection successfulRaw input: {"order_id":5,"notes":""}Decoded input: Array
+(
+    [order_id] => 5
+    [notes] => 
+)
+Database connection successfulDatabase connection successfulDatabase connection successfulupdate_order_status.php accessedDatabase connection successfulRaw input: {"order_id":5,"notes":"","updated_by":"admin"}Decoded input: Array
+(
+    [order_id] => 5
+    [notes] => 
+    [updated_by] => admin
+)
+Database connection successfulDatabase connection successfulDatabase connection successfulupdate_order_status.php accessedDatabase connection successfulRaw input: {"order_id":5,"notes":"","updated_by":"admin"}Decoded input: Array
+(
+    [order_id] => 5
+    [notes] => 
+    [updated_by] => admin
+)
+Database connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulupdate_order_status.php accessedDatabase connection successfulRaw input: {"order_id":5,"notes":"","updated_by":"admin"}Decoded input: Array
+(
+    [order_id] => 5
+    [notes] => 
+    [updated_by] => admin
+)
+Database connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession ID: lhg8snb0ah6hf7qt8ng4jokvpeStarting api/login.phpBefore requiring db_connection.phpDatabase connection successfulAfter requiring db_connection.phpUsing FormData - Email: 'jowakielectrical@gmail.com', Password: non-emptyChecking database connectionPreparing query for email: jowakielectrical@gmail.comUser found: {"id":1,"email":"jowakielectrical@gmail.com"}Login successful for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession expired for user ID: 1Redirecting to login: Your session has expired. Please log in again.Database connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulupdate_order_status.php accessedDatabase connection successfulRaw input: {"order_id":5,"notes":""}Decoded input: Array
+(
+    [order_id] => 5
+    [notes] => 
+)
+Database connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulupdate_order_status.php accessedDatabase connection successfulRaw input: {"order_id":5,"status":{"orders":[{"id":5,"customer_name":"Michael Njuri","customer_email":"jowakielectrical@gmail.com","customer_phone":"0721442248","customer_address":"742 kikuyu, central ","order_date":"2025-08-03 21:13:02","items":[{"name":"","sku":"","quantity":1,"price":50000}],"subtotal":50000,"shipping":0,"tax":8000,"total_amount":58000,"payment_method":"Cash on Delivery","shipping_method":"Standard Delivery","status":"processing"},{"id":4,"customer_name":"John Doe","customer_email":"kibukush@gmail.com","customer_phone":"0721442248","customer_address":"742 kikuyu, central 00902","order_date":"2025-08-03 14:25:52","items":[{"name":"","sku":"","quantity":1,"price":4500},{"name":"","sku":"","quantity":1,"price":400},{"name":"","sku":"","quantity":1,"price":50000}],"subtotal":54900,"shipping":0,"tax":8784,"total_amount":63684,"payment_method":"Cash on Delivery","shipping_method":"Standard Delivery","status":"processing"},{"id":3,"customer_name":"Michael Kinuthia","customer_email":"michaelnjuri4@gmail.comTesting2","customer_phone":"0758744739","customer_address":"kenya, kikuyu 00902","order_date":"2025-07-27 08:23:11","items":[{"name":"","sku":"","quantity":1,"price":50000}],"subtotal":50000,"shipping":0,"tax":8000,"total_amount":58000,"payment_method":"mpesa","shipping_method":"pickup","status":"delivered"},{"id":2,"customer_name":"John Doe","customer_email":"michaelnjuri4@gmail.com","customer_phone":"0758744739","customer_address":"good, here 00902","order_date":"2025-07-23 23:38:19","items":[{"name":"","sku":"","quantity":1,"price":50000}],"subtotal":50000,"shipping":500,"tax":8000,"total_amount":58500,"payment_method":"mpesa","shipping_method":"express","status":"delivered"},{"id":1,"customer_name":"John Doe","customer_email":"michaelnjuri4@gmail.com","customer_phone":"0758744739","customer_address":"good, here 00902","order_date":"2025-07-18 17:44:00","items":[],"subtotal":50000,"shipping":0,"tax":8000,"total_amount":58000,"payment_method":"mpesa","shipping_method":"pickup","status":"delivered"}],"products":[{"id":8,"name":"Chain link","category":"Solar","category_id":0,"price":5000,"stock":20,"description":"clear","status":"active"},{"id":6,"name":"Fence","category":"safety","category_id":0,"price":5000,"stock":20,"description":"TEST","status":"active"},{"id":3,"name":"Fence","category":"safety","category_id":0,"price":50000,"stock":19,"description":"Protection","status":"active"}],"customers":[{"id":1,"name":"Michael Njuri","email":"michaelnjuri4@gmail.com","phone":"0758744739","address":"","orders_count":0,"total_spent":58000,"loyalty_tier":"Bronze","last_order_date":null},{"id":2,"name":"John Kinuthia","email":"jowakielectrical@gmail.com","phone":"0758744739","address":"","orders_count":0,"total_spent":58500,"loyalty_tier":"Bronze","last_order_date":null},{"id":3,"name":"Michael Kinuthia","email":"michaelnjuri4@gmail.comTesting2","phone":"0758744739","address":"","orders_count":0,"total_spent":58000,"loyalty_tier":"Bronze","last_order_date":null},{"id":4,"name":"John Kinuthia","email":"kibukush@gmail.com","phone":"0721442248","address":"","orders_count":0,"total_spent":63684,"loyalty_tier":"Bronze","last_order_date":null},{"id":5,"name":"Michael Njuri","email":"jowakielectrical@gmail.com","phone":"0721442248","address":"","orders_count":0,"total_spent":58000,"loyalty_tier":"Bronze","last_order_date":null}],"categories":[{"id":1,"name":"CCTV Systems","description":"Security Cameras"},{"id":4,"name":"Solar","description":"Inverters"},{"id":3,"name":"Solar","description":"Panels"}],"notifications":[],"lowStockData":{"total":0,"products":[],"summary":{"total_notifications":0,"critical_count":0,"warning_count":0}}},"notes":"","updated_by":"admin"}Decoded input: Array
+(
+    [order_id] => 5
+    [status] => Array
+        (
+            [orders] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 5
+                            [customer_name] => Michael Njuri
+                            [customer_email] => jowakielectrical@gmail.com
+                            [customer_phone] => 0721442248
+                            [customer_address] => 742 kikuyu, central 
+                            [order_date] => 2025-08-03 21:13:02
+                            [items] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 50000
+                                        )
+
+                                )
+
+                            [subtotal] => 50000
+                            [shipping] => 0
+                            [tax] => 8000
+                            [total_amount] => 58000
+                            [payment_method] => Cash on Delivery
+                            [shipping_method] => Standard Delivery
+                            [status] => processing
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 4
+                            [customer_name] => John Doe
+                            [customer_email] => kibukush@gmail.com
+                            [customer_phone] => 0721442248
+                            [customer_address] => 742 kikuyu, central 00902
+                            [order_date] => 2025-08-03 14:25:52
+                            [items] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 4500
+                                        )
+
+                                    [1] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 400
+                                        )
+
+                                    [2] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 50000
+                                        )
+
+                                )
+
+                            [subtotal] => 54900
+                            [shipping] => 0
+                            [tax] => 8784
+                            [total_amount] => 63684
+                            [payment_method] => Cash on Delivery
+                            [shipping_method] => Standard Delivery
+                            [status] => processing
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [customer_name] => Michael Kinuthia
+                            [customer_email] => michaelnjuri4@gmail.comTesting2
+                            [customer_phone] => 0758744739
+                            [customer_address] => kenya, kikuyu 00902
+                            [order_date] => 2025-07-27 08:23:11
+                            [items] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 50000
+                                        )
+
+                                )
+
+                            [subtotal] => 50000
+                            [shipping] => 0
+                            [tax] => 8000
+                            [total_amount] => 58000
+                            [payment_method] => mpesa
+                            [shipping_method] => pickup
+                            [status] => delivered
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 2
+                            [customer_name] => John Doe
+                            [customer_email] => michaelnjuri4@gmail.com
+                            [customer_phone] => 0758744739
+                            [customer_address] => good, here 00902
+                            [order_date] => 2025-07-23 23:38:19
+                            [items] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 50000
+                                        )
+
+                                )
+
+                            [subtotal] => 50000
+                            [shipping] => 500
+                            [tax] => 8000
+                            [total_amount] => 58500
+                            [payment_method] => mpesa
+                            [shipping_method] => express
+                            [status] => delivered
+                        )
+
+                    [4] => Array
+                        (
+                            [id] => 1
+                            [customer_name] => John Doe
+                            [customer_email] => michaelnjuri4@gmail.com
+                            [customer_phone] => 0758744739
+                            [customer_address] => good, here 00902
+                            [order_date] => 2025-07-18 17:44:00
+                            [items] => Array
+                                (
+                                )
+
+                            [subtotal] => 50000
+                            [shipping] => 0
+                            [tax] => 8000
+                            [total_amount] => 58000
+                            [payment_method] => mpesa
+                            [shipping_method] => pickup
+                            [status] => delivered
+                        )
+
+                )
+
+            [products] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 8
+                            [name] => Chain link
+                            [category] => Solar
+                            [category_id] => 0
+                            [price] => 5000
+                            [stock] => 20
+                            [description] => clear
+                            [status] => active
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 6
+                            [name] => Fence
+                            [category] => safety
+                            [category_id] => 0
+                            [price] => 5000
+                            [stock] => 20
+                            [description] => TEST
+                            [status] => active
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [name] => Fence
+                            [category] => safety
+                            [category_id] => 0
+                            [price] => 50000
+                            [stock] => 19
+                            [description] => Protection
+                            [status] => active
+                        )
+
+                )
+
+            [customers] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 1
+                            [name] => Michael Njuri
+                            [email] => michaelnjuri4@gmail.com
+                            [phone] => 0758744739
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 58000
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 2
+                            [name] => John Kinuthia
+                            [email] => jowakielectrical@gmail.com
+                            [phone] => 0758744739
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 58500
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [name] => Michael Kinuthia
+                            [email] => michaelnjuri4@gmail.comTesting2
+                            [phone] => 0758744739
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 58000
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 4
+                            [name] => John Kinuthia
+                            [email] => kibukush@gmail.com
+                            [phone] => 0721442248
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 63684
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                    [4] => Array
+                        (
+                            [id] => 5
+                            [name] => Michael Njuri
+                            [email] => jowakielectrical@gmail.com
+                            [phone] => 0721442248
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 58000
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                )
+
+            [categories] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 1
+                            [name] => CCTV Systems
+                            [description] => Security Cameras
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 4
+                            [name] => Solar
+                            [description] => Inverters
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [name] => Solar
+                            [description] => Panels
+                        )
+
+                )
+
+            [notifications] => Array
+                (
+                )
+
+            [lowStockData] => Array
+                (
+                    [total] => 0
+                    [products] => Array
+                        (
+                        )
+
+                    [summary] => Array
+                        (
+                            [total_notifications] => 0
+                            [critical_count] => 0
+                            [warning_count] => 0
+                        )
+
+                )
+
+        )
+
+    [notes] => 
+    [updated_by] => admin
+)
+update_order_status.php accessedDatabase connection successfulRaw input: {"order_id":4,"status":{"orders":[{"id":5,"customer_name":"Michael Njuri","customer_email":"jowakielectrical@gmail.com","customer_phone":"0721442248","customer_address":"742 kikuyu, central ","order_date":"2025-08-03 21:13:02","items":[{"name":"","sku":"","quantity":1,"price":50000}],"subtotal":50000,"shipping":0,"tax":8000,"total_amount":58000,"payment_method":"Cash on Delivery","shipping_method":"Standard Delivery","status":"processing"},{"id":4,"customer_name":"John Doe","customer_email":"kibukush@gmail.com","customer_phone":"0721442248","customer_address":"742 kikuyu, central 00902","order_date":"2025-08-03 14:25:52","items":[{"name":"","sku":"","quantity":1,"price":4500},{"name":"","sku":"","quantity":1,"price":400},{"name":"","sku":"","quantity":1,"price":50000}],"subtotal":54900,"shipping":0,"tax":8784,"total_amount":63684,"payment_method":"Cash on Delivery","shipping_method":"Standard Delivery","status":"processing"},{"id":3,"customer_name":"Michael Kinuthia","customer_email":"michaelnjuri4@gmail.comTesting2","customer_phone":"0758744739","customer_address":"kenya, kikuyu 00902","order_date":"2025-07-27 08:23:11","items":[{"name":"","sku":"","quantity":1,"price":50000}],"subtotal":50000,"shipping":0,"tax":8000,"total_amount":58000,"payment_method":"mpesa","shipping_method":"pickup","status":"delivered"},{"id":2,"customer_name":"John Doe","customer_email":"michaelnjuri4@gmail.com","customer_phone":"0758744739","customer_address":"good, here 00902","order_date":"2025-07-23 23:38:19","items":[{"name":"","sku":"","quantity":1,"price":50000}],"subtotal":50000,"shipping":500,"tax":8000,"total_amount":58500,"payment_method":"mpesa","shipping_method":"express","status":"delivered"},{"id":1,"customer_name":"John Doe","customer_email":"michaelnjuri4@gmail.com","customer_phone":"0758744739","customer_address":"good, here 00902","order_date":"2025-07-18 17:44:00","items":[],"subtotal":50000,"shipping":0,"tax":8000,"total_amount":58000,"payment_method":"mpesa","shipping_method":"pickup","status":"delivered"}],"products":[{"id":8,"name":"Chain link","category":"Solar","category_id":0,"price":5000,"stock":20,"description":"clear","status":"active"},{"id":6,"name":"Fence","category":"safety","category_id":0,"price":5000,"stock":20,"description":"TEST","status":"active"},{"id":3,"name":"Fence","category":"safety","category_id":0,"price":50000,"stock":19,"description":"Protection","status":"active"}],"customers":[{"id":1,"name":"Michael Njuri","email":"michaelnjuri4@gmail.com","phone":"0758744739","address":"","orders_count":0,"total_spent":58000,"loyalty_tier":"Bronze","last_order_date":null},{"id":2,"name":"John Kinuthia","email":"jowakielectrical@gmail.com","phone":"0758744739","address":"","orders_count":0,"total_spent":58500,"loyalty_tier":"Bronze","last_order_date":null},{"id":3,"name":"Michael Kinuthia","email":"michaelnjuri4@gmail.comTesting2","phone":"0758744739","address":"","orders_count":0,"total_spent":58000,"loyalty_tier":"Bronze","last_order_date":null},{"id":4,"name":"John Kinuthia","email":"kibukush@gmail.com","phone":"0721442248","address":"","orders_count":0,"total_spent":63684,"loyalty_tier":"Bronze","last_order_date":null},{"id":5,"name":"Michael Njuri","email":"jowakielectrical@gmail.com","phone":"0721442248","address":"","orders_count":0,"total_spent":58000,"loyalty_tier":"Bronze","last_order_date":null}],"categories":[{"id":1,"name":"CCTV Systems","description":"Security Cameras"},{"id":4,"name":"Solar","description":"Inverters"},{"id":3,"name":"Solar","description":"Panels"}],"notifications":[],"lowStockData":{"total":0,"products":[],"summary":{"total_notifications":0,"critical_count":0,"warning_count":0}}},"notes":"","updated_by":"admin"}Decoded input: Array
+(
+    [order_id] => 4
+    [status] => Array
+        (
+            [orders] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 5
+                            [customer_name] => Michael Njuri
+                            [customer_email] => jowakielectrical@gmail.com
+                            [customer_phone] => 0721442248
+                            [customer_address] => 742 kikuyu, central 
+                            [order_date] => 2025-08-03 21:13:02
+                            [items] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 50000
+                                        )
+
+                                )
+
+                            [subtotal] => 50000
+                            [shipping] => 0
+                            [tax] => 8000
+                            [total_amount] => 58000
+                            [payment_method] => Cash on Delivery
+                            [shipping_method] => Standard Delivery
+                            [status] => processing
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 4
+                            [customer_name] => John Doe
+                            [customer_email] => kibukush@gmail.com
+                            [customer_phone] => 0721442248
+                            [customer_address] => 742 kikuyu, central 00902
+                            [order_date] => 2025-08-03 14:25:52
+                            [items] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 4500
+                                        )
+
+                                    [1] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 400
+                                        )
+
+                                    [2] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 50000
+                                        )
+
+                                )
+
+                            [subtotal] => 54900
+                            [shipping] => 0
+                            [tax] => 8784
+                            [total_amount] => 63684
+                            [payment_method] => Cash on Delivery
+                            [shipping_method] => Standard Delivery
+                            [status] => processing
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [customer_name] => Michael Kinuthia
+                            [customer_email] => michaelnjuri4@gmail.comTesting2
+                            [customer_phone] => 0758744739
+                            [customer_address] => kenya, kikuyu 00902
+                            [order_date] => 2025-07-27 08:23:11
+                            [items] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 50000
+                                        )
+
+                                )
+
+                            [subtotal] => 50000
+                            [shipping] => 0
+                            [tax] => 8000
+                            [total_amount] => 58000
+                            [payment_method] => mpesa
+                            [shipping_method] => pickup
+                            [status] => delivered
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 2
+                            [customer_name] => John Doe
+                            [customer_email] => michaelnjuri4@gmail.com
+                            [customer_phone] => 0758744739
+                            [customer_address] => good, here 00902
+                            [order_date] => 2025-07-23 23:38:19
+                            [items] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [name] => 
+                                            [sku] => 
+                                            [quantity] => 1
+                                            [price] => 50000
+                                        )
+
+                                )
+
+                            [subtotal] => 50000
+                            [shipping] => 500
+                            [tax] => 8000
+                            [total_amount] => 58500
+                            [payment_method] => mpesa
+                            [shipping_method] => express
+                            [status] => delivered
+                        )
+
+                    [4] => Array
+                        (
+                            [id] => 1
+                            [customer_name] => John Doe
+                            [customer_email] => michaelnjuri4@gmail.com
+                            [customer_phone] => 0758744739
+                            [customer_address] => good, here 00902
+                            [order_date] => 2025-07-18 17:44:00
+                            [items] => Array
+                                (
+                                )
+
+                            [subtotal] => 50000
+                            [shipping] => 0
+                            [tax] => 8000
+                            [total_amount] => 58000
+                            [payment_method] => mpesa
+                            [shipping_method] => pickup
+                            [status] => delivered
+                        )
+
+                )
+
+            [products] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 8
+                            [name] => Chain link
+                            [category] => Solar
+                            [category_id] => 0
+                            [price] => 5000
+                            [stock] => 20
+                            [description] => clear
+                            [status] => active
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 6
+                            [name] => Fence
+                            [category] => safety
+                            [category_id] => 0
+                            [price] => 5000
+                            [stock] => 20
+                            [description] => TEST
+                            [status] => active
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [name] => Fence
+                            [category] => safety
+                            [category_id] => 0
+                            [price] => 50000
+                            [stock] => 19
+                            [description] => Protection
+                            [status] => active
+                        )
+
+                )
+
+            [customers] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 1
+                            [name] => Michael Njuri
+                            [email] => michaelnjuri4@gmail.com
+                            [phone] => 0758744739
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 58000
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 2
+                            [name] => John Kinuthia
+                            [email] => jowakielectrical@gmail.com
+                            [phone] => 0758744739
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 58500
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [name] => Michael Kinuthia
+                            [email] => michaelnjuri4@gmail.comTesting2
+                            [phone] => 0758744739
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 58000
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 4
+                            [name] => John Kinuthia
+                            [email] => kibukush@gmail.com
+                            [phone] => 0721442248
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 63684
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                    [4] => Array
+                        (
+                            [id] => 5
+                            [name] => Michael Njuri
+                            [email] => jowakielectrical@gmail.com
+                            [phone] => 0721442248
+                            [address] => 
+                            [orders_count] => 0
+                            [total_spent] => 58000
+                            [loyalty_tier] => Bronze
+                            [last_order_date] => 
+                        )
+
+                )
+
+            [categories] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 1
+                            [name] => CCTV Systems
+                            [description] => Security Cameras
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 4
+                            [name] => Solar
+                            [description] => Inverters
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [name] => Solar
+                            [description] => Panels
+                        )
+
+                )
+
+            [notifications] => Array
+                (
+                )
+
+            [lowStockData] => Array
+                (
+                    [total] => 0
+                    [products] => Array
+                        (
+                        )
+
+                    [summary] => Array
+                        (
+                            [total_notifications] => 0
+                            [critical_count] => 0
+                            [warning_count] => 0
+                        )
+
+                )
+
+        )
+
+    [notes] => 
+    [updated_by] => admin
+)
+Database connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession ID: 6nt3s3fbockrdagmhk6r08stmsStarting api/login.phpBefore requiring db_connection.phpDatabase connection successfulAfter requiring db_connection.phpUsing FormData - Email: 'jowakielectrical@gmail.com', Password: non-emptyChecking database connectionPreparing query for email: jowakielectrical@gmail.comUser found: {"id":1,"email":"jowakielectrical@gmail.com"}Login successful for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession extended for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession expired for user ID: 1Redirecting to login: Your session has expired. Please log in again.Database connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession ID: bcm1l1gqjq6hfm5o48ns3f2jnhStarting api/login.phpBefore requiring db_connection.phpDatabase connection successfulAfter requiring db_connection.phpUsing FormData - Email: 'jowakielectrical@gmail.com', Password: non-emptyChecking database connectionPreparing query for email: jowakielectrical@gmail.comUser found: {"id":1,"email":"jowakielectrical@gmail.com"}Login successful for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection error: No connection could be made because the target machine actively refused itDatabase connection error: No connection could be made because the target machine actively refused itDatabase connection error: No connection could be made because the target machine actively refused itDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession ID: 3e2a7iflqofjbd50n3oaqjekchStarting api/login.phpBefore requiring db_connection.phpDatabase connection successfulAfter requiring db_connection.phpUsing FormData - Email: 'jowakielectrical@gmail.com', Password: non-emptyChecking database connectionPreparing query for email: jowakielectrical@gmail.comUser found: {"id":1,"email":"jowakielectrical@gmail.com"}Login successful for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession extended for user: jowakielectrical@gmail.comSession ID: 57aod5m4a6sr51t3jqemusudm8Starting api/login.phpBefore requiring db_connection.phpDatabase connection successfulAfter requiring db_connection.phpUsing FormData - Email: 'jowakielectrical@gmail.com', Password: non-emptyChecking database connectionPreparing query for email: jowakielectrical@gmail.comUser found: {"id":1,"email":"jowakielectrical@gmail.com"}Login successful for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulSession expired for user ID: 1Redirecting to login: Your session has expired. Please log in again.Session ID: hfsie9k1mnivb7hi8m4249k0c7Starting api/login.phpBefore requiring db_connection.phpDatabase connection successfulAfter requiring db_connection.phpUsing FormData - Email: 'jowakielectrical@gmail.com', Password: non-emptyChecking database connectionPreparing query for email: jowakielectrical@gmail.comUser found: {"id":1,"email":"jowakielectrical@gmail.com"}Login successful for user: jowakielectrical@gmail.comDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successfulDatabase connection successful

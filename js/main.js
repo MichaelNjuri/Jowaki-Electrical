@@ -8,6 +8,8 @@ import { initializeNotifications, toggleNotifications } from './modules/notifica
 import { initializeModals, showModal, hideModal } from './modules/modals.js';
 import { initializeSearchFilters } from './modules/searchFilters.js';
 import { initializeAnalytics } from './modules/analytics.js';
+import { storeCategoriesModule, initializeStoreCategories } from './modules/storeCategories.js';
+import { contactMessagesModule, initializeContactMessages } from './modules/contactMessages.js';
 
 // Shared state object
 const state = {
@@ -19,15 +21,41 @@ const state = {
     lowStockData: {}
 };
 
+// Expose state globally for button onclick handlers
+window.adminState = state;
+
+// Expose managers globally
+window.storeCategoriesModule = storeCategoriesModule;
+window.contactMessagesModule = contactMessagesModule;
+
 // Make functions available globally for onclick handlers
 window.adminModules = {
     // Navigation
     showSection,
     
+    // Dashboard navigation functions
+    showOrdersSection: () => showSection('orders'),
+    showProductsSection: () => showSection('products'),
+    showCustomersSection: () => showSection('customers'),
+    showCategoriesSection: () => showSection('categories'),
+    showAnalyticsSection: () => showSection('analytics'),
+    showContactMessagesSection: () => showSection('contact-messages'),
+    
     // Orders CRUD
     viewOrder: (id) => viewOrder(id, state),
     editOrder: (id) => editOrder(id, state),
     deleteOrder: (id) => deleteOrder(id, state),
+    
+    // Order Status Management - Now uses modal interface
+    updateOrderStatus: (orderId, newStatus, state) => {
+        // Import the new modal-based function
+        import('./modules/orders.js').then(module => {
+            module.updateOrderStatus(orderId, newStatus, state);
+        }).catch(error => {
+            console.error('Error importing orders module:', error);
+            showNotification('Error loading order status update interface', 'error');
+        });
+    },
     
     // Products CRUD
     viewProduct: (id) => viewProduct(id, state),
@@ -42,43 +70,14 @@ window.adminModules = {
     // Categories CRUD
     editCategory: (id) => editCategory(id, state),
     deleteCategory: (id) => deleteCategory(id, state),
-    promptAddCategory: () => promptAddCategory(state),
-    
-    // Modals
-    showModal,
-    hideModal,
+    addCategory: () => promptAddCategory(state),
     
     // Notifications
-    toggleNotifications,
+    toggleNotifications: () => toggleNotifications(state),
     
-    // Order Status Management
-    updateOrderStatus: async (orderId, newStatus, notes = '') => {
-        try {
-            const response = await fetch('./API/update_order_status.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    order_id: orderId,
-                    status: newStatus,
-                    notes: notes
-                })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                // Refresh orders list
-                await initializeOrders(state);
-                return data;
-            } else {
-                throw new Error(data.error || 'Failed to update order status');
-            }
-        } catch (error) {
-            console.error('Error updating order status:', error);
-            throw error;
-        }
-    },
+    // Modals
+    showModal: (modalId) => showModal(modalId),
+    hideModal: (modalId) => hideModal(modalId),
     
     // Stock Management
     manageStock: async (productId, action, quantity = 0) => {
@@ -162,8 +161,64 @@ window.adminModules = {
     downloadLogs: () => {
         // Placeholder for logs download functionality
         alert('Logs download functionality will be implemented here');
+    },
+    
+    // Store Categories Management
+    addCategory: (formData) => storeCategoriesModule.addStoreCategory(formData),
+    editCategory: (id) => storeCategoriesModule.loadCategoryForEdit(id),
+    deleteCategory: (id) => storeCategoriesModule.deleteStoreCategory(id),
+    updateCategory: (formData) => storeCategoriesModule.editStoreCategory(formData),
+    exportCategoriesCSV: () => storeCategoriesModule.exportStoreCategoriesCSV(),
+    importCategoriesCSV: () => storeCategoriesModule.searchStoreCategories(),
+    
+    // Logout function
+    logout: () => {
+        if (confirm('Are you sure you want to logout?')) {
+            // Clear any stored session data
+            sessionStorage.clear();
+            localStorage.removeItem('admin_session');
+            
+            // Redirect to login page
+            window.location.href = 'login.html';
+        }
     }
 };
+
+// Utility function to show notifications
+function showNotification(message, type = 'info') {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification-popup');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification-popup notification-${type}`;
+    
+    // Notification content
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div>
+                <strong>${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+                <p>${message}</p>
+            </div>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+        </div>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Show with animation
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -184,6 +239,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             initializeNotifications(state),
             initializeAnalytics()
         ]);
+        
+        // Initialize carousel manager
+        // await carouselManager.init(); // This line is removed
+        
+        // Initialize store categories
+        initializeStoreCategories();
+        await storeCategoriesModule.loadStoreCategories();
+        
+        // Initialize contact messages
+        initializeContactMessages();
         
         // Initialize UI components
         initializeModals(state);
@@ -251,10 +316,10 @@ async function initializeSettingsForms() {
                 
                 try {
                     await window.adminModules.saveSettings(settingsData);
-                    alert('General settings saved successfully!');
+                    showNotification('General settings saved successfully!', 'success');
                     window.adminModules.hideModal('general-settings-modal');
                 } catch (error) {
-                    alert('Error saving settings: ' + error.message);
+                    showNotification('Error saving settings: ' + error.message, 'error');
                 }
             });
         }
@@ -284,10 +349,10 @@ async function initializeSettingsForms() {
                 
                 try {
                     await window.adminModules.saveSettings(settingsData);
-                    alert('Payment settings saved successfully!');
+                    showNotification('Payment settings saved successfully!', 'success');
                     window.adminModules.hideModal('payment-settings-modal');
                 } catch (error) {
-                    alert('Error saving settings: ' + error.message);
+                    showNotification('Error saving settings: ' + error.message, 'error');
                 }
             });
         }
@@ -318,10 +383,10 @@ async function initializeSettingsForms() {
                 
                 try {
                     await window.adminModules.saveSettings(settingsData);
-                    alert('Shipping settings saved successfully!');
+                    showNotification('Shipping settings saved successfully!', 'success');
                     window.adminModules.hideModal('shipping-settings-modal');
                 } catch (error) {
-                    alert('Error saving settings: ' + error.message);
+                    showNotification('Error saving settings: ' + error.message, 'error');
                 }
             });
         }
@@ -349,10 +414,10 @@ async function initializeSettingsForms() {
                 
                 try {
                     await window.adminModules.saveSettings(settingsData);
-                    alert('Security settings saved successfully!');
+                    showNotification('Security settings saved successfully!', 'success');
                     window.adminModules.hideModal('backup-settings-modal');
                 } catch (error) {
-                    alert('Error saving settings: ' + error.message);
+                    showNotification('Error saving settings: ' + error.message, 'error');
                 }
             });
         }

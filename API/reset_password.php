@@ -1,203 +1,160 @@
 <?php
-session_start();
-require 'db_connection.php';
+// Password Reset Handler
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
-// Function to display error message
-function displayError($message) {
-    echo "<!DOCTYPE html><html><head><title>Error</title></head><body>";
-    echo "<h2>Error</h2><p>" . htmlspecialchars($message) . "</p>";
-    echo "<a href='login.php'>Back to Login</a></body></html>";
-    exit;
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
 }
 
-// Function to send JSON response (for AJAX requests)
-function sendJsonResponse($success, $message, $httpCode = 200) {
-    http_response_code($httpCode);
-    header('Content-Type: application/json');
-    echo json_encode(['success' => $success, 'message' => $message]);
-    exit;
+// Function to send JSON response
+function sendJsonResponse($data, $statusCode = 200) {
+    http_response_code($statusCode);
+    echo json_encode($data);
+    exit();
 }
 
-// Check if this is an AJAX request
-$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+// Function to send error response
+function sendErrorResponse($message, $statusCode = 400) {
+    sendJsonResponse(['success' => false, 'error' => $message], $statusCode);
+}
 
-// Also check content type for JSON requests
-$isJson = isset($_SERVER['CONTENT_TYPE']) && 
-          strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false;
-
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Parse input data
-    if ($isJson) {
-        $input = json_decode(file_get_contents('php://input'), true);
-        $email = trim($input['email'] ?? '');
-    } else {
-        $email = trim($_POST['email'] ?? '');
+try {
+    // Check request method
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        sendErrorResponse('Only POST method allowed', 405);
     }
 
-    // Validate email
-    if (empty($email)) {
-        if ($isAjax || $isJson) {
-            sendJsonResponse(false, "Please enter your email address", 400);
-        } else {
-            header("Location: login.php?error=" . urlencode("Please enter your email address"));
-            exit;
-        }
+    // Include database connection
+    require_once 'db_connection.php';
+    
+    // Check database connection
+    if (!isset($conn) || $conn->connect_error) {
+        sendErrorResponse('Database connection failed', 500);
     }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        if ($isAjax || $isJson) {
-            sendJsonResponse(false, "Please enter a valid email address", 400);
-        } else {
-            header("Location: login.php?error=" . urlencode("Please enter a valid email address"));
-            exit;
-        }
+    // Get and validate input
+    $raw_input = file_get_contents('php://input');
+    if (empty($raw_input)) {
+        sendErrorResponse('No input data received');
     }
 
-    // Check if email exists in database
-    $stmt = $conn->prepare("SELECT id, first_name FROM users WHERE email = ?");
+    $input = json_decode($raw_input, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        sendErrorResponse('Invalid JSON data');
+    }
+
+    // Validate required fields
+    if (!isset($input['token']) || empty(trim($input['token']))) {
+        sendErrorResponse('Reset token is required');
+    }
+
+    if (!isset($input['password']) || empty(trim($input['password']))) {
+        sendErrorResponse('New password is required');
+    }
+
+    if (!isset($input['confirm_password']) || empty(trim($input['confirm_password']))) {
+        sendErrorResponse('Password confirmation is required');
+    }
+
+    // Sanitize input
+    $token = trim($input['token']);
+    $password = trim($input['password']);
+    $confirm_password = trim($input['confirm_password']);
+
+    // Validate password
+    if (strlen($password) < 8) {
+        sendErrorResponse('Password must be at least 8 characters long');
+    }
+
+    if ($password !== $confirm_password) {
+        sendErrorResponse('Passwords do not match');
+    }
+
+    // Check if password_resets table exists
+    $table_check = $conn->query("SHOW TABLES LIKE 'password_resets'");
+    if ($table_check->num_rows === 0) {
+        sendErrorResponse('Password reset table does not exist', 500);
+    }
+
+    // Validate reset token
+    $stmt = $conn->prepare("SELECT pr.*, u.id as user_id, u.email FROM password_resets pr 
+                           JOIN users u ON pr.user_id = u.id 
+                           WHERE pr.token = ? AND pr.expires_at > NOW()");
     if (!$stmt) {
-        if ($isAjax || $isJson) {
-            sendJsonResponse(false, "Database error occurred", 500);
-        } else {
-            displayError("Database error: " . $conn->error);
-        }
+        sendErrorResponse('Database query preparation failed', 500);
     }
-
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
+    
+    $stmt->bind_param('s', $token);
+    if (!$stmt->execute()) {
+        sendErrorResponse('Database query execution failed', 500);
+    }
+    
     $result = $stmt->get_result();
-
     if ($result->num_rows === 0) {
         $stmt->close();
-        // For security, don't reveal if email exists or not
-        error_log("Password reset requested for non-existent email: $email");
-        
-        if ($isAjax || $isJson) {
-            sendJsonResponse(true, "If an account with that email exists, a password reset link has been sent to your email address.");
-        } else {
-            header("Location: login.php?success=true&message=" . urlencode("If an account with that email exists, a password reset link has been sent to your email address."));
-            exit;
-        }
+        sendErrorResponse('Invalid or expired reset token');
     }
 
-    $user = $result->fetch_assoc();
+    $reset_data = $result->fetch_assoc();
     $stmt->close();
 
-    // Generate reset token
-    $resetToken = bin2hex(random_bytes(32));
-    $resetExpiry = date('Y-m-d H:i:s', strtotime('+1 hour')); // Token expires in 1 hour
+    // Hash the new password
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Create password_resets table if it doesn't exist
-    $createTable = "CREATE TABLE IF NOT EXISTS password_resets (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(255) NOT NULL,
-        token VARCHAR(64) NOT NULL UNIQUE,
-        expires_at TIMESTAMP NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        used TINYINT(1) DEFAULT 0,
-        INDEX idx_email (email),
-        INDEX idx_token (token)
-    )";
+    // Update user password
+    $update_stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+    if (!$update_stmt) {
+        sendErrorResponse('Failed to prepare password update query', 500);
+    }
     
-    if (!$conn->query($createTable)) {
-        error_log("Failed to create password_resets table: " . $conn->error);
-        if ($isAjax || $isJson) {
-            sendJsonResponse(false, "Database setup error", 500);
-        } else {
-            displayError("Database setup error");
-        }
+    $update_stmt->bind_param('si', $hashed_password, $reset_data['user_id']);
+    if (!$update_stmt->execute()) {
+        sendErrorResponse('Failed to update password', 500);
     }
+    $update_stmt->close();
 
-    // Delete any existing reset tokens for this email
-    $deleteOld = $conn->prepare("DELETE FROM password_resets WHERE email = ?");
-    if ($deleteOld) {
-        $deleteOld->bind_param("s", $email);
-        $deleteOld->execute();
-        $deleteOld->close();
+    // Delete the used reset token
+    $delete_stmt = $conn->prepare("DELETE FROM password_resets WHERE token = ?");
+    $delete_stmt->bind_param('s', $token);
+    $delete_stmt->execute();
+    $delete_stmt->close();
+
+    // Log the password reset
+    error_log("Password reset completed for user ID: " . $reset_data['user_id'] . ", email: " . $reset_data['email']);
+
+    // Close database connection
+    $conn->close();
+
+    // Send success response
+    sendJsonResponse([
+        'success' => true,
+        'message' => 'Password has been reset successfully. You can now log in with your new password.'
+    ]);
+
+} catch (Exception $e) {
+    // Log the error
+    error_log("Error in reset_password.php: " . $e->getMessage());
+    
+    // Send error response
+    sendErrorResponse('Internal server error: ' . $e->getMessage(), 500);
+    
+    // Close connection if it exists
+    if (isset($conn) && $conn) {
+        $conn->close();
     }
-
-    // Store reset token in database
-    $stmt = $conn->prepare("INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)");
-    if (!$stmt) {
-        if ($isAjax || $isJson) {
-            sendJsonResponse(false, "Database error occurred", 500);
-        } else {
-            displayError("Database error: " . $conn->error);
-        }
-    }
-
-    $stmt->bind_param("sss", $email, $resetToken, $resetExpiry);
-
-    if (!$stmt->execute()) {
-        error_log("Failed to insert password reset token: " . $stmt->error);
-        if ($isAjax || $isJson) {
-            sendJsonResponse(false, "Failed to process reset request", 500);
-        } else {
-            displayError("Failed to process reset request");
-        }
-    }
-
-    $stmt->close();
-
-    // Create reset link
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'];
-    $resetLink = $protocol . "://" . $host . dirname($_SERVER['PHP_SELF']) . "/reset_password_form.php?token=" . $resetToken;
-
-    // Log the reset link (in production, you would send this via email)
-    error_log("Password reset link for $email: $resetLink");
-
-    // Here you would send an email with the reset link
-    // For demonstration, we'll create a simple email function
-    $emailSent = sendResetEmail($email, $user['first_name'], $resetLink);
-
-    if ($emailSent) {
-        if ($isAjax || $isJson) {
-            sendJsonResponse(true, "A password reset link has been sent to your email address. Please check your inbox.");
-        } else {
-            header("Location: login.php?success=true&message=" . urlencode("A password reset link has been sent to your email address. Please check your inbox."));
-            exit;
-        }
-    } else {
-        // Even if email fails, don't reveal it for security
-        if ($isAjax || $isJson) {
-            sendJsonResponse(true, "If an account with that email exists, a password reset link has been sent.");
-        } else {
-            header("Location: login.php?success=true&message=" . urlencode("If an account with that email exists, a password reset link has been sent."));
-            exit;
-        }
-    }
-
-} else {
-    if ($isAjax || $isJson) {
-        sendJsonResponse(false, "Invalid request method", 405);
-    } else {
-        displayError("Invalid request method");
+} catch (Error $e) {
+    // Handle fatal errors
+    error_log("Fatal error in reset_password.php: " . $e->getMessage());
+    
+    sendErrorResponse('Server error occurred', 500);
+    
+    if (isset($conn) && $conn) {
+        $conn->close();
     }
 }
-
-// Simple email function (replace with proper email service in production)
-function sendResetEmail($email, $firstName, $resetLink) {
-    $to = $email;
-    $subject = "Password Reset - Jowaki Electrical Services";
-    
-    $message = "Hi " . htmlspecialchars($firstName) . ",\n\n";
-    $message .= "You requested a password reset for your account at Jowaki Electrical Services.\n\n";
-    $message .= "Click the link below to reset your password:\n";
-    $message .= $resetLink . "\n\n";
-    $message .= "This link will expire in 1 hour for security reasons.\n\n";
-    $message .= "If you didn't request this password reset, please ignore this email. Your password will remain unchanged.\n\n";
-    $message .= "Best regards,\n";
-    $message .= "Jowaki Electrical Services Team";
-    
-    $headers = "From: noreply@jowakielectrical.com\r\n";
-    $headers .= "Reply-To: support@jowakielectrical.com\r\n";
-    $headers .= "X-Mailer: PHP/" . phpversion();
-    
-    // Use PHP's mail function (basic - consider using PHPMailer for production)
-    return mail($to, $subject, $message, $headers);
-}
-
-$conn->close();
 ?>

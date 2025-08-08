@@ -1033,3 +1033,71 @@ body {
     background: #059669;
     border-color: #059669;
 }
+
+/* Image Input Styles */
+.image-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.image-input-option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.image-input-divider {
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-secondary);
+    position: relative;
+    margin: 0.5rem 0;
+}
+
+.image-input-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-color);
+    z-index: 1;
+}
+
+.image-input-divider span {
+    background: var(--bg-tertiary);
+    padding: 0 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+.image-input-container input[type="file"] {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+}
+
+.image-input-container input[type="file"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.image-preview {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-color);
+}

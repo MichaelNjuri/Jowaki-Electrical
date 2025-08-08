@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .btn-danger { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Database Connection Test</h2>
+        <button class="btn-primary" onclick="testDatabaseConnection()">Test Database Connection</button>
+        <div id="db-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. API Endpoints Test</h2>
+        <button class="btn-primary" onclick="testAPIEndpoints()">Test All API Endpoints</button>
+        <div id="api-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Dashboard Stats Test</h2>
+        <button class="btn-success" onclick="testDashboardStats()">Test Dashboard Statistics</button>
+        <div id="stats-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Orders Management Test</h2>
+        <button class="btn-warning" onclick="testOrdersManagement()">Test Orders Functions</button>
+        <div id="orders-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. Products Management Test</h2>
+        <button class="btn-warning" onclick="testProductsManagement()">Test Products Functions</button>
+        <div id="products-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>6. Customers Management Test</h2>
+        <button class="btn-warning" onclick="testCustomersManagement()">Test Customers Functions</button>
+        <div id="customers-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>7. Categories Management Test</h2>
+        <button class="btn-warning" onclick="testCategoriesManagement()">Test Categories Functions</button>
+        <div id="categories-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>8. Settings Test</h2>
+        <button class="btn-info" onclick="testSettings()">Test Settings Functions</button>
+        <div id="settings-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>9. Complete Integration Test</h2>
+        <button class="btn-danger" onclick="runCompleteTest()">Run Complete Test Suite</button>
+        <div id="complete-test-result"></div>
+    </div>
+
+    <script>
+        function addResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            element.appendChild(div);
+        }
+
+        function clearResults(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        async function testDatabaseConnection() {
+            clearResults('db-test-result');
+            addResult('db-test-result', 'Testing database connection...', 'info');
+            
+            try {
+                const response = await fetch('./api/test_db.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('db-test-result', '✅ Database connection successful!', 'success');
+                    addResult('db-test-result', `Database: ${data.database_name}`, 'info');
+                    addResult('db-test-result', `Tables found: ${data.tables.join(', ')}`, 'info');
+                } else {
+                    addResult('db-test-result', `❌ Database connection failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult('db-test-result', `❌ Database test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAPIEndpoints() {
+            clearResults('api-test-result');
+            addResult('api-test-result', 'Testing API endpoints...', 'info');
+            
+            const endpoints = [
+                { name: 'Dashboard Stats', url: './api/get_dashboard_stats.php' },
+                { name: 'Orders', url: './api/admin_orders.php' },
+                { name: 'Products', url: './api/get_products_admin.php' },
+                { name: 'Customers', url: './api/admin_customers.php' },
+                { name: 'Categories', url: './api/admin_categories.php' },
+                { name: 'Settings', url: './api/get_settings.php' },
+                { name: 'Notifications', url: './api/get_notifications_admin.php' },
+                { name: 'Low Stock', url: './api/check_low_stock.php' }
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint.url);
+                    const data = await response.json();
+                    
+                    if (data.success !== false) {
+                        addResult('api-test-result', `✅ ${endpoint.name}: Working`, 'success');
+                    } else {
+                        addResult('api-test-result', `⚠️ ${endpoint.name}: ${data.error || 'Unknown error'}`, 'error');
+                    }
+                } catch (error) {
+                    addResult('api-test-result', `❌ ${endpoint.name}: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testDashboardStats() {
+            clearResults('stats-test-result');
+            addResult('stats-test-result', 'Testing dashboard statistics...', 'info');
+            
+            try {
+                const response = await fetch('./api/get_dashboard_stats.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('stats-test-result', '✅ Dashboard stats loaded successfully!', 'success');
+                    addResult('stats-test-result', `Total Products: ${data.total_products}`, 'info');
+                    addResult('stats-test-result', `Pending Orders: ${data.pending_orders}`, 'info');
+                    addResult('stats-test-result', `Total Customers: ${data.total_customers}`, 'info');
+                    addResult('stats-test-result', `Monthly Revenue: KSh ${data.monthly_revenue}`, 'info');
+                } else {
+                    addResult('stats-test-result', `❌ Dashboard stats failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult('stats-test-result', `❌ Dashboard stats error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testOrdersManagement() {
+            clearResults('orders-test-result');
+            addResult('orders-test-result', 'Testing orders management...', 'info');
+            
+            try {
+                // Test fetching orders
+                const response = await fetch('./api/admin_orders.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('orders-test-result', '✅ Orders fetched successfully!', 'success');
+                    addResult('orders-test-result', `Found ${data.data ? data.data.length : 0} orders`, 'info');
+                } else {
+                    addResult('orders-test-result', `❌ Orders fetch failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult('orders-test-result', `❌ Orders test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testProductsManagement() {
+            clearResults('products-test-result');
+            addResult('products-test-result', 'Testing products management...', 'info');
+            
+            try {
+                const response = await fetch('./api/get_products_admin.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('products-test-result', '✅ Products fetched successfully!', 'success');
+                    addResult('products-test-result', `Found ${data.products ? data.products.length : 0} products`, 'info');
+                } else {
+                    addResult('products-test-result', `❌ Products fetch failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult('products-test-result', `❌ Products test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCustomersManagement() {
+            clearResults('customers-test-result');
+            addResult('customers-test-result', 'Testing customers management...', 'info');
+            
+            try {
+                const response = await fetch('./api/admin_customers.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('customers-test-result', '✅ Customers fetched successfully!', 'success');
+                    addResult('customers-test-result', `Found ${data.customers ? data.customers.length : 0} customers`, 'info');
+                } else {
+                    addResult('customers-test-result', `❌ Customers fetch failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult('customers-test-result', `❌ Customers test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCategoriesManagement() {
+            clearResults('categories-test-result');
+            addResult('categories-test-result', 'Testing categories management...', 'info');
+            
+            try {
+                const response = await fetch('./api/admin_categories.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('categories-test-result', '✅ Categories fetched successfully!', 'success');
+                    addResult('categories-test-result', `Found ${data.categories ? data.categories.length : 0} categories`, 'info');
+                } else {
+                    addResult('categories-test-result', `❌ Categories fetch failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult('categories-test-result', `❌ Categories test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSettings() {
+            clearResults('settings-test-result');
+            addResult('settings-test-result', 'Testing settings management...', 'info');
+            
+            try {
+                const response = await fetch('./api/get_settings.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('settings-test-result', '✅ Settings loaded successfully!', 'success');
+                    addResult('settings-test-result', `Store Name: ${data.settings.store_name || 'Not set'}`, 'info');
+                    addResult('settings-test-result', `Tax Rate: ${data.settings.tax_rate || 'Not set'}%`, 'info');
+                } else {
+                    addResult('settings-test-result', `❌ Settings load failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult('settings-test-result', `❌ Settings test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runCompleteTest() {
+            clearResults('complete-test-result');
+            addResult('complete-test-result', '🚀 Starting complete test suite...', 'info');
+            
+            const tests = [
+                { name: 'Database Connection', func: testDatabaseConnection },
+                { name: 'API Endpoints', func: testAPIEndpoints },
+                { name: 'Dashboard Stats', func: testDashboardStats },
+                { name: 'Orders Management', func: testOrdersManagement },
+                { name: 'Products Management', func: testProductsManagement },
+                { name: 'Customers Management', func: testCustomersManagement },
+                { name: 'Categories Management', func: testCategoriesManagement },
+                { name: 'Settings', func: testSettings }
+            ];
+            
+            for (const test of tests) {
+                addResult('complete-test-result', `Running ${test.name}...`, 'info');
+                await test.func();
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between tests
+            }
+            
+            addResult('complete-test-result', '🎉 Complete test suite finished!', 'success');
+        }
+    </script>
+</body>
+</html> 

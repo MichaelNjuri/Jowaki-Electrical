@@ -12,6 +12,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Include email service
+require_once 'email_service.php';
+
 // Set up error handler to catch any unexpected errors
 function handleError($errno, $errstr, $errfile, $errline) {
     error_log("PHP Error: $errstr in $errfile on line $errline");
@@ -147,12 +150,9 @@ try {
         }
         $user_id = $conn->insert_id;
 
-        // Send email with login credentials
-        $to = $email;
-        $subject = 'Your Jowaki Store Account';
-        $message = "Thank you for your purchase!\n\nAn account has been created for you.\nEmail: $email\nPassword: $password\n\nYou can log in at /jowaki_electrical_srvs/login_form.php to view your order history.";
-        $headers = 'From: no-reply@jowaki.com';
-        mail($to, $subject, $message, $headers);
+        // Send welcome email with login credentials
+        $customer_name = $first_name . ' ' . $last_name;
+        sendWelcomeEmail($email, $customer_name, $password);
     }
 
     // Check which columns exist in the orders table
@@ -269,6 +269,26 @@ try {
     $_SESSION['cart'] = [];
     $stmt->close();
     $conn->close();
+
+    // Send order confirmation email to customer
+    $customer_email = $customer_info['email'];
+    $customer_name = $customer_info['firstName'] . ' ' . $customer_info['lastName'];
+    
+    $order_data_for_email = [
+        'order_id' => $order_id,
+        'total' => $total,
+        'order_date' => $order_date,
+        'payment_method' => $payment_method,
+        'delivery_method' => $delivery_method,
+        'customer_info' => $customer_info
+    ];
+    
+    // Send customer confirmation email
+    sendOrderConfirmationEmail($order_data_for_email, $customer_email, $customer_name);
+    
+    // Send admin notification email
+    $admin_email = 'admin@jowaki.com'; // You can make this configurable
+    sendAdminOrderNotification($order_data_for_email, $admin_email);
 
     error_log("Order placement successful. Order ID: " . $order_id);
     echo json_encode(['success' => true, 'order_id' => $order_id]);

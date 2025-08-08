@@ -1,103 +1,78 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, PUT, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+// Check if user is logged in
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    echo json_encode(['success' => false, 'error' => 'User not logged in']);
+    exit;
+}
+
+// Check if it's a POST request
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+    exit;
 }
 
 require_once 'db_connection.php';
 
+$userId = $_SESSION['user_id'];
+
+// Get form data
+$firstName = trim($_POST['first_name'] ?? '');
+$lastName = trim($_POST['last_name'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$phone = trim($_POST['phone'] ?? '');
+$address = trim($_POST['address'] ?? '');
+$city = trim($_POST['city'] ?? '');
+$postalCode = trim($_POST['postal_code'] ?? '');
+
+// Validate required fields
+if (empty($firstName) || empty($lastName) || empty($email)) {
+    echo json_encode(['success' => false, 'error' => 'First name, last name, and email are required']);
+    exit;
+}
+
+// Validate email format
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(['success' => false, 'error' => 'Please enter a valid email address']);
+    exit;
+}
+
+// Check if email is already taken by another user
+$stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+$stmt->bind_param("si", $email, $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    echo json_encode(['success' => false, 'error' => 'Email address is already in use']);
+    exit;
+}
+
 try {
-    $input = json_decode(file_get_contents('php://input'), true);
+    // Update user profile
+    $stmt = $conn->prepare("
+        UPDATE users 
+        SET first_name = ?, last_name = ?, email = ?, phone = ?, address = ?, city = ?, postal_code = ?
+        WHERE id = ?
+    ");
     
-    if (!$input) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid JSON data']);
-        exit();
-    }
-
-    // Check if user is logged in
-    if (!isset($_SESSION['user_id']) || !isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'User not logged in']);
-        exit();
-    }
-
-    $user_id = $_SESSION['user_id'];
+    $stmt->bind_param("sssssssi", $firstName, $lastName, $email, $phone, $address, $city, $postalCode, $userId);
     
-    // Prepare update query with all possible fields
-    $updateFields = [];
-    $types = '';
-    $values = [];
-    
-    // Map input fields to database columns
-    $fieldMappings = [
-        'first_name' => 'first_name',
-        'last_name' => 'last_name',
-        'email' => 'email',
-        'phone' => 'phone',
-        'address' => 'address',
-        'city' => 'city',
-        'postal_code' => 'postal_code'
-    ];
-    
-    foreach ($fieldMappings as $inputField => $dbField) {
-        if (isset($input[$inputField]) && !empty($input[$inputField])) {
-            $updateFields[] = "$dbField = ?";
-            $types .= 's';
-            $values[] = $input[$inputField];
-        }
-    }
-    
-    if (empty($updateFields)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'No valid fields to update']);
-        exit();
-    }
-    
-    // Add user_id to values array
-    $values[] = $user_id;
-    $types .= 'i';
-    
-    $sql = "UPDATE users SET " . implode(', ', $updateFields) . " WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    
-    if (!$stmt) {
-        throw new Exception('Database prepare failed: ' . $conn->error);
-    }
-    
-    $stmt->bind_param($types, ...$values);
-    
-    if (!$stmt->execute()) {
-        throw new Exception('Database execute failed: ' . $stmt->error);
-    }
-    
-    if ($stmt->affected_rows > 0) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Profile updated successfully',
-            'updated_fields' => array_keys(array_filter($input, function($value) {
-                return !empty($value);
-            }))
-        ]);
+    if ($stmt->execute()) {
+        // Update session data
+        $_SESSION['user_name'] = $firstName . ' ' . $lastName;
+        $_SESSION['user_email'] = $email;
+        
+        echo json_encode(['success' => true, 'message' => 'Profile updated successfully']);
     } else {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Profile data unchanged',
-            'updated_fields' => []
-        ]);
+        echo json_encode(['success' => false, 'error' => 'Failed to update profile']);
     }
-    
-    $stmt->close();
     
 } catch (Exception $e) {
-    error_log('Update profile error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    error_log("Error updating user profile: " . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'An error occurred while updating profile']);
 }
 
 $conn->close();

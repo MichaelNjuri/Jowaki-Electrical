@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; background-color: #007bff; color: white; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Orders API Test</h1>
+    
+    <button onclick="testOrdersAPI()">Test Orders API</button>
+    <button onclick="testOrderStatusUpdate()">Test Order Status Update</button>
+    <button onclick="testOrdersStructure()">Test Orders Table Structure</button>
+    <button onclick="testUsersStructure()">Test Users Table Structure</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        async function testOrdersAPI() {
+            addResult('Testing Orders API...', 'info');
+            
+            try {
+                const response = await fetch('./API/admin_orders.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('✅ Orders API working correctly!', 'success');
+                    addResult(`Found ${data.data ? data.data.length : 0} orders`, 'info');
+                    
+                    if (data.data && data.data.length > 0) {
+                        const order = data.data[0];
+                        addResult(`Sample order: ID ${order.id}, Customer: ${order.customer_name}, Status: ${order.status}`, 'info');
+                    }
+                } else {
+                    addResult(`❌ Orders API failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Orders API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testOrderStatusUpdate() {
+            addResult('Testing Order Status Update...', 'info');
+            
+            try {
+                const response = await fetch('./API/update_order_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: 1,
+                        status: 'test',
+                        notes: 'Test update',
+                        updated_by: 'admin'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('✅ Order Status Update API working!', 'success');
+                } else {
+                    addResult(`⚠️ Order Status Update API: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Order Status Update error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testOrdersStructure() {
+            addResult('Testing Orders Table Structure...', 'info');
+            
+            try {
+                const response = await fetch('./API/test_orders_structure.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('✅ Orders table structure check successful!', 'success');
+                    addResult(`Columns found: ${data.columns.join(', ')}`, 'info');
+                    addResult(`Total orders: ${data.total_orders}`, 'info');
+                    
+                    if (data.sample_order) {
+                        addResult('Sample order data available', 'info');
+                    } else {
+                        addResult('No orders found in database', 'warning');
+                    }
+                } else {
+                    addResult(`❌ Orders structure check failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Orders structure check error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUsersStructure() {
+            addResult('Testing Users Table Structure...', 'info');
+            
+            try {
+                const response = await fetch('./API/test_users_structure.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('✅ Users table structure check successful!', 'success');
+                    addResult(`Columns found: ${data.columns.join(', ')}`, 'info');
+                    addResult(`Total users: ${data.total_users}`, 'info');
+                    
+                    if (data.sample_user) {
+                        addResult('Sample user data available', 'info');
+                    } else {
+                        addResult('No users found in database', 'warning');
+                    }
+                } else {
+                    addResult(`❌ Users structure check failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Users structure check error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

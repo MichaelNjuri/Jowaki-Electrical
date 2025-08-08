@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Jowaki Electrical Services</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
@@ -22,7 +24,13 @@
 
             <!-- Login Form -->
             <div id="loginForm" class="form-section active">
-                <h2>Welcome Back</h2>
+                <div class="form-header">
+                    <div class="logo-section">
+                        <img src="Logo.jpg" alt="Jowaki Logo" class="form-logo">
+                        <h2>Welcome Back</h2>
+                        <p>Sign in to your account to continue</p>
+                    </div>
+                </div>
                 
                 <!-- Google Login Button -->
                 <button type="button" class="btn google-btn" id="googleLoginBtn">
@@ -36,7 +44,7 @@
                 </button>
 
                 <div class="divider">
-                    <span>or</span>
+                    <span>or continue with email</span>
                 </div>
 
                 <form id="loginFormElement">
@@ -45,27 +53,53 @@
                     
                     <div class="form-group">
                         <label for="loginEmail">Email Address</label>
-                        <input type="email" id="loginEmail" name="email" required>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="loginEmail" name="email" placeholder="Enter your email" required>
+                        </div>
                         <div class="error-message"></div>
                     </div>
+                    
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" name="password" required>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" id="loginPasswordToggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                         <div class="error-message"></div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Sign In</button>
-                    <div class="form-links">
-                        <a href="#" id="forgotPasswordLink">Forgot your password?</a>
+                    
+                    <div class="form-options">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="rememberMe" name="remember">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#" id="forgotPasswordLink" class="forgot-link">Forgot password?</a>
                     </div>
-                    <div class="form-links">
-                        <a href="#" id="switchToSignUpLink">Don't have an account? Sign up here</a>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+                    
+                    <div class="form-footer">
+                        <p>Don't have an account? <a href="#" id="switchToSignUpLink">Sign up here</a></p>
                     </div>
                 </form>
             </div>
 
             <!-- Sign Up Form -->
             <div id="signUpForm" class="form-section">
-                <h2>Create Account</h2>
+                <div class="form-header">
+                    <div class="logo-section">
+                        <img src="Logo.jpg" alt="Jowaki Logo" class="form-logo">
+                        <h2>Create Account</h2>
+                        <p>Join us and start shopping today</p>
+                    </div>
+                </div>
                 
                 <!-- Google Signup Button -->
                 <button type="button" class="btn google-btn" id="googleSignupBtn">
@@ -79,43 +113,75 @@
                 </button>
 
                 <div class="divider">
-                    <span>or</span>
+                    <span>or sign up with email</span>
                 </div>
 
                 <form id="signUpFormElement">
                     <input type="hidden" id="signupRedirectField" name="redirect" value="">
                     <input type="hidden" id="signupReturnToCheckoutField" name="return_to_checkout" value="">
                     
-                    <div class="form-group">
-                        <label for="firstName">First Name</label>
-                        <input type="text" id="firstName" name="firstName" required>
-                        <div class="error-message"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="firstName" name="firstName" placeholder="Enter first name" required>
+                            </div>
+                            <div class="error-message"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="lastName" name="lastName" placeholder="Enter last name" required>
+                            </div>
+                            <div class="error-message"></div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="lastName">Last Name</label>
-                        <input type="text" id="lastName" name="lastName" required>
-                        <div class="error-message"></div>
-                    </div>
+                    
                     <div class="form-group">
                         <label for="signUpEmail">Email Address</label>
-                        <input type="email" id="signUpEmail" name="email" required>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="signUpEmail" name="email" placeholder="Enter your email" required>
+                        </div>
                         <div class="error-message"></div>
                     </div>
+                    
                     <div class="form-group">
                         <label for="phoneNumber">Phone Number</label>
-                        <input type="tel" id="phoneNumber" name="phoneNumber" required>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone input-icon"></i>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter phone number" required>
+                        </div>
                         <div class="error-message"></div>
                     </div>
+                    
                     <div class="form-group">
                         <label for="signUpPassword">Password</label>
-                        <input type="password" id="signUpPassword" name="password" required>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="signUpPassword" name="password" placeholder="Create a password" required>
+                            <button type="button" class="password-toggle" id="signUpPasswordToggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                         <div class="error-message"></div>
                     </div>
+                    
                     <div class="form-group">
                         <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                            <button type="button" class="password-toggle" id="confirmPasswordToggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                         <div class="error-message"></div>
                     </div>
+                    
                     <div class="form-group">
                         <label class="checkbox-group">
                             <input type="checkbox" name="terms" required>
@@ -123,28 +189,45 @@
                         </label>
                         <div class="error-message"></div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Create Account</button>
-                    <div class="form-links">
-                        <a href="#" id="switchToLoginLink">Already have an account? Sign in here</a>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                    
+                    <div class="form-footer">
+                        <p>Already have an account? <a href="#" id="switchToLoginLink">Sign in here</a></p>
                     </div>
                 </form>
             </div>
 
             <!-- Forgot Password Form -->
             <div id="forgotPasswordForm" class="form-section">
-                <h2>Reset Password</h2>
-                <p style="text-align: center; color: #666; margin-bottom: 20px;">
-                    Enter your email address and we'll send you a link to reset your password.
-                </p>
+                <div class="form-header">
+                    <div class="logo-section">
+                        <img src="Logo.jpg" alt="Jowaki Logo" class="form-logo">
+                        <h2>Reset Password</h2>
+                        <p>Enter your email to receive a reset link</p>
+                    </div>
+                </div>
+                
                 <form id="resetPasswordFormElement">
                     <div class="form-group">
                         <label for="resetEmail">Email Address</label>
-                        <input type="email" id="resetEmail" name="email" required>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="resetEmail" name="email" placeholder="Enter your email" required>
+                        </div>
                         <div class="error-message"></div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Send Reset Link</button>
-                    <div class="form-links">
-                        <a href="#" id="backToLoginLink">Back to Login</a>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Send Reset Link
+                    </button>
+                    
+                    <div class="form-footer">
+                        <p><a href="#" id="backToLoginLink">Back to Login</a></p>
                     </div>
                 </form>
             </div>

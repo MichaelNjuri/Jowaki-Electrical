@@ -263,11 +263,14 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: 1.5rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .dashboard-card:hover {
             box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
         }
 
         .dashboard-card h3 {
@@ -281,6 +284,25 @@
             font-size: 2rem;
             font-weight: 700;
             color: var(--text-primary);
+        }
+        
+        /* Contact Messages Styles */
+        .unread-message {
+            background-color: #fef3c7;
+            font-weight: 500;
+        }
+        
+        .unread-message:hover {
+            background-color: #fde68a;
+        }
+        
+        .message-details .detail-row {
+            margin-bottom: 10px;
+        }
+        
+        .message-content {
+            font-family: inherit;
+            line-height: 1.6;
         }
 
         /* Section Header */
@@ -380,6 +402,222 @@
 
         .btn-danger:hover {
             background: #dc2626;
+        }
+
+        /* Image Upload Styles */
+        .image-upload-section {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            margin-top: 0.5rem;
+        }
+
+        .current-image-preview {
+            text-align: center;
+        }
+
+        .image-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .image-upload-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 120px;
+        }
+
+        .file-upload-label:hover {
+            border-color: var(--primary-color);
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+
+        .file-upload-label i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload-label span {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .image-preview-wrapper {
+            text-align: center;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Responsive adjustments for image upload */
+        @media (max-width: 768px) {
+            .image-upload-section {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .current-image-preview img,
+            .image-preview-wrapper img {
+                max-width: 150px;
+                max-height: 150px;
+            }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 1.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1rem 1.5rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal-footer .btn {
+            min-width: 100px;
+        }
+
+        /* Form Groups in Modal */
+        .modal-body .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-body .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-body label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .modal-body .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .modal-body .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .modal-body textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-body select.form-control {
+            cursor: pointer;
         }
 
         /* Data Table */
@@ -665,6 +903,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="contact-messages">
+                            <i class="nav-icon fas fa-envelope"></i>
+                            Contact Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="#" class="nav-link" data-section="settings">
                             <i class="nav-icon fas fa-cog"></i>
                             Settings
@@ -699,39 +943,39 @@
                 <!-- Dashboard Section -->
                 <section id="dashboard" class="content-section active">
                     <div class="dashboard-grid">
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showProductsSection()" style="cursor: pointer;">
                             <h3>Total Products</h3>
                             <p id="total-products">0</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Pending Orders</h3>
                             <p id="pending-orders">0</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showCustomersSection()" style="cursor: pointer;">
                             <h3>Total Customers</h3>
                             <p id="total-customers">0</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Monthly Revenue</h3>
                             <p>$<span id="monthly-revenue">0.00</span></p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Monthly Sales</h3>
                             <p id="monthly-sales">0</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Orders This Month</h3>
                             <p id="orders-this-month">0</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showCustomersSection()" style="cursor: pointer;">
                             <h3>New Customers</h3>
                             <p id="new-customers">0</p>
                         </div>
-                        <div class="dashboard-card">
-                            <h3>Service Completion</h3>
-                            <p id="service-completion">0%</p>
+                        <div class="dashboard-card" onclick="adminModules.showContactMessagesSection()" style="cursor: pointer;">
+                            <h3>Contact Messages</h3>
+                            <p id="contact-messages-count">0</p>
                         </div>
-                        <div class="dashboard-card" style="border-left: 4px solid #f59e0b;">
+                        <div class="dashboard-card" onclick="adminModules.showProductsSection()" style="cursor: pointer; border-left: 4px solid #f59e0b;">
                             <h3>Low Stock Alerts</h3>
                             <p id="low-stock-products" style="color: #f59e0b;">0</p>
                         </div>
@@ -868,15 +1112,24 @@
                     </div>
                 </section>
 
-                <!-- Categories Section -->
+                <!-- Store Categories Section -->
                 <section id="categories" class="content-section">
                     <div class="section-header">
-                        <h3>Categories Management</h3>
+                        <h3>Store Categories Management</h3>
+                        <p class="section-subtitle">Manage the category cards that appear in the store's category scroll section</p>
                         <div class="section-controls">
                             <input type="text" class="form-control" placeholder="Search categories..." id="category-search">
-                            <button class="btn btn-primary" onclick="adminModules.showModal('add-category-modal')">
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-store-category-modal')">
                                 <i class="fas fa-plus"></i>
-                                Add Category
+                                Add Store Category
+                            </button>
+                            <button class="btn btn-secondary" onclick="adminModules.exportCategoriesCSV()">
+                                <i class="fas fa-download"></i>
+                                Export CSV
+                            </button>
+                            <button class="btn btn-info" onclick="adminModules.importCategoriesCSV()">
+                                <i class="fas fa-upload"></i>
+                                Import CSV
                             </button>
                         </div>
                     </div>
@@ -885,15 +1138,50 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
+                                    <th>Image/Icon</th>
                                     <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Products</th>
+                                    <th>Display Name</th>
+                                    <th>Filter Value</th>
+                                    <th>Sort Order</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="store-categories-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading store categories...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Legacy Categories Section -->
+                <section id="legacy-categories" class="content-section">
+                    <div class="section-header">
+                        <h3>Legacy Categories Management</h3>
+                        <p class="section-subtitle">Manage the legacy category system (for backward compatibility)</p>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search categories..." id="legacy-category-search">
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-category-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Legacy Category
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Category</th>
+                                    <th>Subcategory</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="categories-tbody">
                                 <tr>
-                                    <td colspan="5" style="text-align: center; padding: 20px; color: #666;">Loading categories...</td>
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">Loading legacy categories...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -926,27 +1214,27 @@
                     
                     <!-- Sales Overview -->
                     <div class="dashboard-grid" style="margin-bottom: 2rem;">
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Total Revenue</h3>
                             <p id="total-revenue">KSh 0.00</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Total Orders</h3>
                             <p id="total-orders">0</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showProductsSection()" style="cursor: pointer;">
                             <h3>Items Sold</h3>
                             <p id="items-sold">0</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Average Order Value</h3>
                             <p id="avg-order-value">KSh 0.00</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Total Tax</h3>
                             <p id="total-tax">KSh 0.00</p>
                         </div>
-                        <div class="dashboard-card">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
                             <h3>Delivery Fees</h3>
                             <p id="total-delivery">KSh 0.00</p>
                         </div>
@@ -1033,6 +1321,43 @@
                             <h3>New Customers (7d)</h3>
                             <p id="new-customers-7d">0</p>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Contact Messages Section -->
+                <section id="contact-messages" class="content-section">
+                    <div class="section-header">
+                        <h3>Contact Messages</h3>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search messages..." id="message-search">
+                            <select class="form-control" id="message-status-filter">
+                                <option value="">All Messages</option>
+                                <option value="unread">Unread</option>
+                                <option value="read">Read</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Subject</th>
+                                    <th>Message</th>
+                                    <th>Submitted</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contact-messages-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading messages...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
@@ -1153,7 +1478,11 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Category</label>
-                    <input type="text" class="form-input" name="category" placeholder="e.g., Electrical Components" required>
+                    <select class="form-input" name="category" id="product-category-select" required>
+                        <option value="">Select a category...</option>
+                        <!-- Categories will be loaded dynamically -->
+                    </select>
+                    <small class="form-help">Choose from the store categories or type a custom category</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Price</label>
@@ -1250,7 +1579,7 @@
     <div id="add-category-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Add New Category</h3>
+                <h3 class="modal-title">Add New Store Category</h3>
                 <button class="modal-close" onclick="adminModules.hideModal('add-category-modal')">&times;</button>
             </div>
             <form id="add-category-form">
@@ -1259,8 +1588,25 @@
                     <input type="text" class="form-input" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-input" name="description" rows="3"></textarea>
+                    <label class="form-label">Icon Class</label>
+                    <input type="text" class="form-input" name="icon" placeholder="fas fa-shield-alt" required>
+                    <div class="form-help">Enter FontAwesome icon class (e.g., fas fa-shield-alt)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter Value</label>
+                    <input type="text" class="form-input" name="filter_value" placeholder="fencing" required>
+                    <div class="form-help">The value used in filterProducts() function</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" class="form-input" name="sort_order" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" name="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-category-modal')">Cancel</button>
@@ -1269,6 +1615,177 @@
             </form>
         </div>
     </div>
+
+    <!-- Edit Category Modal -->
+    <div id="edit-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Store Category</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('edit-category-modal')">&times;</button>
+            </div>
+            <form id="edit-category-form">
+                <input type="hidden" id="edit-category-id">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" class="form-input" id="edit-category-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon Class</label>
+                    <input type="text" class="form-input" id="edit-category-icon" name="icon" required>
+                    <div class="form-help">Enter FontAwesome icon class (e.g., fas fa-shield-alt)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter Value</label>
+                    <input type="text" class="form-input" id="edit-category-filter-value" name="filter_value" required>
+                    <div class="form-help">The value used in filterProducts() function</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" class="form-input" id="edit-category-sort-order" name="sort_order" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" id="edit-category-status" name="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('edit-category-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Store Category Modal -->
+    <div id="add-store-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Store Category</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-store-category-modal')">&times;</button>
+            </div>
+            <form id="add-store-category-form">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                    <div class="form-help">Internal name for the category</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" class="form-input" name="display_name" required>
+                    <div class="form-help">Name shown to customers</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category Image</label>
+                    <div class="image-input-container">
+                        <div class="image-input-option">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-input" name="image_url" placeholder="https://example.com/image.jpg">
+                            <div class="form-help">Direct URL to category image</div>
+                        </div>
+                        <div class="image-input-divider">OR</div>
+                        <div class="image-input-option">
+                            <label class="form-label">Upload Image</label>
+                            <input type="file" class="form-input" name="image_upload" accept="image/*">
+                            <div class="form-help">Upload image file (JPG, PNG, GIF)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon Class</label>
+                    <input type="text" class="form-input" name="icon_class" value="fas fa-box">
+                    <div class="form-help">FontAwesome icon class (used if no image provided)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter Value</label>
+                    <input type="text" class="form-input" name="filter_value" required>
+                    <div class="form-help">Value used in filterProducts() function</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" class="form-input" name="sort_order" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" name="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-store-category-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Store Category Modal -->
+    <div id="edit-store-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Store Category</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('edit-store-category-modal')">&times;</button>
+            </div>
+            <form id="edit-store-category-form">
+                <input type="hidden" id="edit-store-category-id">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" class="form-input" id="edit-store-category-name" name="name" required>
+                    <div class="form-help">Internal name for the category</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" class="form-input" id="edit-store-category-display-name" name="display_name" required>
+                    <div class="form-help">Name shown to customers</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category Image</label>
+                    <div class="image-input-container">
+                        <div class="image-input-option">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-input" id="edit-store-category-image-url" name="image_url" placeholder="https://example.com/image.jpg">
+                            <div class="form-help">Direct URL to category image</div>
+                        </div>
+                        <div class="image-input-divider">OR</div>
+                        <div class="image-input-option">
+                            <label class="form-label">Upload Image</label>
+                            <input type="file" class="form-input" name="image_upload" accept="image/*">
+                            <div class="form-help">Upload image file (JPG, PNG, GIF)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon Class</label>
+                    <input type="text" class="form-input" id="edit-store-category-icon-class" name="icon_class">
+                    <div class="form-help">FontAwesome icon class (used if no image provided)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter Value</label>
+                    <input type="text" class="form-input" id="edit-store-category-filter-value" name="filter_value" required>
+                    <div class="form-help">Value used in filterProducts() function</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" class="form-input" id="edit-store-category-sort-order" name="sort_order" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" id="edit-store-category-status" name="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('edit-store-category-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
 
     <!-- Order Details Modal -->
     <div id="order-details-modal" class="modal">
@@ -1343,8 +1860,10 @@
                 <div class="form-group">
                     <label class="form-label">Category</label>
                     <select class="form-input" id="edit-product-category" name="category" required>
-                        <option value="">Select Category</option>
+                        <option value="">Select a category...</option>
+                        <!-- Categories will be loaded dynamically -->
                     </select>
+                    <small class="form-help">Choose from the store categories or type a custom category</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Price (KSh)</label>
@@ -1369,6 +1888,35 @@
                     <label class="form-label">SKU</label>
                     <input type="text" class="form-input" id="edit-product-sku" name="sku" placeholder="Stock Keeping Unit">
                 </div>
+                
+                <!-- Product Image Section -->
+                <div class="form-group">
+                    <label class="form-label">Product Image</label>
+                    <div class="image-upload-section">
+                        <div class="current-image-preview">
+                            <img id="edit-product-current-image" src="" alt="Current product image" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">
+                            <p class="image-label">Current Image</p>
+                        </div>
+                        <div class="image-upload-controls">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="edit-product-image-upload" name="image" accept="image/*" class="file-input">
+                                <label for="edit-product-image-upload" class="file-upload-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Choose New Image</span>
+                                </label>
+                            </div>
+                            <div class="image-preview-wrapper" style="display: none;">
+                                <img id="edit-product-new-image-preview" src="" alt="New image preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #10b981;">
+                                <p class="image-label">New Image Preview</p>
+                                <button type="button" id="edit-product-remove-image" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <small class="form-help">Upload a new image to replace the current product image. Supported formats: JPG, PNG, GIF</small>
+                </div>
+                
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('edit-product-modal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Product</button>

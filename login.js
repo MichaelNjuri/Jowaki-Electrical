@@ -21,6 +21,28 @@
         // Initialize redirect fields
         setRedirectFields();
 
+        // Password toggle functionality
+        function initializePasswordToggles() {
+            const passwordToggles = document.querySelectorAll('.password-toggle');
+            
+            passwordToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+                    
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+        }
+
         // Show alert messages
         function showAlert(message, type) {
             const alertElement = type === 'error' ? 
@@ -68,10 +90,13 @@
                 showForm.classList.add('active');
                 // Clear any error messages
                 document.getElementById('generalError').classList.remove('show');
+                document.getElementById('successMessage').classList.remove('show');
                 // Clear form validation errors
                 clearFormErrors();
                 // Update auth link
                 updateAuthLink();
+                // Initialize password toggles for new form
+                initializePasswordToggles();
             }, 250);
         }
 
@@ -471,6 +496,9 @@
             // Initialize auth link
             updateAuthLink();
             
+            // Initialize password toggles
+            initializePasswordToggles();
+            
             // Handle auth link click in header
             document.getElementById('auth-link').addEventListener('click', function(e) {
                 e.preventDefault();
@@ -481,5 +509,26 @@
                 } else {
                     switchForm('signUpForm', 'loginForm');
                 }
+            });
+            
+            // Form switching event listeners
+            document.getElementById('switchToSignUpLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                switchForm('loginForm', 'signUpForm');
+            });
+            
+            document.getElementById('switchToLoginLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                switchForm('signUpForm', 'loginForm');
+            });
+            
+            document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                switchForm('loginForm', 'forgotPasswordForm');
+            });
+            
+            document.getElementById('backToLoginLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                switchForm('forgotPasswordForm', 'loginForm');
             });
         });

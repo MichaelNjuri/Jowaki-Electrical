@@ -1,5 +1,12 @@
 
 
+<?php
+session_start();
+require_once 'API/load_settings.php';
+
+// Load store settings - pass null to let getStoreSettings handle the connection
+$store_settings = getStoreSettings(null);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -556,7 +563,7 @@
 </head>
 <body>
     <!-- Header -->
- <?php include('header.php'); ?>
+    <?php include('header.php'); ?>
 
 
     <main>
@@ -633,6 +640,10 @@
                                 <input type="email" id="email" name="email" required placeholder="Enter your email address">
                             </div>
                             <div class="form-group">
+                                <label for="phone">Phone Number *</label>
+                                <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+                            </div>
+                            <div class="form-group">
                                 <label for="subject">Subject *</label>
                                 <input type="text" id="subject" name="subject" required placeholder="What's this about?">
                             </div>
@@ -677,7 +688,7 @@
     </main>
 
     <!-- WhatsApp Float Button -->
-    <a href="https://wa.me/254721442248?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20inquire%20about%20your%20services." class="whatsapp-float" target="_blank">
+    <a href="https://wa.me/<?php echo htmlspecialchars($store_settings['whatsapp_number']); ?>?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20inquire%20about%20your%20services." class="whatsapp-float" target="_blank">
         <i class="fab fa-whatsapp"></i>
         Chat With Us
     </a>
@@ -771,13 +782,14 @@
             
             // Collect form data
             const formData = {
-                firstName: document.getElementById('name').value.split(' ')[0] || '',
-                lastName: document.getElementById('name').value.split(' ').slice(1).join(' ') || '',
-                email: document.getElementById('email').value
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message').value
             };
             
-            // Update user profile if logged in
-            fetch('API/update_user_profile.php', {
+            // Send contact form data
+            fetch('API/contact_form.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -787,33 +799,57 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log('Profile updated successfully');
-                } else {
-                    console.log('Profile update failed or user not logged in');
-                }
-            })
-            .catch(error => {
-                console.log('Profile update error:', error);
-            })
-            .finally(() => {
-                // Simulate form submission (replace with actual form handling)
-                setTimeout(() => {
                     // Show success message
                     successMessage.style.display = 'flex';
+                    successMessage.textContent = data.message;
                     
                     // Reset form
                     this.reset();
                     
-                    // Reset button
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+                    // Update user profile if logged in
+                    const profileData = {
+                        firstName: formData.name.split(' ')[0] || '',
+                        lastName: formData.name.split(' ').slice(1).join(' ') || '',
+                        email: formData.email
+                    };
                     
-                    // Hide success message after 5 seconds
-                    setTimeout(() => {
-                        successMessage.style.display = 'none';
-                    }, 5000);
+                    fetch('API/update_user_profile.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(profileData)
+                    })
+                    .then(response => response.json())
+                    .then(profileData => {
+                        if (profileData.success) {
+                            console.log('Profile updated successfully');
+                        } else {
+                            console.log('Profile update failed or user not logged in');
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Profile update error:', error);
+                    });
                     
-                }, 2000);
+                } else {
+                    // Show error message
+                    alert('Error: ' + (data.error || 'Failed to send message'));
+                }
+            })
+            .catch(error => {
+                console.error('Contact form error:', error);
+                alert('Error: Failed to send message. Please try again.');
+            })
+            .finally(() => {
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
             });
         });
 

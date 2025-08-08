@@ -70,51 +70,71 @@ export function renderProducts(productsToRender, state) {
     });
 }
 
-export function updateProductCategoryOptions(state) {
+export async function updateProductCategoryOptions(state) {
     const categoryFilter = document.getElementById('product-category-filter');
     const categorySelect = document.getElementById('product-category-select');
     
-    if (categoryFilter) {
-        categoryFilter.innerHTML = '<option value="">All Categories</option>';
-        state.categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category.id;
-            option.textContent = category.name;
-            categoryFilter.appendChild(option);
-        });
-    }
-    
-    if (categorySelect) {
-        categorySelect.innerHTML = '<option value="">Select Category</option>';
-        state.categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category.id;
-            option.textContent = category.name;
-            categorySelect.appendChild(option);
-        });
+    try {
+        // Fetch store categories
+        const response = await fetch('api/store_categories_admin.php');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+            const storeCategories = data.data;
+            
+            if (categoryFilter) {
+                categoryFilter.innerHTML = '<option value="">All Categories</option>';
+                storeCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.filter_value || category.name;
+                    option.textContent = category.display_name || category.name;
+                    categoryFilter.appendChild(option);
+                });
+            }
+            
+            if (categorySelect) {
+                categorySelect.innerHTML = '<option value="">Select Category</option>';
+                storeCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.filter_value || category.name;
+                    option.textContent = category.display_name || category.name;
+                    categorySelect.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading store categories for product options:', error);
+        // Fallback to empty options
+        if (categorySelect) {
+            categorySelect.innerHTML = '<option value="">Select Category</option>';
+        }
+        if (categoryFilter) {
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+        }
     }
 }
 
-export function fetchProducts(state) {
-    return fetch('api/get_products_admin.php')
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            return response.json();
-        })
-        .then(data => {
-            if (data.success !== false && Array.isArray(data)) {
-                state.products = data.map(product => processProductData(product));
-                renderProducts(state.products, state);
-                updateProductCategoryOptions(state);
-            } else {
-                throw new Error(data.error || 'Failed to fetch products');
-            }
-        })
-        .catch(error => {
-            console.error('Products fetch error:', error);
-            showNotification(`Error fetching products: ${error.message}`, 'error');
-            renderProducts([], state);
-        });
+export async function fetchProducts(state) {
+    try {
+        const response = await fetch('api/get_products_admin.php');
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+        const data = await response.json();
+        if (data.success !== false && Array.isArray(data)) {
+            state.products = data.map(product => processProductData(product));
+            renderProducts(state.products, state);
+            await updateProductCategoryOptions(state);
+        } else {
+            throw new Error(data.error || 'Failed to fetch products');
+        }
+    } catch (error) {
+        console.error('Products fetch error:', error);
+        showNotification(`Error fetching products: ${error.message}`, 'error');
+        renderProducts([], state);
+    }
 }
 
 // Enhanced CRUD operations
@@ -215,7 +235,70 @@ function updateStock(productId, state) {
     });
 }
 
-export function editProduct(productId, state) {
+async function loadStoreCategoriesForEditProduct(currentCategory) {
+    try {
+        const response = await fetch('/jowaki_electrical_srvs/API/store_categories.php');
+        if (!response.ok) {
+            console.error('Failed to load store categories for edit product form');
+            return;
+        }
+        
+        const data = await response.json();
+        if (data.success && data.categories) {
+            const categorySelect = document.getElementById('edit-product-category');
+            if (categorySelect) {
+                // Clear existing options
+                categorySelect.innerHTML = '<option value="">Select a category...</option>';
+                
+                // Add store categories
+                data.categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.name;
+                    option.textContent = category.name;
+                    if (category.name === currentCategory) {
+                        option.selected = true;
+                    }
+                    categorySelect.appendChild(option);
+                });
+                
+                // Add a separator option
+                const separatorOption = document.createElement('option');
+                separatorOption.value = '';
+                separatorOption.textContent = '─────────── Custom Categories ───────────';
+                separatorOption.disabled = true;
+                categorySelect.appendChild(separatorOption);
+                
+                // Add common custom categories
+                const customCategories = [
+                    'Electrical Components',
+                    'Security Equipment',
+                    'CCTV Systems',
+                    'Access Control',
+                    'Fire Safety',
+                    'Lighting',
+                    'Wiring',
+                    'Tools',
+                    'Spare Parts',
+                    'Installation Services'
+                ];
+                
+                customCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    if (category === currentCategory) {
+                        option.selected = true;
+                    }
+                    categorySelect.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading store categories for edit product form:', error);
+    }
+}
+
+export async function editProduct(productId, state) {
     // Find the product in the state
     const product = state.products.find(p => p.id === productId);
     if (!product) {
@@ -232,18 +315,21 @@ export function editProduct(productId, state) {
     document.getElementById('edit-product-status').value = product.status;
     document.getElementById('edit-product-sku').value = product.sku || '';
 
-    // Populate category dropdown
-    const categorySelect = document.getElementById('edit-product-category');
-    categorySelect.innerHTML = '<option value="">Select Category</option>';
-    state.categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category.name;
-        option.textContent = category.name;
-        if (category.name === product.category) {
-            option.selected = true;
-        }
-        categorySelect.appendChild(option);
-    });
+    // Set up current image display
+    const currentImageElement = document.getElementById('edit-product-current-image');
+    if (currentImageElement) {
+        const imageSrc = product.image_paths ? 
+            (Array.isArray(JSON.parse(product.image_paths)) ? JSON.parse(product.image_paths)[0] : product.image_paths) 
+            : 'placeholder.jpg';
+        currentImageElement.src = imageSrc;
+        currentImageElement.style.display = imageSrc !== 'placeholder.jpg' ? 'block' : 'none';
+    }
+
+    // Load store categories for edit product form
+    await loadStoreCategoriesForEditProduct(product.category);
+
+    // Set up image upload functionality
+    setupImageUpload();
 
     // Show the modal
     const modal = document.getElementById('edit-product-modal');
@@ -261,11 +347,58 @@ export function editProduct(productId, state) {
     }
 }
 
+function setupImageUpload() {
+    const fileInput = document.getElementById('edit-product-image-upload');
+    const imagePreview = document.getElementById('edit-product-new-image-preview');
+    const previewWrapper = document.querySelector('.image-preview-wrapper');
+    const removeButton = document.getElementById('edit-product-remove-image');
+
+    if (fileInput) {
+        fileInput.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showNotification('Please select a valid image file', 'error');
+                    return;
+                }
+
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showNotification('Image file size must be less than 5MB', 'error');
+                    return;
+                }
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewWrapper.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+    }
+
+    if (removeButton) {
+        removeButton.onclick = function() {
+            fileInput.value = '';
+            imagePreview.src = '';
+            previewWrapper.style.display = 'none';
+        };
+    }
+}
+
 async function updateProduct(productId, state) {
     const form = document.getElementById('edit-product-form');
     if (!form) return;
 
     const formData = new FormData(form);
+    const fileInput = document.getElementById('edit-product-image-upload');
+    
+    // Check if a new image was selected
+    const hasNewImage = fileInput && fileInput.files.length > 0;
+    
     const productData = {
         id: productId,
         name: formData.get('name'),
@@ -276,13 +409,18 @@ async function updateProduct(productId, state) {
         status: formData.get('status')
     };
 
+    // If there's a new image, append it to formData
+    if (hasNewImage) {
+        formData.append('image', fileInput.files[0]);
+    }
+
     try {
         const response = await fetch('api/update_product.php', {
             method: 'POST',
-            headers: {
+            body: hasNewImage ? formData : JSON.stringify(productData),
+            headers: hasNewImage ? {} : {
                 'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(productData)
+            }
         });
 
         const data = await response.json();
@@ -294,6 +432,10 @@ async function updateProduct(productId, state) {
             const productIndex = state.products.findIndex(p => p.id === productId);
             if (productIndex !== -1) {
                 state.products[productIndex] = { ...state.products[productIndex], ...productData };
+                // Update image path if new image was uploaded
+                if (data.image_path) {
+                    state.products[productIndex].image_paths = data.image_path;
+                }
             }
             
             // Refresh products list
@@ -305,9 +447,13 @@ async function updateProduct(productId, state) {
                 modal.classList.remove('show');
             }
             
-            // Reset form
+            // Reset form and image preview
             if (form) {
                 form.reset();
+                const previewWrapper = document.querySelector('.image-preview-wrapper');
+                if (previewWrapper) {
+                    previewWrapper.style.display = 'none';
+                }
             }
         } else {
             throw new Error(data.error || 'Failed to update product');
@@ -325,11 +471,11 @@ export function deleteProduct(productId, state) {
     }
 }
 
-export function initializeProducts(state) {
+export async function initializeProducts(state) {
     console.log('Initializing products module...');
     
     // Load initial products
-    fetchProducts(state);
+    await fetchProducts(state);
     
     // Set up search and filter functionality
     const productSearch = document.getElementById('product-search');

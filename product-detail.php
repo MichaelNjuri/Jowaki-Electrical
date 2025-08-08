@@ -1,6 +1,10 @@
 <?php
 session_start();
 require_once 'API/db_connection.php';
+require_once 'API/load_settings.php';
+
+// Load store settings
+$store_settings = getStoreSettings($conn);
 
 // Get product ID from URL parameter
 $product_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -10,8 +14,8 @@ if (!$product_id) {
     exit();
 }
 
-// Fetch product details
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
+// Fetch product details with all fields
+$stmt = $conn->prepare("SELECT * FROM products WHERE id = ? AND is_active = 1");
 $stmt->bind_param("i", $product_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -22,8 +26,33 @@ if (!$product) {
     exit();
 }
 
-// Fetch related products (same category, excluding current product)
-$related_stmt = $conn->prepare("SELECT * FROM products WHERE category = ? AND id != ? LIMIT 4");
+// Process image paths
+$image_paths = [];
+if ($product['image_paths']) {
+    $image_paths = json_decode($product['image_paths'], true);
+    if (!is_array($image_paths)) {
+        $image_paths = [$product['image_paths']];
+    }
+}
+$main_image = !empty($image_paths) ? $image_paths[0] : 'placeholder.jpg';
+
+// Process specifications
+$specifications = [];
+if ($product['specifications']) {
+    $specifications = json_decode($product['specifications'], true);
+    if (!is_array($specifications)) {
+        $specifications = [];
+    }
+}
+
+// Calculate pricing
+$original_price = floatval($product['price']);
+$discount_price = floatval($product['discount_price']);
+$current_price = $discount_price > 0 ? $discount_price : $original_price;
+$discount_percentage = $discount_price > 0 ? round((($original_price - $discount_price) / $original_price) * 100) : 0;
+
+// Fetch related products
+$related_stmt = $conn->prepare("SELECT * FROM products WHERE category = ? AND id != ? AND is_active = 1 LIMIT 6");
 $related_stmt->bind_param("si", $product['category'], $product_id);
 $related_stmt->execute();
 $related_products = $related_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -36,638 +65,263 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($product['name']); ?> - Jowaki Store</title>
+    <title><?php echo htmlspecialchars($product['name']); ?> - Jowaki Electrical Services</title>
+    <meta name="description" content="<?php echo htmlspecialchars(substr($product['description'], 0, 160)); ?>">
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="store.css">
     <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="css/product-detail.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .product-detail-main {
-            padding: var(--space-2xl) 0;
-            background: var(--background-color);
-        }
-        
-        .product-detail-container {
-            max-width: var(--container-max-width);
-            margin: 0 auto;
-            padding: 0 var(--space-lg);
-        }
-        
-        .breadcrumb {
-            background: var(--surface-color);
-            padding: var(--space-md) 0;
-            margin-bottom: var(--space-xl);
-        }
-        
-        .breadcrumb .container {
-            max-width: var(--container-max-width);
-            margin: 0 auto;
-            padding: 0 var(--space-lg);
-        }
-        
-        .breadcrumb a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: color var(--transition-fast);
-        }
-        
-        .breadcrumb a:hover {
-            color: var(--primary-color);
-        }
-        
-        .breadcrumb .separator {
-            margin: 0 var(--space-sm);
-            color: var(--text-muted);
-        }
-        
-        .product-detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-2xl);
-            margin-bottom: var(--space-3xl);
-        }
-        
-        .product-images {
-            position: relative;
-        }
-        
-        .main-image {
-            width: 100%;
-            height: 400px;
-            object-fit: cover;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .product-info {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-lg);
-        }
-        
-        .product-header {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-md);
-        }
-        
-        .product-title {
-            font-size: var(--font-size-3xl);
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1.2;
-        }
-        
-        .product-category {
-            font-size: var(--font-size-sm);
-            color: var(--primary-color);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-        
-        .product-price-section {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-            flex-wrap: wrap;
-        }
-        
-        .current-price {
-            font-size: var(--font-size-2xl);
-            font-weight: 700;
-            color: var(--price-highlight);
-        }
-        
-        .original-price {
-            font-size: var(--font-size-lg);
-            color: var(--text-secondary);
-            text-decoration: line-through;
-        }
-        
-        .discount-badge {
-            background: var(--price-highlight);
-            color: white;
-            padding: var(--space-xs) var(--space-sm);
-            border-radius: var(--radius-sm);
-            font-size: var(--font-size-sm);
-            font-weight: 600;
-        }
-        
-        .stock-status {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            font-size: var(--font-size-sm);
-            font-weight: 600;
-        }
-        
-        .stock-status.in-stock {
-            color: var(--success-color);
-        }
-        
-        .stock-status.out-of-stock {
-            color: var(--error-color);
-        }
-        
-        .stock-status i {
-            font-size: var(--font-size-base);
-        }
-        
-        .product-description {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            font-size: var(--font-size-base);
-        }
-        
-        .product-specs {
-            background: var(--surface-color);
-            padding: var(--space-lg);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-        }
-        
-        .specs-title {
-            font-size: var(--font-size-lg);
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: var(--space-md);
-        }
-        
-        .spec-item {
-            display: flex;
-            justify-content: space-between;
-            padding: var(--space-sm) 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .spec-item:last-child {
-            border-bottom: none;
-        }
-        
-        .spec-label {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        
-        .spec-value {
-            color: var(--text-secondary);
-        }
-        
-        .product-actions {
-            display: flex;
-            gap: var(--space-md);
-            flex-wrap: wrap;
-        }
-        
-        .btn-add-cart {
-            flex: 1;
-            padding: var(--space-lg) var(--space-xl);
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: var(--font-size-base);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--space-sm);
-        }
-        
-        .btn-add-cart:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-        
-        .btn-add-cart:disabled {
-            background: var(--text-muted);
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .btn-whatsapp {
-            padding: var(--space-lg) var(--space-xl);
-            background: linear-gradient(135deg, #25d366, #128c7e);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: var(--font-size-base);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            text-decoration: none;
-        }
-        
-        .btn-whatsapp:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
-        }
-        
-        .quantity-controls {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-            margin-bottom: var(--space-lg);
-        }
-        
-        .quantity-btn {
-            width: 40px;
-            height: 40px;
-            border: 1px solid var(--border-color);
-            background: var(--background-color);
-            color: var(--text-primary);
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .quantity-btn:hover {
-            background: var(--surface-color);
-            border-color: var(--primary-color);
-        }
-        
-        .quantity-input {
-            width: 60px;
-            height: 40px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            font-size: var(--font-size-base);
-            font-weight: 600;
-        }
-        
-        .social-share {
-            display: flex;
-            gap: var(--space-sm);
-            margin-top: var(--space-lg);
-        }
-        
-        .share-btn {
-            width: 40px;
-            height: 40px;
-            border: 1px solid var(--border-color);
-            background: var(--background-color);
-            color: var(--text-primary);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .share-btn:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        
-        .related-section {
-            margin-top: var(--space-3xl);
-        }
-        
-        .section-title {
-            font-size: var(--font-size-2xl);
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: var(--space-xl);
-            text-align: center;
-        }
-        
-        .related-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: var(--space-lg);
-        }
-        
-        .related-card {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            transition: all var(--transition-base);
-            cursor: pointer;
-        }
-        
-        .related-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .related-image {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-        
-        .related-content {
-            padding: var(--space-md);
-        }
-        
-        .related-title {
-            font-size: var(--font-size-base);
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: var(--space-xs);
-            line-height: 1.3;
-        }
-        
-        .related-price {
-            font-size: var(--font-size-lg);
-            font-weight: 700;
-            color: var(--price-highlight);
-        }
-        
-        @media (max-width: 768px) {
-            .product-detail-grid {
-                grid-template-columns: 1fr;
-                gap: var(--space-xl);
-            }
-            
-            .product-title {
-                font-size: var(--font-size-2xl);
-            }
-            
-            .product-actions {
-                flex-direction: column;
-            }
-            
-            .related-grid {
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            }
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: var(--space-md) var(--space-lg);
-            border-radius: var(--radius-md);
-            color: white;
-            font-weight: 600;
-            z-index: 1000;
-            transform: translateX(100%);
-            transition: transform var(--transition-base);
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification.success {
-            background: var(--success-color);
-        }
-        
-        .notification.error {
-            background: var(--error-color);
-        }
-    </style>
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="<?php echo htmlspecialchars($product['name']); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($product['description']); ?>">
+    <meta property="og:image" content="<?php echo htmlspecialchars($main_image); ?>">
+    <meta property="og:url" content="<?php echo $_SERVER['REQUEST_URI']; ?>">
+    <meta name="whatsapp-number" content="<?php echo htmlspecialchars($store_settings['whatsapp_number']); ?>">
 </head>
 <body>
     <?php include 'store_header.php'; ?>
 
-    <div class="product-detail-main">
-        <div class="product-detail-container">
+    <!-- Main Content -->
+    <main class="product-detail-main">
+        <div class="container">
             <!-- Breadcrumb -->
             <nav class="breadcrumb">
-                <div class="container">
-                    <a href="Store.php">Home</a>
-                    <span class="separator">/</span>
-                    <a href="Store.php">Products</a>
-                    <span class="separator">/</span>
-                    <span><?php echo htmlspecialchars($product['name']); ?></span>
-                </div>
+                <a href="Store.php">Store</a>
+                <span class="separator">/</span>
+                <a href="Store.php?category=<?php echo urlencode($product['category']); ?>"><?php echo htmlspecialchars($product['category']); ?></a>
+                <span class="separator">/</span>
+                <span class="current"><?php echo htmlspecialchars($product['name']); ?></span>
             </nav>
 
-            <!-- Product Detail Grid -->
-            <div class="product-detail-grid">
+            <!-- Product Detail Section -->
+            <div class="product-detail-container">
                 <!-- Product Images -->
                 <div class="product-images">
-                    <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                         alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                         class="main-image">
+                    <div class="main-image">
+                        <img src="<?php echo htmlspecialchars($main_image); ?>" 
+                             alt="<?php echo htmlspecialchars($product['name']); ?>"
+                             id="mainProductImage">
+                    </div>
+                    
+                    <?php if (count($image_paths) > 1): ?>
+                    <div class="thumbnail-images">
+                        <?php foreach ($image_paths as $index => $image_path): ?>
+                        <div class="thumbnail <?php echo $index === 0 ? 'active' : ''; ?>" 
+                             onclick="changeMainImage('<?php echo htmlspecialchars($image_path); ?>', this)">
+                            <img src="<?php echo htmlspecialchars($image_path); ?>" 
+                                 alt="<?php echo htmlspecialchars($product['name']); ?> - Image <?php echo $index + 1; ?>">
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Product Info -->
                 <div class="product-info">
                     <div class="product-header">
-                        <div class="product-category"><?php echo htmlspecialchars($product['category']); ?></div>
                         <h1 class="product-title"><?php echo htmlspecialchars($product['name']); ?></h1>
-                        
-                        <div class="product-price-section">
-                            <?php 
-                            $original_price = floatval($product['price']);
-                            $discount_price = floatval($product['discount_price']);
-                            $current_price = $discount_price > 0 ? $discount_price : $original_price;
-                            $discount_percentage = $discount_price > 0 ? round((($original_price - $discount_price) / $original_price) * 100) : 0;
-                            ?>
-                            
-                            <span class="current-price">KSh <?php echo number_format($current_price, 2); ?></span>
-                            
-                            <?php if ($discount_price > 0): ?>
-                                <span class="original-price">KSh <?php echo number_format($original_price, 2); ?></span>
-                                <span class="discount-badge">-<?php echo $discount_percentage; ?>%</span>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="stock-status <?php echo $product['stock'] > 0 ? 'in-stock' : 'out-of-stock'; ?>">
-                            <i class="fas fa-<?php echo $product['stock'] > 0 ? 'check-circle' : 'times-circle'; ?>"></i>
-                            <?php echo $product['stock'] > 0 ? 'In Stock' : 'Out of Stock'; ?>
-                            <?php if ($product['stock'] > 0): ?>
-                                (<?php echo $product['stock']; ?> available)
-                            <?php endif; ?>
-                        </div>
+                        <div class="product-category"><?php echo htmlspecialchars($product['category']); ?></div>
                     </div>
 
+                    <!-- Price Section -->
+                    <div class="price-section">
+                        <?php if ($discount_percentage > 0): ?>
+                        <div class="discount-badge">-<?php echo $discount_percentage; ?>% OFF</div>
+                        <div class="price-container">
+                            <span class="original-price">KSh <?php echo number_format($original_price, 0); ?></span>
+                            <span class="current-price">KSh <?php echo number_format($current_price, 0); ?></span>
+                        </div>
+                        <?php else: ?>
+                        <div class="price-container">
+                            <span class="current-price">KSh <?php echo number_format($current_price, 0); ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div class="stock-status">
+                        <?php if ($product['stock'] > 0): ?>
+                        <span class="in-stock">
+                            <i class="fas fa-check-circle"></i>
+                            In Stock
+                        </span>
+                        <?php else: ?>
+                        <span class="out-of-stock">
+                            <i class="fas fa-times-circle"></i>
+                            Out of Stock
+                        </span>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Product Description -->
                     <div class="product-description">
-                        <?php echo nl2br(htmlspecialchars($product['description'])); ?>
+                        <h3>Description</h3>
+                        <p><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
                     </div>
 
-                    <div class="product-specs">
-                        <h3 class="specs-title">Product Specifications</h3>
-                        <div class="spec-item">
-                            <span class="spec-label">Category:</span>
-                            <span class="spec-value"><?php echo htmlspecialchars($product['category']); ?></span>
+                    <!-- Quantity Selector -->
+                    <div class="quantity-section">
+                        <label for="quantity">Quantity:</label>
+                        <div class="quantity-controls">
+                            <button type="button" class="quantity-btn" onclick="changeQuantity(-1)" <?php echo $product['stock'] <= 0 ? 'disabled' : ''; ?>>-</button>
+                            <input type="number" id="quantity" value="1" min="1" max="<?php echo $product['stock']; ?>" 
+                                   onchange="updateQuantity(this.value)" <?php echo $product['stock'] <= 0 ? 'disabled' : ''; ?>>
+                            <button type="button" class="quantity-btn" onclick="changeQuantity(1)" <?php echo $product['stock'] <= 0 ? 'disabled' : ''; ?>>+</button>
                         </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Brand:</span>
-                            <span class="spec-value"><?php echo htmlspecialchars($product['brand'] ?? 'Jowaki'); ?></span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Stock:</span>
-                            <span class="spec-value"><?php echo $product['stock']; ?> units</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">SKU:</span>
-                            <span class="spec-value"><?php echo htmlspecialchars($product['sku'] ?? 'N/A'); ?></span>
+                        <div class="quantity-stock-info">
+                            <?php echo $product['stock'] > 0 ? 'Items available' : 'No items available'; ?>
                         </div>
                     </div>
 
-                    <div class="quantity-controls">
-                        <button class="quantity-btn" onclick="updateQuantity(-1)">-</button>
-                        <input type="number" id="quantity" value="1" min="1" max="<?php echo $product['stock']; ?>" class="quantity-input">
-                        <button class="quantity-btn" onclick="updateQuantity(1)">+</button>
-                    </div>
-
-                    <div class="product-actions">
-                        <button class="btn-add-cart" onclick="addToCart(<?php echo $product['id']; ?>)" 
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="addToCart(<?php echo $product['id']; ?>)" 
                                 <?php echo $product['stock'] <= 0 ? 'disabled' : ''; ?>>
                             <i class="fas fa-shopping-cart"></i>
-                            <?php echo $product['stock'] > 0 ? 'Add to Cart' : 'Out of Stock'; ?>
+                            Add to Cart
                         </button>
-                        
-                        <a href="https://wa.me/254721442248?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20order%20<?php echo urlencode($product['name']); ?>%20(Product%20ID:%20<?php echo $product['id']; ?>)" 
-                           class="btn-whatsapp" target="_blank">
+                        <a href="https://wa.me/<?php echo htmlspecialchars($store_settings['whatsapp_number']); ?>?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20inquire%20about%20<?php echo urlencode($product['name']); ?>" 
+                           class="btn btn-whatsapp" target="_blank">
                             <i class="fab fa-whatsapp"></i>
-                            Order via WhatsApp
+                            WhatsApp
                         </a>
                     </div>
 
+                    <!-- Social Share -->
                     <div class="social-share">
-                        <button class="share-btn" onclick="shareProduct()" title="Share Product">
-                            <i class="fas fa-share-alt"></i>
-                        </button>
-                        <button class="share-btn" onclick="shareOnFacebook()" title="Share on Facebook">
-                            <i class="fab fa-facebook"></i>
-                        </button>
-                        <button class="share-btn" onclick="shareOnTwitter()" title="Share on Twitter">
-                            <i class="fab fa-twitter"></i>
-                        </button>
+                        <div class="share-title">Share this product:</div>
+                        <div class="share-buttons">
+                            <button class="share-btn facebook" onclick="shareOnFacebook()">
+                                <i class="fab fa-facebook-f"></i>
+                            </button>
+                            <button class="share-btn twitter" onclick="shareOnTwitter()">
+                                <i class="fab fa-twitter"></i>
+                            </button>
+                            <button class="share-btn whatsapp" onclick="shareOnWhatsApp()">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            <button class="share-btn copy" onclick="copyProductLink()">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Product Specifications -->
+            <?php if (!empty($specifications)): ?>
+            <div class="specifications-section">
+                <h2>Specifications</h2>
+                <div class="specifications-grid">
+                    <?php foreach ($specifications as $spec): ?>
+                    <div class="spec-item">
+                        <span class="spec-label"><?php echo htmlspecialchars($spec['label']); ?></span>
+                        <span class="spec-value"><?php echo htmlspecialchars($spec['value']); ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Related Products -->
             <?php if (!empty($related_products)): ?>
-            <div class="related-section">
-                <h2 class="section-title">Related Products</h2>
+            <div class="related-products">
+                <h2>Related Products</h2>
                 <div class="related-grid">
-                    <?php foreach ($related_products as $related): ?>
-                    <div class="related-card" onclick="window.location.href='product-detail.php?id=<?php echo $related['id']; ?>'">
-                        <img src="<?php echo htmlspecialchars($related['image']); ?>" 
-                             alt="<?php echo htmlspecialchars($related['name']); ?>" 
-                             class="related-image">
-                        <div class="related-content">
-                            <h3 class="related-title"><?php echo htmlspecialchars($related['name']); ?></h3>
-                            <div class="related-price">
-                                KSh <?php echo number_format(floatval($related['discount_price'] ?: $related['price']), 2); ?>
-                            </div>
-                        </div>
+                    <?php foreach ($related_products as $related): 
+                        // Process related product image paths
+                        $related_image_paths = [];
+                        if ($related['image_paths']) {
+                            $related_image_paths = json_decode($related['image_paths'], true);
+                            if (!is_array($related_image_paths)) {
+                                $related_image_paths = [$related['image_paths']];
+                            }
+                        }
+                        $related_image = !empty($related_image_paths) ? $related_image_paths[0] : 'placeholder.jpg';
+                        
+                        // Calculate related product price
+                        $related_original = floatval($related['price']);
+                        $related_discount = floatval($related['discount_price']);
+                        $related_current = $related_discount > 0 ? $related_discount : $related_original;
+                    ?>
+                    <div class="related-product">
+                        <a href="product-detail.php?id=<?php echo $related['id']; ?>">
+                            <img src="<?php echo htmlspecialchars($related_image); ?>" 
+                                 alt="<?php echo htmlspecialchars($related['name']); ?>">
+                            <h3><?php echo htmlspecialchars($related['name']); ?></h3>
+                            <p class="price">KSh <?php echo number_format($related_current, 0); ?></p>
+                        </a>
                     </div>
                     <?php endforeach; ?>
                 </div>
             </div>
             <?php endif; ?>
         </div>
-    </div>
+    </main>
 
     <!-- WhatsApp Float Button -->
-    <a href="https://wa.me/254721442248?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20inquire%20about%20your%20products." class="whatsapp-float" target="_blank">
+    <a href="https://wa.me/<?php echo htmlspecialchars($store_settings['whatsapp_number']); ?>?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20inquire%20about%20your%20products." 
+       class="whatsapp-float" target="_blank">
         <i class="fab fa-whatsapp"></i>
-        Chat With Us
     </a>
 
+    <!-- Scripts -->
+    <script src="js/product-detail.js"></script>
+    
+    <!-- Fallback script in case external JS fails to load -->
     <script>
-        // Quantity controls
-        function updateQuantity(change) {
-            const input = document.getElementById('quantity');
-            const newValue = parseInt(input.value) + change;
-            const max = parseInt(input.getAttribute('max'));
+        // Check if functions are loaded, if not provide fallbacks
+        if (typeof addToCart === 'undefined') {
+            console.log('External JS not loaded, using fallback functions');
             
-            if (newValue >= 1 && newValue <= max) {
-                input.value = newValue;
-            }
-        }
-
-        // Add to cart functionality
-        async function addToCart(productId) {
-            const quantity = parseInt(document.getElementById('quantity').value);
+            window.addToCart = function(productId) {
+                alert('Add to cart functionality is loading...');
+            };
             
-            try {
-                const response = await fetch('API/add_to_cart.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id: productId,
-                        quantity: quantity
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showNotification('Product added to cart successfully!', 'success');
-                    // Update cart count if available
-                    const cartCountElement = document.querySelector('#cartCount');
-                    if (cartCountElement) {
-                        cartCountElement.textContent = data.cartCount || 0;
-                    }
-                } else {
-                    showNotification(data.message || 'Failed to add product to cart', 'error');
+            window.changeQuantity = function(change) {
+                const input = document.getElementById('quantity');
+                if (input) {
+                    let value = parseInt(input.value) + change;
+                    if (value >= 1) input.value = value;
                 }
-            } catch (error) {
-                showNotification('Error adding product to cart', 'error');
-            }
-        }
-
-        // Share functionality
-        function shareProduct() {
-            const productName = '<?php echo addslashes($product['name']); ?>';
-            const productUrl = window.location.href;
+            };
             
-            if (navigator.share) {
-                navigator.share({
-                    title: productName,
-                    text: `Check out this amazing product: ${productName}`,
-                    url: productUrl
+            window.updateQuantity = function(value) {
+                const input = document.getElementById('quantity');
+                if (input) input.value = value;
+            };
+            
+            window.changeMainImage = function(imageSrc, thumbnail) {
+                const mainImage = document.getElementById('mainProductImage');
+                if (mainImage) mainImage.src = imageSrc;
+                
+                // Update active thumbnail
+                document.querySelectorAll('.thumbnail').forEach(thumb => {
+                    thumb.classList.remove('active');
                 });
-            } else {
-                // Fallback: copy to clipboard
-                navigator.clipboard.writeText(productUrl).then(() => {
-                    showNotification('Product link copied to clipboard!', 'success');
+                if (thumbnail) thumbnail.classList.add('active');
+            };
+            
+            window.shareOnFacebook = function() {
+                window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href), '_blank');
+            };
+            
+            window.shareOnTwitter = function() {
+                window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent('Check out this product!') + '&url=' + encodeURIComponent(window.location.href), '_blank');
+            };
+            
+            window.shareOnWhatsApp = function() {
+                window.open('https://wa.me/<?php echo htmlspecialchars($store_settings['whatsapp_number']); ?>?text=' + encodeURIComponent('Check out this product! ' + window.location.href), '_blank');
+            };
+            
+            window.copyProductLink = function() {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('Link copied to clipboard!');
                 });
-            }
-        }
-
-        function shareOnFacebook() {
-            const url = encodeURIComponent(window.location.href);
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-        }
-
-        function shareOnTwitter() {
-            const text = encodeURIComponent(`Check out this amazing product: <?php echo addslashes($product['name']); ?>`);
-            const url = encodeURIComponent(window.location.href);
-            window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-        }
-
-        // Notification system
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 100);
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
+            };
         }
     </script>
 </body>

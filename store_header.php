@@ -2,6 +2,14 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+require_once 'API/load_settings.php';
+
+// Establish database connection
+require_once 'API/db_connection.php';
+
+// Load store settings
+$store_settings = getStoreSettings($conn);
+
 $logged_in = isset($_SESSION['logged_in']) && $_SESSION['logged_in'];
 $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 ?>
@@ -10,6 +18,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="whatsapp-number" content="<?php echo htmlspecialchars($store_settings['whatsapp_number']); ?>">
     <title>Jowaki Store</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
@@ -633,9 +642,9 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                         <?php endif; ?>
                     </a>
                     <div class="mobile-contact">
-                        <div class="contact-item" onclick="window.open('tel:0721442248', '_self')">
+                        <div class="contact-item" onclick="window.open('tel:<?php echo htmlspecialchars($store_settings['store_phone']); ?>', '_self')">
                             <span>📞</span>
-                            <span>0721442248</span>
+                            <span><?php echo htmlspecialchars($store_settings['store_phone']); ?></span>
                         </div>
                         <div class="contact-item" onclick="window.open('mailto:Jowakielecricalsrvs@gmail.com', '_self')">
                             <span>✉️</span>

@@ -89,14 +89,14 @@ export function fetchLowStockNotifications(state) {
 }
 
 export function fetchNotifications(state) {
-    return fetch('api/get_notifications_admin.php')
+    return fetch('API/get_notifications_admin.php')
         .then(response => {
             if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return response.json();
         })
         .then(data => {
-            if (data.success !== false && Array.isArray(data)) {
-                state.notifications = data.map(notification => processNotificationData(notification));
+            if (data.success && Array.isArray(data.notifications)) {
+                state.notifications = data.notifications.map(notification => processNotificationData(notification));
                 renderNotifications(state);
             } else {
                 throw new Error(data.error || 'Failed to fetch notifications');
