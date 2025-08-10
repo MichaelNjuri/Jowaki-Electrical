@@ -59,7 +59,9 @@ function initializeAddOrderForm(state) {
 
 async function loadStoreCategoriesForProduct() {
     try {
-        const response = await fetch('/jowaki_electrical_srvs/API/store_categories.php');
+        const response = await fetch('./API/get_store_categories_fixed.php', {
+            credentials: 'include'
+        });
         if (!response.ok) {
             console.error('Failed to load store categories for product form');
             return;

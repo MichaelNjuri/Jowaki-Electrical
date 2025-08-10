@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                                 <div class="product-actions">
                                     <a href="Store.php" class="btn-primary">View Details</a>
-                                    <a href="https://wa.me/0721442248?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20inquire%20about%20${encodeURIComponent(product.name)}" class="btn-secondary" target="_blank">
+                                    <a href="https://wa.me/254721442248?text=Hello%20Jowaki%20Electrical,%20I%20would%20like%20to%20inquire%20about%20${encodeURIComponent(product.name)}" class="btn-secondary" target="_blank">
                                         <i class="fab fa-whatsapp"></i> Order
                                     </a>
                                 </div>

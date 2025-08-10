@@ -1,3 +1,10 @@
+<?php
+session_start();
+require_once 'API/load_settings.php';
+
+// Load store settings
+$store_settings = getStoreSettings(null);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +13,7 @@
     <title>Jowaki Electrical Services Ltd - Security & Electrical Solutions</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Header -->
@@ -282,6 +290,27 @@
                     <p>📞 +254 721442248</p>
                     <p>📧 Jowakielecricalsrvs@gmail.com</p>
                     <p>📍 Nairobi, Kenya</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Follow Us</h3>
+                    <div class="social-links">
+                        <?php if ($store_settings['enable_facebook'] && !empty($store_settings['facebook_url'])): ?>
+                        <a href="<?php echo htmlspecialchars($store_settings['facebook_url']); ?>" target="_blank" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <?php endif; ?>
+                        <?php if ($store_settings['enable_whatsapp']): ?>
+                        <a href="https://wa.me/<?php echo htmlspecialchars($store_settings['whatsapp_number']); ?>" target="_blank" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <?php endif; ?>
+                        <a href="tel:<?php echo htmlspecialchars($store_settings['store_phone']); ?>" title="Call Us">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                        <a href="mailto:<?php echo htmlspecialchars($store_settings['store_email']); ?>" title="Email Us">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
             <div class="footer-bottom">

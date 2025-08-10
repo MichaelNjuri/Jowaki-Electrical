@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin APIs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Admin APIs</h1>
+    
+    <div class="section">
+        <h2>Issue Fixed</h2>
+        <div class="success">
+            ✅ <strong>Problem:</strong> Admin management was getting "Unexpected token '<'" errors
+        </div>
+        <div class="success">
+            ✅ <strong>Root Cause:</strong> PHP errors being output before JSON responses
+        </div>
+        <div class="success">
+            ✅ <strong>Solution:</strong> Created fixed versions with proper error handling and output buffering
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Test Admin APIs</h2>
+        <button onclick="testAdminsAPI()">Test Get Admins API</button>
+        <button onclick="testAdminActivityAPI()">Test Admin Activity API</button>
+        <button onclick="testAdminRolesAPI()">Test Admin Roles API</button>
+        <button onclick="testAllAdminAPIs()">Test All Admin APIs</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <div class="section">
+        <h2>Quick Links</h2>
+        <button onclick="window.open('AdminDashboard.html', '_blank')">Open Admin Dashboard</button>
+        <button onclick="window.open('test_admin_creation.html', '_blank')">Test Admin Creation</button>
+        <button onclick="window.open('test_no_redirect.html', '_blank')">Test No Redirect</button>
+    </div>
+
+    <div class="section">
+        <h2>What Was Fixed</h2>
+        <ul>
+            <li><strong>get_admins_fixed.php:</strong> Added output buffering, CORS headers, table existence check</li>
+            <li><strong>get_admin_activity_fixed.php:</strong> Added output buffering, CORS headers, table existence check</li>
+            <li><strong>get_admin_roles_fixed.php:</strong> Added output buffering, CORS headers, default roles fallback</li>
+            <li><strong>adminManagement.js:</strong> Updated to use fixed API endpoints</li>
+        </ul>
+    </div>
+
+    <script>
+        async function testAdminsAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Get Admins API...</div>';
+            
+            try {
+                const response = await fetch('API/get_admins_fixed.php');
+                const data = await response.json();
+                
+                if (data.success && Array.isArray(data.admins)) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Get Admins API working perfectly!</div>
+                        <div class="info">Found ${data.admins.length} admin users</div>
+                        <div class="info">Data structure: success: ${data.success}, admins: array(${data.admins.length})</div>
+                        <pre>${JSON.stringify(data.admins.slice(0, 1), null, 2)}</pre>
+                    `;
+                } else if (data.success === false) {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Get Admins API: ${data.message}</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Get Admins API: Unexpected data structure</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Get Admins API error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testAdminActivityAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Admin Activity API...</div>';
+            
+            try {
+                const response = await fetch('API/get_admin_activity_fixed.php?limit=5');
+                const data = await response.json();
+                
+                if (data.success && Array.isArray(data.activities)) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Admin Activity API working perfectly!</div>
+                        <div class="info">Found ${data.activities.length} activity records</div>
+                        <div class="info">Total: ${data.total}, Page: ${data.page}, Limit: ${data.limit}</div>
+                        <div class="info">Data structure: success: ${data.success}, activities: array(${data.activities.length})</div>
+                        <pre>${JSON.stringify(data.activities.slice(0, 1), null, 2)}</pre>
+                    `;
+                } else if (data.success === false) {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Admin Activity API: ${data.message}</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Admin Activity API: Unexpected data structure</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Admin Activity API error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testAdminRolesAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Admin Roles API...</div>';
+            
+            try {
+                const response = await fetch('API/get_admin_roles_fixed.php');
+                const data = await response.json();
+                
+                if (data.success && Array.isArray(data.roles)) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Admin Roles API working perfectly!</div>
+                        <div class="info">Found ${data.roles.length} admin roles</div>
+                        <div class="info">Data structure: success: ${data.success}, roles: array(${data.roles.length})</div>
+                        <pre>${JSON.stringify(data.roles.slice(0, 1), null, 2)}</pre>
+                    `;
+                } else if (data.success === false) {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Admin Roles API: ${data.message}</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Admin Roles API: Unexpected data structure</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Admin Roles API error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testAllAdminAPIs() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing all admin APIs...</div>';
+            
+            const apis = [
+                { name: 'Get Admins API', url: 'get_admins_fixed.php', test: 'admins' },
+                { name: 'Admin Activity API', url: 'get_admin_activity_fixed.php?limit=5', test: 'activities' },
+                { name: 'Admin Roles API', url: 'get_admin_roles_fixed.php', test: 'roles' }
+            ];
+            
+            let results = '';
+            
+            for (const api of apis) {
+                try {
+                    const response = await fetch(`API/${api.url}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data[api.test]) {
+                        results += `<div class="success">✅ ${api.name}: Working perfectly! (${data[api.test].length} items)</div>`;
+                    } else if (data.success === false) {
+                        results += `<div class="warning">⚠️ ${api.name}: ${data.message}</div>`;
+                    } else {
+                        results += `<div class="error">❌ ${api.name}: Unexpected data structure</div>`;
+                    }
+                } catch (error) {
+                    results += `<div class="error">❌ ${api.name}: Network error - ${error.message}</div>`;
+                }
+            }
+            
+            resultsDiv.innerHTML = results;
+        }
+    </script>
+</body>
+</html>
+

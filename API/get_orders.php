@@ -1,35 +1,25 @@
 <?php
 session_start();
+require_once 'db_connection.php';
+require_once 'check_auth.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Database connection
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$dbname = 'jowaki_db';
+// Check if user is admin
+if (!isAdmin()) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Access denied. Admin privileges required.']);
+    exit;
+}
 
 try {
-    $conn = new mysqli($host, $user, $pass, $dbname);
-
-    if ($conn->connect_error) {
-        throw new Exception('Database connection failed: ' . $conn->connect_error);
+    $conn = getConnection();
+    if (!$conn) {
+        throw new Exception('Database connection failed');
     }
-
-    // Check if user is logged in
-    if (!isset($_SESSION['user_id']) || !isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'User not logged in']);
-        exit;
-    }
-
-    $user_id = $_SESSION['user_id'];
 
     // First, check if the orders table exists
     $tableExists = $conn->query("SHOW TABLES LIKE 'orders'");
@@ -66,14 +56,12 @@ try {
 
     $columnsString = implode(', ', $availableColumns);
     
-    // Get user orders
-    $stmt = $conn->prepare("SELECT $columnsString FROM orders WHERE user_id = ? ORDER BY order_date DESC");
+    // Get all orders for admin view
+    $stmt = $conn->prepare("SELECT $columnsString FROM orders ORDER BY order_date DESC");
     
     if (!$stmt) {
         throw new Exception('Database prepare failed: ' . $conn->error);
     }
-    
-    $stmt->bind_param("i", $user_id);
     
     if (!$stmt->execute()) {
         throw new Exception('Database execute failed: ' . $stmt->error);
@@ -100,36 +88,57 @@ try {
         // Format order data with safe defaults
         $order = [
             'id' => $row['id'],
-            'orderId' => 'JES-' . str_pad($row['id'], 6, '0', STR_PAD_LEFT),
-            'total' => (float)($row['total'] ?? 0),
-            'subtotal' => (float)($row['subtotal'] ?? 0),
-            'tax' => (float)($row['tax'] ?? 0),
-            'delivery_fee' => (float)($row['delivery_fee'] ?? 0),
-            'status' => ucfirst($row['status'] ?? 'pending'),
-            'date' => $row['order_date'] ?? date('Y-m-d H:i:s'),
-            'created_at' => $row['order_date'] ?? date('Y-m-d H:i:s'),
-            'confirmed_at' => $row['confirmed_at'] ?? null,
-            'delivery_method' => $row['delivery_method'] ?? 'Standard',
-            'delivery_address' => $row['delivery_address'] ?? '',
-            'payment_method' => $row['payment_method'] ?? 'Cash on Delivery',
+            'user_id' => $row['user_id'],
             'items' => $items,
-            'item_count' => $item_count
+            'item_count' => $item_count,
+            'total' => isset($row['total']) ? (float)$row['total'] : 0,
+            'status' => $row['status'] ?? 'pending',
+            'order_date' => $row['order_date'],
+            'cart' => $cart_items
         ];
+        
+        // Add optional fields if they exist
+        if (isset($row['customer_info'])) {
+            $order['customer_info'] = json_decode($row['customer_info'], true);
+        }
+        if (isset($row['subtotal'])) {
+            $order['subtotal'] = (float)$row['subtotal'];
+        }
+        if (isset($row['tax'])) {
+            $order['tax'] = (float)$row['tax'];
+        }
+        if (isset($row['delivery_fee'])) {
+            $order['delivery_fee'] = (float)$row['delivery_fee'];
+        }
+        if (isset($row['delivery_method'])) {
+            $order['delivery_method'] = $row['delivery_method'];
+        }
+        if (isset($row['delivery_address'])) {
+            $order['delivery_address'] = $row['delivery_address'];
+        }
+        if (isset($row['payment_method'])) {
+            $order['payment_method'] = $row['payment_method'];
+        }
+        if (isset($row['confirmed_at'])) {
+            $order['confirmed_at'] = $row['confirmed_at'];
+        }
         
         $orders[] = $order;
     }
     
+    $stmt->close();
+    $conn->close();
+    
+    // Log activity
+    logAdminActivity('View Orders', 'Viewed all orders in admin dashboard');
+    
     echo json_encode($orders);
     
-    $stmt->close();
-    
 } catch (Exception $e) {
-    error_log('Get orders error: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Failed to fetch orders: ' . $e->getMessage()]);
-} finally {
-    if (isset($conn)) {
-        $conn->close();
-    }
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error retrieving orders: ' . $e->getMessage()
+    ]);
 }
 ?>

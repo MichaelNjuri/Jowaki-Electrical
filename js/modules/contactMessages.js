@@ -7,7 +7,9 @@ let contactMessages = [];
 // Fetch contact messages from API
 export function fetchContactMessages() {
     console.log('Fetching contact messages...');
-    return fetch('API/get_contact_messages.php')
+    return fetch('API/get_contact_messages_fixed.php', {
+        credentials: 'include'
+    })
         .then(response => {
             console.log('Response status:', response.status);
             if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -154,11 +156,12 @@ export function viewMessage(messageId) {
 
 // Mark message as read
 export function markAsRead(messageId) {
-    fetch('API/get_contact_messages.php', {
+    fetch('API/get_contact_messages_fixed.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ message_id: messageId })
     })
     .then(response => response.json())

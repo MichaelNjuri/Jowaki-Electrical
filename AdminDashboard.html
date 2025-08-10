@@ -854,6 +854,601 @@
                 align-items: flex-start;
             }
         }
+
+        /* Profile Styles */
+        .profile-container {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+            color: white;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .profile-info h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-info p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-details {
+            padding: 2rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .profile-item {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .profile-item label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-item span {
+            display: block;
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .badge-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        /* Profile Dropdown Styles */
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .profile-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+        }
+
+        .profile-btn i:first-child {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .profile-btn i:last-child {
+            font-size: 0.75rem;
+            transition: transform 0.2s ease;
+        }
+
+        .profile-dropdown.active .profile-btn i:last-child {
+            transform: rotate(180deg);
+        }
+
+        .profile-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 280px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .profile-dropdown.active .profile-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .profile-dropdown-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .profile-dropdown-header i {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .profile-dropdown-header div {
+            flex: 1;
+        }
+
+        .profile-dropdown-header div:first-child {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .profile-dropdown-header div:last-child {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .profile-dropdown-divider {
+            height: 1px;
+            background: var(--border-light);
+            margin: 0.5rem 0;
+        }
+
+        .profile-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .profile-dropdown-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .profile-dropdown-item i {
+            width: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Admin Management Styles */
+        .admin-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-stat-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .admin-stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .admin-stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .admin-stat-icon.active {
+            background: var(--success-color);
+        }
+
+        .admin-stat-icon.super {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .admin-stat-icon.recent {
+            background: var(--warning-color);
+        }
+
+        .admin-stat-info h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .admin-stat-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .admin-table-container {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .admin-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .admin-table-header h4 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .admin-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+
+        .admin-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .admin-details h5 {
+            margin: 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-details p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .role-badge.super {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .role-badge.admin {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.active {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-badge.inactive {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .admin-actions .btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .admin-activity-container {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .admin-activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .admin-activity-header h4 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-activity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            transition: background-color 0.2s ease;
+        }
+
+        .activity-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 0.25rem 0;
+        }
+
+        .activity-details {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Admin Details Modal Styles */
+        .admin-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-detail-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .admin-detail-info h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-detail-info p {
+            margin: 0 0 0.75rem 0;
+            color: var(--text-secondary);
+        }
+
+        .admin-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-detail-item {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+        }
+
+        .admin-detail-item label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-detail-item span {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .admin-detail-section {
+            border-top: 1px solid var(--border-light);
+            padding-top: 1.5rem;
+        }
+
+        .admin-detail-section h5 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
@@ -861,8 +1456,8 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="logo">
-                <h1>Jowaki</h1>
-                <p>Admin Dashboard</p>
+                <h1>Admin</h1>
+                <p>Dashboard</p>
             </div>
             <nav>
                 <ul class="nav-menu">
@@ -913,6 +1508,14 @@
                             <i class="nav-icon fas fa-cog"></i>
                             Settings
                         </a>
+                        <a href="#" class="nav-link" data-section="admin-management" id="admin-management-link" style="display: none;">
+                            <i class="nav-icon fas fa-users-cog"></i>
+                            Admin Management
+                        </a>
+                        <a href="#" class="nav-link" data-section="admin-profile">
+                            <i class="nav-icon fas fa-user"></i>
+                            My Profile
+                        </a>
                     </li>
                 </ul>
             </nav>
@@ -931,10 +1534,31 @@
                             <div class="notification-header">Notifications</div>
                         </div>
                     </button>
-                    <button class="btn btn-danger" onclick="adminModules.logout()" title="Logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Logout
-                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" onclick="adminModules.toggleProfileDropdown()">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="header-admin-name">Admin</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="profile-dropdown-menu" class="profile-dropdown-menu">
+                            <div class="profile-dropdown-header">
+                                <i class="fas fa-user-circle"></i>
+                                <div>
+                                    <div id="dropdown-admin-name">Admin</div>
+                                    <div id="dropdown-admin-role">Role</div>
+                                </div>
+                            </div>
+                            <div class="profile-dropdown-divider"></div>
+                            <a href="#" class="profile-dropdown-item" onclick="adminModules.showSection('admin-profile')">
+                                <i class="fas fa-user"></i>
+                                My Profile
+                            </a>
+                            <a href="#" class="profile-dropdown-item" onclick="adminModules.logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -1367,33 +1991,7 @@
                         <h3>System Settings</h3>
                     </div>
                     
-                    <!-- Admin Management -->
-                    <div class="table-container" style="margin-bottom: 2rem;">
-                        <div class="section-header" style="padding: 1rem; margin: 0;">
-                            <h4 style="margin: 0;">Admin Management</h4>
-                            <button class="btn btn-primary" onclick="adminModules.showModal('add-admin-modal')">
-                                <i class="fas fa-plus"></i>
-                                Add New Admin
-                            </button>
-                        </div>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Created</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admins-tbody">
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 20px; color: #666;">Loading admins...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+
                     
                     <div class="dashboard-grid">
                         <div class="dashboard-card" onclick="adminModules.showModal('general-settings-modal')" style="cursor: pointer;">
@@ -1415,6 +2013,167 @@
                             <h3>Backup & Security</h3>
                             <p>Database backup and security</p>
                             <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--danger-color); margin-top: 1rem;"></i>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showModal('social-media-settings-modal')" style="cursor: pointer;">
+                            <h3>Social Media</h3>
+                            <p>Manage social media links</p>
+                            <i class="fas fa-share-alt" style="font-size: 2rem; color: var(--primary-color); margin-top: 1rem;"></i>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin Management Section -->
+                <section id="admin-management" class="content-section">
+                    <div class="section-header">
+                        <h3>Admin Management</h3>
+                        <div class="section-controls">
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-admin-modal')">
+                                <i class="fas fa-plus"></i> Add New Admin
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Admin Overview Cards -->
+                    <div class="admin-overview-grid">
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h4 id="total-admins">0</h4>
+                                <p>Total Admins</p>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon active">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h4 id="active-admins">0</h4>
+                                <p>Active</p>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon super">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h4 id="super-admins">0</h4>
+                                <p>Super Admins</p>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon recent">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h4 id="recent-logins">0</h4>
+                                <p>Recent Logins</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Users Table -->
+                    <div class="admin-table-container">
+                        <div class="admin-table-header">
+                            <h4>Admin Users</h4>
+                            <button class="btn btn-outline" onclick="adminModules.refreshAdmins()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table" id="admins-table">
+                                <thead>
+                                    <tr>
+                                        <th>Admin</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admins-table-body">
+                                    <tr>
+                                        <td colspan="5" class="loading-state">
+                                            <div class="loading-spinner"></div>
+                                            <span>Loading admins...</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="admin-activity-container">
+                        <div class="admin-activity-header">
+                            <h4>Recent Activity</h4>
+                            <button class="btn btn-outline" onclick="adminModules.refreshActivity()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="admin-activity-list" id="activity-list">
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <span>Loading activity...</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin Profile Section -->
+                <section id="admin-profile" class="content-section">
+                    <div class="section-header">
+                        <h3>My Profile</h3>
+                        <div class="section-controls">
+                            <button class="btn btn-primary" onclick="adminProfile.showModal('edit-profile-modal')">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </button>
+                            <button class="btn btn-secondary" onclick="adminProfile.refreshProfile()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="profile-container">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="profile-info">
+                                <h4 id="profile-full-name">Loading...</h4>
+                                <p id="profile-role">Loading...</p>
+                                <span id="profile-status-badge" class="badge badge-success">Active</span>
+                            </div>
+                        </div>
+
+                        <div class="profile-details">
+                            <div class="profile-grid">
+                                <div class="profile-item">
+                                    <label>Username</label>
+                                    <span id="profile-username">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Email</label>
+                                    <span id="profile-email">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Role</label>
+                                    <span id="profile-role-description">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Status</label>
+                                    <span id="profile-status">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Last Login</label>
+                                    <span id="profile-last-login">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Account Created</label>
+                                    <span id="profile-created">Loading...</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -2118,6 +2877,257 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('backup-settings-modal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Social Media Settings Modal -->
+    <div id="social-media-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Social Media Settings</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('social-media-settings-modal')">&times;</button>
+            </div>
+            <form id="social-media-settings-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_facebook" checked style="margin-right: 8px;">
+                        Enable Facebook
+                    </label>
+                    <input type="url" class="form-input" name="facebook_url" placeholder="https://www.facebook.com/yourpage" value="https://www.facebook.com/JowakiElectricalServicesLTD">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_twitter" style="margin-right: 8px;">
+                        Enable Twitter
+                    </label>
+                    <input type="url" class="form-input" name="twitter_url" placeholder="https://twitter.com/yourhandle">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_instagram" style="margin-right: 8px;">
+                        Enable Instagram
+                    </label>
+                    <input type="url" class="form-input" name="instagram_url" placeholder="https://instagram.com/yourhandle">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_linkedin" style="margin-right: 8px;">
+                        Enable LinkedIn
+                    </label>
+                    <input type="url" class="form-input" name="linkedin_url" placeholder="https://linkedin.com/company/yourcompany">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_youtube" style="margin-right: 8px;">
+                        Enable YouTube
+                    </label>
+                    <input type="url" class="form-input" name="youtube_url" placeholder="https://youtube.com/@yourchannel">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_tiktok" style="margin-right: 8px;">
+                        Enable TikTok
+                    </label>
+                    <input type="url" class="form-input" name="tiktok_url" placeholder="https://tiktok.com/@yourhandle">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('social-media-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Admin Modal -->
+    <div id="add-admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Admin</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-admin-modal')">&times;</button>
+            </div>
+            <form id="add-admin-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name *</label>
+                        <input type="text" class="form-input" name="first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name *</label>
+                        <input type="text" class="form-input" name="last_name" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Username *</label>
+                        <input type="text" class="form-input" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-input" name="email" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Password *</label>
+                        <input type="password" class="form-input" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        <input type="password" class="form-input" name="confirm_password" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Role *</label>
+                    <select class="form-input" name="role_id" required>
+                        <option value="">Select a role...</option>
+                        <option value="1">Super Admin - Full system access</option>
+                        <option value="2" selected>Admin - Standard admin access</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="is_active" checked style="margin-right: 8px;">
+                        Active Account
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-admin-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Admin Modal -->
+    <div id="view-admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Admin Details</h3>
+                <button class="modal-close" onclick="adminManagement.hideModal('view-admin-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="admin-details-content">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <span>Loading admin details...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Admin Modal -->
+    <div id="edit-admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Admin</h3>
+                <button class="modal-close" onclick="adminManagement.hideModal('edit-admin-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-admin-form">
+                    <input type="hidden" name="admin_id">
+                    <div class="form-group">
+                        <label class="form-label">Username *</label>
+                        <input type="text" class="form-input" name="username" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" class="form-input" name="first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" class="form-input" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-input" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <select class="form-input" name="role_id">
+                            <option value="1">Super Admin</option>
+                            <option value="2">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-input" name="new_password" minlength="6">
+                        <small class="form-help">Leave blank to keep current password</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="adminManagement.hideModal('edit-admin-modal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Admin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Profile</h3>
+                <button class="modal-close" onclick="adminProfile.hideModal('edit-profile-modal')">&times;</button>
+            </div>
+            <form id="edit-profile-form">
+                <div class="form-group">
+                    <label class="form-label">Username *</label>
+                    <input type="text" class="form-input" name="username" required>
+                    <small class="form-help">Username must be unique and cannot be changed by other admins</small>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name *</label>
+                        <input type="text" class="form-input" name="first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name *</label>
+                        <input type="text" class="form-input" name="last_name" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-input" name="email" required>
+                    <small class="form-help">This email will be used for notifications and password reset</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="change-password-toggle" style="margin-right: 8px;">
+                        Change Password
+                    </label>
+                </div>
+                
+                <div id="password-fields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Current Password *</label>
+                        <input type="password" class="form-input" name="current_password">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">New Password *</label>
+                            <input type="password" class="form-input" name="new_password" minlength="6">
+                            <small class="form-help">Password must be at least 6 characters long</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm New Password *</label>
+                            <input type="password" class="form-input" name="confirm_password">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminProfile.hideModal('edit-profile-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
                 </div>
             </form>
         </div>

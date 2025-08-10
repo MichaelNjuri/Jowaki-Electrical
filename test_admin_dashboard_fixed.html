@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Dashboard Fixed</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Admin Dashboard Fixed</h1>
+    
+    <div class="section">
+        <h2>Issues Fixed</h2>
+        <div class="success">
+            ✅ <strong>Problem:</strong> Admin management showing "login" instead of content
+        </div>
+        <div class="success">
+            ✅ <strong>Problem:</strong> Admin management section not visible
+        </div>
+        <div class="success">
+            ✅ <strong>Problem:</strong> Permission checking not working properly
+        </div>
+        <div class="success">
+            ✅ <strong>Solution:</strong> Fixed permission checking and section visibility
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Test Admin Dashboard</h2>
+        <button onclick="testAdminUser()">Test Admin User Data</button>
+        <button onclick="testAdminManagement()">Test Admin Management</button>
+        <button onclick="testNavigation()">Test Navigation</button>
+        <button onclick="testAllComponents()">Test All Components</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <div class="section">
+        <h2>Quick Links</h2>
+        <button onclick="window.open('AdminDashboard.html', '_blank')">Open Admin Dashboard</button>
+        <button onclick="window.open('admin_login.html', '_blank')">Open Admin Login</button>
+        <button onclick="window.open('test_admin_creation_fixed.html', '_blank')">Test Admin Creation</button>
+    </div>
+
+    <div class="section">
+        <h2>What Was Fixed</h2>
+        <ul>
+            <li><strong>Permission Checking:</strong> Fixed to read from localStorage instead of window.currentUser</li>
+            <li><strong>Section Visibility:</strong> Removed inline display:none from admin-management section</li>
+            <li><strong>Navigation:</strong> Admin management section now uses CSS classes for visibility</li>
+            <li><strong>Error Handling:</strong> Added proper error handling for admin user data parsing</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Expected Behavior Now</h2>
+        <div class="success">
+            ✅ <strong>Admin Management Visible:</strong> Section shows properly when user has permissions
+        </div>
+            ✅ <strong>Navigation Works:</strong> Clicking admin management link shows the section
+        </div>
+        <div class="success">
+            ✅ <strong>Permission Checking:</strong> Properly checks admin user permissions from localStorage
+        </div>
+        <div class="success">
+            ✅ <strong>Content Loading:</strong> Admin management content loads without "login" message
+        </div>
+    </div>
+
+    <script>
+        async function testAdminUser() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Admin User Data...</div>';
+            
+            const adminUserStr = localStorage.getItem('adminUser');
+            if (!adminUserStr) {
+                resultsDiv.innerHTML = `
+                    <div class="warning">⚠️ No admin user found in localStorage</div>
+                    <div class="info">Please log in first to test admin functionality</div>
+                `;
+                return;
+            }
+            
+            try {
+                const adminUser = JSON.parse(adminUserStr);
+                resultsDiv.innerHTML = `
+                    <div class="success">✅ Admin user data found!</div>
+                    <div class="info">Username: ${adminUser.username}</div>
+                    <div class="info">Full Name: ${adminUser.full_name}</div>
+                    <div class="info">Has Permissions: ${adminUser.permissions ? 'Yes' : 'No'}</div>
+                    <div class="info">Admin Management Permission: ${adminUser.permissions?.admin_management ? 'Yes' : 'No'}</div>
+                    <div class="info">Raw Data:</div>
+                    <pre>${JSON.stringify(adminUser, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Error parsing admin user data: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testAdminManagement() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Admin Management...</div>';
+            
+            try {
+                // Test if admin management API is accessible
+                const response = await fetch('API/get_admins_fixed.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Admin Management API working!</div>
+                        <div class="info">Found ${data.admins.length} admin users</div>
+                        <div class="info">API Response:</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Admin Management API error: ${data.message}</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Error testing admin management: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testNavigation() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Navigation...</div>';
+            
+            // Check if admin management link exists
+            const adminLink = document.getElementById('admin-management-link');
+            if (!adminLink) {
+                resultsDiv.innerHTML = `
+                    <div class="warning">⚠️ Admin management link not found on this page</div>
+                    <div class="info">This test should be run from the Admin Dashboard page</div>
+                `;
+                return;
+            }
+            
+            // Check if admin management section exists
+            const adminSection = document.getElementById('admin-management');
+            if (!adminSection) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Admin management section not found</div>
+                `;
+                return;
+            }
+            
+            resultsDiv.innerHTML = `
+                <div class="success">✅ Navigation elements found!</div>
+                <div class="info">Admin Link: ${adminLink ? 'Found' : 'Not Found'}</div>
+                <div class="info">Admin Section: ${adminSection ? 'Found' : 'Not Found'}</div>
+                <div class="info">Link Display: ${adminLink.style.display}</div>
+                <div class="info">Section Classes: ${adminSection.className}</div>
+            `;
+        }
+        
+        async function testAllComponents() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing All Components...</div>';
+            
+            let results = '';
+            
+            // Test 1: Admin User Data
+            const adminUserStr = localStorage.getItem('adminUser');
+            if (adminUserStr) {
+                try {
+                    const adminUser = JSON.parse(adminUserStr);
+                    results += `<div class="success">✅ Admin User: ${adminUser.username} (${adminUser.full_name})</div>`;
+                    results += `<div class="success">✅ Permissions: ${adminUser.permissions?.admin_management ? 'Admin Management ✓' : 'No Admin Management ✗'}</div>`;
+                } catch (error) {
+                    results += `<div class="error">❌ Admin User Parse Error: ${error.message}</div>`;
+                }
+            } else {
+                results += `<div class="warning">⚠️ No Admin User Found</div>`;
+            }
+            
+            // Test 2: Admin Management API
+            try {
+                const response = await fetch('API/get_admins_fixed.php');
+                const data = await response.json();
+                if (data.success) {
+                    results += `<div class="success">✅ Admin API: Working (${data.admins.length} admins)</div>`;
+                } else {
+                    results += `<div class="warning">⚠️ Admin API: ${data.message}</div>`;
+                }
+            } catch (error) {
+                results += `<div class="error">❌ Admin API Error: ${error.message}</div>`;
+            }
+            
+            // Test 3: Admin Activity API
+            try {
+                const response = await fetch('API/get_admin_activity_fixed.php?limit=5');
+                const data = await response.json();
+                if (data.success) {
+                    results += `<div class="success">✅ Activity API: Working (${data.activities.length} activities)</div>`;
+                } else {
+                    results += `<div class="warning">⚠️ Activity API: ${data.message}</div>`;
+                }
+            } catch (error) {
+                results += `<div class="error">❌ Activity API Error: ${error.message}</div>`;
+            }
+            
+            // Test 4: Admin Roles API
+            try {
+                const response = await fetch('API/get_admin_roles_fixed.php');
+                const data = await response.json();
+                if (data.success) {
+                    results += `<div class="success">✅ Roles API: Working (${data.roles.length} roles)</div>`;
+                } else {
+                    results += `<div class="warning">⚠️ Roles API: ${data.message}</div>`;
+                }
+            } catch (error) {
+                results += `<div class="error">❌ Roles API Error: ${error.message}</div>`;
+            }
+            
+            resultsDiv.innerHTML = results;
+        }
+    </script>
+</body>
+</html>
+

@@ -1,4 +1,4 @@
-// Product Detail Page JavaScript
+// Product Detail Page JavaScript - Enhanced Version
 console.log('Product detail JavaScript loaded');
 
 // Global variables
@@ -7,9 +7,12 @@ let maxStock = 0;
 let productId = 0;
 let productName = '';
 let productPrice = 0;
+let wishlistItems = JSON.parse(localStorage.getItem('wishlist') || '[]');
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Product detail page initializing...');
+    
     // Get product data from PHP variables (these will be set by the server)
     const quantityInput = document.querySelector('#quantity');
     const addToCartBtn = document.querySelector('.btn-primary');
@@ -17,15 +20,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentPrice = document.querySelector('.current-price');
     
     maxStock = quantityInput ? parseInt(quantityInput.getAttribute('max')) || 0 : 0;
-    productId = addToCartBtn ? parseInt(addToCartBtn.getAttribute('onclick').match(/\d+/)[0]) || 0 : 0;
+    productId = addToCartBtn ? parseInt(addToCartBtn.getAttribute('data-product-id')) || 0 : 0;
     productName = productTitle ? productTitle.textContent || '' : '';
     productPrice = currentPrice ? parseFloat(currentPrice.textContent.replace(/[^\d.]/g, '')) || 0 : 0;
+    
+    console.log('Product data loaded:', {
+        maxStock,
+        productId,
+        productName,
+        productPrice
+    });
     
     // Update quantity display
     validateQuantity();
     
+    // Initialize wishlist state
+    initializeWishlistState();
+    
     // Add smooth scrolling to related products
-    const relatedSection = document.querySelector('.related-products');
+    const relatedSection = document.querySelector('.related-products-section');
     if (relatedSection) {
         relatedSection.style.opacity = '0';
         relatedSection.style.transform = 'translateY(50px)';
@@ -129,6 +142,10 @@ window.updatePriceDisplay = function() {
 
 // Cart functionality
 window.addToCart = async function(productId) {
+    console.log('addToCart function called with productId:', productId);
+    console.log('Current quantity:', currentQuantity);
+    console.log('Max stock:', maxStock);
+    
     const quantity = currentQuantity;
     
     // Check if product is in stock
@@ -144,6 +161,7 @@ window.addToCart = async function(productId) {
     addButton.disabled = true;
 
     try {
+        // Direct API call to add to cart
         const response = await fetch('API/add_to_cart.php', {
             method: 'POST',
             headers: {
@@ -235,8 +253,20 @@ window.shareOnTwitter = function() {
 window.shareOnWhatsApp = function() {
     const text = encodeURIComponent(`Check out this amazing product: ${productName} - KSh ${productPrice.toLocaleString()} \n${window.location.href}`);
     // Get WhatsApp number from a data attribute or global variable
-    const whatsappNumber = document.querySelector('meta[name="whatsapp-number"]')?.getAttribute('content') || '254721442248';
-    window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
+    let whatsappNumber = document.querySelector('meta[name="whatsapp-number"]')?.getAttribute('content') || '254721442248';
+    
+    // Clean the WhatsApp number (remove any non-numeric characters except +)
+    let cleanNumber = whatsappNumber.replace(/[^\d+]/g, '');
+    
+    // Handle local format (07xxxxxxxx) - convert to international format
+    if (cleanNumber.startsWith('07') && cleanNumber.length === 10) {
+        cleanNumber = '254' + cleanNumber.substring(1);
+    }
+    
+    // Ensure the number starts with the country code
+    const finalNumber = cleanNumber.startsWith('+') ? cleanNumber.substring(1) : cleanNumber;
+    
+    window.open(`https://wa.me/${finalNumber}?text=${text}`, '_blank');
 }
 
 window.copyProductLink = async function() {
@@ -372,10 +402,100 @@ document.querySelectorAll('img[data-src]').forEach(img => {
     observer.observe(img);
 });
 
-// Add to wishlist functionality (if needed)
-function toggleWishlist(productId) {
-    // Implementation for wishlist functionality
-    showNotification('Wishlist feature coming soon!', 'success');
+// Image Modal Functions
+window.openImageModal = function() {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const mainImage = document.getElementById('mainProductImage');
+    
+    if (modal && modalImage && mainImage) {
+        modalImage.src = mainImage.src;
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        
+        // Add fade-in animation
+        setTimeout(() => {
+            modal.style.opacity = '1';
+        }, 10);
+    }
+}
+
+window.closeImageModal = function() {
+    const modal = document.getElementById('imageModal');
+    
+    if (modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeImageModal();
+            }
+        });
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+});
+
+// Wishlist functionality
+window.toggleWishlist = function(productId) {
+    const index = wishlistItems.findIndex(item => item.id === productId);
+    const wishlistBtn = document.querySelector(`[onclick="toggleWishlist(${productId})"]`);
+    
+    if (index > -1) {
+        // Remove from wishlist
+        wishlistItems.splice(index, 1);
+        localStorage.setItem('wishlist', JSON.stringify(wishlistItems));
+        
+        if (wishlistBtn) {
+            wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+            wishlistBtn.style.color = '#6b7280';
+        }
+        
+        showNotification('Product removed from wishlist', 'success');
+    } else {
+        // Add to wishlist
+        const productData = {
+            id: productId,
+            name: productName,
+            price: productPrice,
+            image: document.querySelector('#mainProductImage').src,
+            addedAt: new Date().toISOString()
+        };
+        
+        wishlistItems.push(productData);
+        localStorage.setItem('wishlist', JSON.stringify(wishlistItems));
+        
+        if (wishlistBtn) {
+            wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+            wishlistBtn.style.color = '#ef4444';
+        }
+        
+        showNotification('Product added to wishlist!', 'success');
+    }
+}
+
+// Initialize wishlist button state
+function initializeWishlistState() {
+    const wishlistBtn = document.querySelector(`[onclick="toggleWishlist(${productId})"]`);
+    if (wishlistBtn && wishlistItems.find(item => item.id === productId)) {
+        wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+        wishlistBtn.style.color = '#ef4444';
+    }
 }
 
 // Quick view functionality (if needed)
@@ -383,6 +503,28 @@ function quickView(productId) {
     // Implementation for quick view modal
     console.log('Quick view for product:', productId);
 }
+
+// Carousel functionality for recommendations
+window.scrollCarousel = function(direction) {
+    const track = document.querySelector('.carousel-track');
+    if (!track) return;
+    
+    const cardWidth = 280 + 24; // card width + gap
+    const currentScroll = track.scrollLeft || 0;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    
+    let newScroll;
+    if (direction === 'left') {
+        newScroll = Math.max(0, currentScroll - cardWidth * 2);
+    } else {
+        newScroll = Math.min(maxScroll, currentScroll + cardWidth * 2);
+    }
+    
+    track.scrollTo({
+        left: newScroll,
+        behavior: 'smooth'
+    });
+};
 
 // Initialize tooltips for better UX
 function initializeTooltips() {

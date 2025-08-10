@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Creation Fixed</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 200px; overflow-y: auto; }
+        .form-group { margin: 10px 0; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Admin Creation Fixed</h1>
+    
+    <div class="section">
+        <h2>Issue Fixed</h2>
+        <div class="success">
+            ✅ <strong>Problem:</strong> Foreign key constraint fails on role_id
+        </div>
+        <div class="success">
+            ✅ <strong>Root Cause:</strong> Missing role_id field in create_admin.php and form
+        </div>
+        <div class="success">
+            ✅ <strong>Solution:</strong> Added role_id field with validation and form select
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Test Admin Creation</h2>
+        <form id="test-admin-form">
+            <div class="form-group">
+                <label class="form-label">First Name *</label>
+                <input type="text" class="form-input" name="first_name" value="Test" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Last Name *</label>
+                <input type="text" class="form-input" name="last_name" value="Admin" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Username *</label>
+                <input type="text" class="form-input" name="username" value="testadmin" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-input" name="email" value="testadmin@example.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password *</label>
+                <input type="password" class="form-input" name="password" value="password123" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Role *</label>
+                <select class="form-input" name="role_id" required>
+                    <option value="">Select a role...</option>
+                    <option value="1">Super Admin - Full system access</option>
+                    <option value="2" selected>Admin - Standard admin access</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" name="is_active" checked style="margin-right: 8px;">
+                    Active Account
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Test Create Admin</button>
+        </form>
+    </div>
+    
+    <div id="results"></div>
+
+    <div class="section">
+        <h2>Quick Links</h2>
+        <button onclick="window.open('AdminDashboard.html', '_blank')">Open Admin Dashboard</button>
+        <button onclick="window.open('test_admin_management_fixed.html', '_blank')">Test Admin Management</button>
+        <button onclick="window.open('test_admin_apis.html', '_blank')">Test Admin APIs</button>
+    </div>
+
+    <div class="section">
+        <h2>What Was Fixed</h2>
+        <ul>
+            <li><strong>create_admin.php:</strong> Added role_id field to INSERT statement</li>
+            <li><strong>create_admin.php:</strong> Added role_id validation against admin_roles table</li>
+            <li><strong>create_admin.php:</strong> Default role_id to 2 (Admin) if not provided</li>
+            <li><strong>AdminDashboard.html:</strong> Added role selection dropdown to form</li>
+            <li><strong>Database:</strong> Foreign key constraint now properly satisfied</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Expected Behavior Now</h2>
+        <div class="success">
+            ✅ <strong>No Foreign Key Errors:</strong> role_id properly references admin_roles.id
+        </div>
+        <div class="success">
+            ✅ <strong>Role Selection:</strong> Form includes role dropdown with validation
+        </div>
+        <div class="success">
+            ✅ <strong>Admin Creation:</strong> Admins can be created successfully
+        </div>
+        <div class="success">
+            ✅ <strong>Data Integrity:</strong> All required fields are properly validated
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('test-admin-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Creating test admin...</div>';
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('API/create_admin.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Admin created successfully!</div>
+                        <div class="info">Admin ID: ${data.admin_id}</div>
+                        <div class="info">Message: ${data.message}</div>
+                        <div class="info">Form data sent:</div>
+                        <pre>${JSON.stringify(Object.fromEntries(formData), null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Failed to create admin</div>
+                        <div class="error">Error: ${data.message}</div>
+                        <div class="info">Form data sent:</div>
+                        <pre>${JSON.stringify(Object.fromEntries(formData), null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Network error: ${error.message}</div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
+

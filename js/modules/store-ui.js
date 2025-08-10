@@ -220,7 +220,12 @@ export function orderByWhatsApp(productId = null, storeProducts) {
     const whatsappNumber = document.querySelector('meta[name="whatsapp-number"]')?.getAttribute('content') || '254721442248';
     
     // Clean the WhatsApp number (remove any non-numeric characters except +)
-    const cleanNumber = whatsappNumber.replace(/[^\d+]/g, '');
+    let cleanNumber = whatsappNumber.replace(/[^\d+]/g, '');
+    
+    // Handle local format (07xxxxxxxx) - convert to international format
+    if (cleanNumber.startsWith('07') && cleanNumber.length === 10) {
+        cleanNumber = '254' + cleanNumber.substring(1);
+    }
     
     // Ensure the number starts with the country code
     const finalNumber = cleanNumber.startsWith('+') ? cleanNumber.substring(1) : cleanNumber;

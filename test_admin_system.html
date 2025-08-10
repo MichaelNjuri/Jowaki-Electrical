@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin System Test - Jowaki Electrical Services</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .test-results {
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .test-results pre {
+            font-size: 0.8rem;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .credentials {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .credentials h4 {
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+        }
+
+        .credentials p {
+            margin-bottom: 0.25rem;
+            font-family: monospace;
+            background: #e0f2fe;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .step {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .step p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-cogs"></i> Admin System Test</h1>
+            <p>Test and initialize the admin management system</p>
+        </div>
+
+        <!-- System Status -->
+        <div class="test-section">
+            <h3><i class="fas fa-info-circle"></i> System Status</h3>
+            <button class="btn btn-primary" onclick="checkSystemStatus()">
+                <span id="status-loading" class="loading" style="display: none;"></span>
+                Check System Status
+            </button>
+            <div id="system-status" class="status" style="display: none;"></div>
+        </div>
+
+        <!-- Initialize System -->
+        <div class="test-section">
+            <h3><i class="fas fa-database"></i> Initialize Admin System</h3>
+            <p>This will create the necessary database tables and default admin account.</p>
+            <button class="btn btn-success" onclick="initializeSystem()">
+                <span id="init-loading" class="loading" style="display: none;"></span>
+                Initialize System
+            </button>
+            <div id="init-status" class="status" style="display: none;"></div>
+            <div id="credentials" class="credentials" style="display: none;">
+                <h4><i class="fas fa-key"></i> Default Admin Credentials</h4>
+                <p><strong>Username:</strong> <code>admin</code></p>
+                <p><strong>Password:</strong> <code>admin123</code></p>
+            </div>
+        </div>
+
+        <!-- Test Login -->
+        <div class="test-section">
+            <h3><i class="fas fa-sign-in-alt"></i> Test Admin Login</h3>
+            <p>Test the admin login functionality with the default credentials.</p>
+            <button class="btn btn-warning" onclick="testLogin()">
+                <span id="login-loading" class="loading" style="display: none;"></span>
+                Test Login
+            </button>
+            <div id="login-status" class="status" style="display: none;"></div>
+        </div>
+
+        <!-- Test Admin Management -->
+        <div class="test-section">
+            <h3><i class="fas fa-users-cog"></i> Test Admin Management</h3>
+            <p>Test the admin management API endpoints.</p>
+            <button class="btn btn-primary" onclick="testGetAdmins()">Get Admins</button>
+            <button class="btn btn-primary" onclick="testGetRoles()">Get Roles</button>
+            <button class="btn btn-primary" onclick="testGetActivity()">Get Activity</button>
+            <div id="management-status" class="status" style="display: none;"></div>
+        </div>
+
+        <!-- Quick Access -->
+        <div class="test-section">
+            <h3><i class="fas fa-rocket"></i> Quick Access</h3>
+            <div class="step">
+                <h4>Step 1: Initialize System</h4>
+                <p>Click "Initialize System" to create database tables and default admin account.</p>
+            </div>
+            <div class="step">
+                <h4>Step 2: Access Admin Login</h4>
+                <p>Use the default credentials to log into the admin system.</p>
+                <button class="btn btn-success" onclick="window.open('admin_login.html', '_blank')">
+                    <i class="fas fa-external-link-alt"></i> Open Admin Login
+                </button>
+            </div>
+            <div class="step">
+                <h4>Step 3: Access Admin Dashboard</h4>
+                <p>After successful login, access the admin dashboard.</p>
+                <button class="btn btn-primary" onclick="window.open('AdminDashboard.html', '_blank')">
+                    <i class="fas fa-external-link-alt"></i> Open Admin Dashboard
+                </button>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="test-section">
+            <h3><i class="fas fa-clipboard-list"></i> Test Results</h3>
+            <div class="test-results">
+                <pre id="test-output">Click any test button to see results here...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+
+        // Utility functions
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+        }
+
+        function hideStatus(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function showLoading(buttonId) {
+            const button = document.querySelector(`#${buttonId}`).parentElement;
+            const loading = button.querySelector('.loading');
+            loading.style.display = 'inline-block';
+            button.disabled = true;
+        }
+
+        function hideLoading(buttonId) {
+            const button = document.querySelector(`#${buttonId}`).parentElement;
+            const loading = button.querySelector('.loading');
+            loading.style.display = 'none';
+            button.disabled = false;
+        }
+
+        function logResult(message) {
+            const output = document.getElementById('test-output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `\n[${timestamp}] ${message}`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Test functions
+        async function checkSystemStatus() {
+            showLoading('status-loading');
+            hideStatus('system-status');
+            
+            try {
+                const response = await fetch('API/check_auth.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('system-status', '✅ System is running and accessible', 'success');
+                    logResult('System status check: SUCCESS');
+                } else {
+                    showStatus('system-status', '⚠️ System is running but authentication required', 'warning');
+                    logResult('System status check: AUTHENTICATION REQUIRED');
+                }
+            } catch (error) {
+                showStatus('system-status', '❌ System error: ' + error.message, 'error');
+                logResult('System status check: ERROR - ' + error.message);
+            } finally {
+                hideLoading('status-loading');
+            }
+        }
+
+        async function initializeSystem() {
+            showLoading('init-loading');
+            hideStatus('init-status');
+            document.getElementById('credentials').style.display = 'none';
+            
+            try {
+                const response = await fetch('API/create_admin_tables.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('init-status', '✅ Admin system initialized successfully!', 'success');
+                    document.getElementById('credentials').style.display = 'block';
+                    logResult('System initialization: SUCCESS');
+                    if (data.default_password) {
+                        logResult('Default admin created with password: ' + data.default_password);
+                    }
+                } else {
+                    showStatus('init-status', '❌ Failed to initialize: ' + data.message, 'error');
+                    logResult('System initialization: FAILED - ' + data.message);
+                }
+            } catch (error) {
+                showStatus('init-status', '❌ System error: ' + error.message, 'error');
+                logResult('System initialization: ERROR - ' + error.message);
+            } finally {
+                hideLoading('init-loading');
+            }
+        }
+
+        async function testLogin() {
+            showLoading('login-loading');
+            hideStatus('login-status');
+            
+            try {
+                const response = await fetch('API/admin_login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUser = data.admin;
+                    showStatus('login-status', '✅ Login successful! Admin: ' + data.admin.username, 'success');
+                    logResult('Login test: SUCCESS - Logged in as ' + data.admin.username);
+                    logResult('Admin role: ' + data.admin.role_name);
+                    logResult('Super admin: ' + (data.admin.is_super_admin ? 'Yes' : 'No'));
+                } else {
+                    showStatus('login-status', '❌ Login failed: ' + data.message, 'error');
+                    logResult('Login test: FAILED - ' + data.message);
+                }
+            } catch (error) {
+                showStatus('login-status', '❌ System error: ' + error.message, 'error');
+                logResult('Login test: ERROR - ' + error.message);
+            } finally {
+                hideLoading('login-loading');
+            }
+        }
+
+        async function testGetAdmins() {
+            if (!currentUser) {
+                showStatus('management-status', '❌ Please login first', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('API/get_admins.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('management-status', `✅ Retrieved ${data.total} admin users`, 'success');
+                    logResult('Get admins: SUCCESS - Found ' + data.total + ' admins');
+                    data.admins.forEach(admin => {
+                        logResult(`  - ${admin.full_name} (${admin.username}) - ${admin.role_name}`);
+                    });
+                } else {
+                    showStatus('management-status', '❌ Failed to get admins: ' + data.message, 'error');
+                    logResult('Get admins: FAILED - ' + data.message);
+                }
+            } catch (error) {
+                showStatus('management-status', '❌ System error: ' + error.message, 'error');
+                logResult('Get admins: ERROR - ' + error.message);
+            }
+        }
+
+        async function testGetRoles() {
+            if (!currentUser) {
+                showStatus('management-status', '❌ Please login first', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('API/get_admin_roles.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('management-status', `✅ Retrieved ${data.roles.length} roles`, 'success');
+                    logResult('Get roles: SUCCESS - Found ' + data.roles.length + ' roles');
+                    data.roles.forEach(role => {
+                        logResult(`  - ${role.role_name}: ${role.role_description}`);
+                    });
+                } else {
+                    showStatus('management-status', '❌ Failed to get roles: ' + data.message, 'error');
+                    logResult('Get roles: FAILED - ' + data.message);
+                }
+            } catch (error) {
+                showStatus('management-status', '❌ System error: ' + error.message, 'error');
+                logResult('Get roles: ERROR - ' + error.message);
+            }
+        }
+
+        async function testGetActivity() {
+            if (!currentUser) {
+                showStatus('management-status', '❌ Please login first', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('API/get_admin_activity.php?limit=5');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('management-status', `✅ Retrieved ${data.activities.length} recent activities`, 'success');
+                    logResult('Get activity: SUCCESS - Found ' + data.activities.length + ' activities');
+                    data.activities.forEach(activity => {
+                        logResult(`  - ${activity.admin_name}: ${activity.action} - ${activity.created_at}`);
+                    });
+                } else {
+                    showStatus('management-status', '❌ Failed to get activity: ' + data.message, 'error');
+                    logResult('Get activity: FAILED - ' + data.message);
+                }
+            } catch (error) {
+                showStatus('management-status', '❌ System error: ' + error.message, 'error');
+                logResult('Get activity: ERROR - ' + error.message);
+            }
+        }
+
+        // Initialize page
+        window.addEventListener('load', () => {
+            logResult('Admin system test page loaded');
+            logResult('Ready to test admin management system');
+        });
+    </script>
+</body>
+</html>
+
+

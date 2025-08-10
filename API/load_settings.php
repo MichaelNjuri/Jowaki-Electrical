@@ -3,11 +3,36 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Function to format WhatsApp number to international format
+function formatWhatsAppNumber($number) {
+    // Remove any non-numeric characters except +
+    $cleanNumber = preg_replace('/[^\d+]/', '', $number);
+    
+    // Handle local format (07xxxxxxxx) - convert to international format
+    if (preg_match('/^07\d{8}$/', $cleanNumber)) {
+        $cleanNumber = '254' . substr($cleanNumber, 1);
+    }
+    
+    // Remove + if present and ensure it starts with country code
+    $cleanNumber = ltrim($cleanNumber, '+');
+    
+    return $cleanNumber;
+}
+
 // Function to get a valid database connection
 function getValidConnection($existingConn = null) {
-    // If we have a valid existing connection, use it
+    // If we have a valid existing connection, check if it's still alive
     if ($existingConn && !$existingConn->connect_error) {
-        return $existingConn;
+        try {
+            // Try to ping the connection to see if it's still valid
+            if ($existingConn->ping()) {
+                return $existingConn;
+            }
+        } catch (Exception $e) {
+            // Connection is dead, will create new one
+        } catch (Error $e) {
+            // Connection is closed or invalid, will create new one
+        }
     }
     
     // Otherwise, create a new connection
@@ -47,7 +72,20 @@ function getStoreSettings($conn) {
         'pickup_location' => '',
         'enable_2fa' => false,
         'enable_login_notifications' => false,
-        'enable_audit_log' => true
+        'enable_audit_log' => true,
+        // Social Media Settings
+        'facebook_url' => 'https://www.facebook.com/JowakiElectricalServicesLTD',
+        'twitter_url' => '',
+        'instagram_url' => '',
+        'linkedin_url' => '',
+        'youtube_url' => '',
+        'tiktok_url' => '',
+        'enable_facebook' => true,
+        'enable_twitter' => false,
+        'enable_instagram' => false,
+        'enable_linkedin' => false,
+        'enable_youtube' => false,
+        'enable_tiktok' => false
     ];
 
     // Get a valid connection
@@ -78,18 +116,29 @@ function getStoreSettings($conn) {
                     } elseif (in_array($key, ['enable_mpesa', 'enable_card', 'enable_whatsapp', 'enable_standard_delivery', 'enable_express_delivery', 'enable_pickup', 'enable_2fa', 'enable_login_notifications', 'enable_audit_log'])) {
                         $settings[$key] = (bool) $value;
                     } else {
-                        $settings[$key] = $value;
+                        // Format WhatsApp number if it's the whatsapp_number setting
+                        if ($key === 'whatsapp_number') {
+                            $settings[$key] = formatWhatsAppNumber($value);
+                        } else {
+                            $settings[$key] = $value;
+                        }
                     }
                 }
             }
         }
         
     } catch (Exception $e) {
+        // Log the error for debugging
+        error_log("Error in getStoreSettings: " . $e->getMessage());
         // If any database error occurs, return default settings
     } finally {
         // Close the connection if we created a new one
         if ($shouldCloseConnection && $useConnection) {
-            $useConnection->close();
+            try {
+                $useConnection->close();
+            } catch (Exception $e) {
+                // Ignore errors when closing connection
+            }
         }
     }
 

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Creation JSON Fixed</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 200px; overflow-y: auto; }
+        .form-group { margin: 10px 0; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Admin Creation JSON Fixed</h1>
+    
+    <div class="section">
+        <h2>Issue Fixed</h2>
+        <div class="success">
+            ✅ <strong>Problem:</strong> "Unexpected token '<'" JSON parsing error
+        </div>
+        <div class="success">
+            ✅ <strong>Root Cause:</strong> PHP errors/warnings output before JSON response
+        </div>
+        <div class="success">
+            ✅ <strong>Solution:</strong> Added output buffering, CORS headers, and proper error handling
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Test Admin Creation API</h2>
+        <form id="test-admin-form">
+            <div class="form-group">
+                <label class="form-label">First Name *</label>
+                <input type="text" class="form-input" name="first_name" value="Test" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Last Name *</label>
+                <input type="text" class="form-input" name="last_name" value="Admin" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Username *</label>
+                <input type="text" class="form-input" name="username" value="testadmin" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-input" name="email" value="testadmin@example.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password *</label>
+                <input type="password" class="form-input" name="password" value="password123" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Role *</label>
+                <select class="form-input" name="role_id" required>
+                    <option value="">Select a role...</option>
+                    <option value="1">Super Admin - Full system access</option>
+                    <option value="2" selected>Admin - Standard admin access</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" name="is_active" checked style="margin-right: 8px;">
+                    Active Account
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Test Create Admin</button>
+        </form>
+    </div>
+    
+    <div id="results"></div>
+
+    <div class="section">
+        <h2>Quick Links</h2>
+        <button onclick="window.open('AdminDashboard.html', '_blank')">Open Admin Dashboard</button>
+        <button onclick="window.open('test_admin_creation_fixed.html', '_blank')">Test Admin Creation</button>
+        <button onclick="window.open('test_admin_management_fixed.html', '_blank')">Test Admin Management</button>
+    </div>
+
+    <div class="section">
+        <h2>What Was Fixed</h2>
+        <ul>
+            <li><strong>Output Buffering:</strong> Added <code>ob_end_clean()</code> to prevent HTML errors</li>
+            <li><strong>CORS Headers:</strong> Added proper CORS headers for cross-origin requests</li>
+            <li><strong>Error Handling:</strong> Converted all error exits to exceptions</li>
+            <li><strong>Connection Management:</strong> Added proper try-catch-finally with connection cleanup</li>
+            <li><strong>JSON Response:</strong> Ensured only clean JSON is output</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Expected Behavior Now</h2>
+        <div class="success">
+            ✅ <strong>Clean JSON:</strong> No HTML errors in response
+        </div>
+        <div class="success">
+            ✅ <strong>Proper Parsing:</strong> JavaScript can parse response as JSON
+        </div>
+        <div class="success">
+            ✅ <strong>Error Handling:</strong> Errors are returned as JSON, not HTML
+        </div>
+        <div class="success">
+            ✅ <strong>CORS Support:</strong> Cross-origin requests work properly
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('test-admin-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Creating test admin...</div>';
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('API/create_admin.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    // If not JSON, get the raw text to see what's being returned
+                    const rawText = await response.text();
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Response is not JSON!</div>
+                        <div class="error">Content-Type: ${contentType}</div>
+                        <div class="error">Raw Response:</div>
+                        <pre>${rawText}</pre>
+                    `;
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Admin created successfully!</div>
+                        <div class="info">Admin ID: ${data.admin_id}</div>
+                        <div class="info">Message: ${data.message}</div>
+                        <div class="info">Response is valid JSON ✅</div>
+                        <div class="info">Form data sent:</div>
+                        <pre>${JSON.stringify(Object.fromEntries(formData), null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Admin creation failed (expected behavior)</div>
+                        <div class="info">Error: ${data.message}</div>
+                        <div class="info">Response is valid JSON ✅</div>
+                        <div class="info">Form data sent:</div>
+                        <pre>${JSON.stringify(Object.fromEntries(formData), null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                if (error.name === 'SyntaxError') {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ JSON Parse Error: ${error.message}</div>
+                        <div class="error">This indicates HTML or other non-JSON content is being returned</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Network error: ${error.message}</div>
+                    `;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

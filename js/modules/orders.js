@@ -141,7 +141,9 @@ function generateOrderActionButtons(order, state) {
 }
 
 export function fetchOrders(state) {
-    return fetch('./API/admin_orders.php')
+    return fetch('./API/get_orders_fixed.php', {
+        credentials: 'include'
+    })
         .then(response => {
             if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return response.json();

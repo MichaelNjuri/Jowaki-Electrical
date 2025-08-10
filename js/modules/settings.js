@@ -12,7 +12,7 @@ export class SettingsManager {
 
     async loadSettings() {
         try {
-            const response = await fetch('/jowaki_electrical_srvs/api/get_settings.php');
+            const response = await fetch('API/get_settings_test.php');
             const data = await response.json();
             
             if (data.success) {
@@ -154,7 +154,7 @@ export class SettingsManager {
 
     async updateSettings(settings, successMessage) {
         try {
-            const response = await fetch('/jowaki_electrical_srvs/api/update_settings.php', {
+            const response = await fetch('API/update_settings.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -179,7 +179,7 @@ export class SettingsManager {
 
     async backupDatabase() {
         try {
-            const response = await fetch('/jowaki_electrical_srvs/api/backup_database.php');
+            const response = await fetch('API/backup_database.php');
             const blob = await response.blob();
             
             const url = window.URL.createObjectURL(blob);
@@ -200,7 +200,7 @@ export class SettingsManager {
 
     async downloadLogs() {
         try {
-            const response = await fetch('/jowaki_electrical_srvs/api/download_logs.php');
+            const response = await fetch('API/download_logs.php');
             const blob = await response.blob();
             
             const url = window.URL.createObjectURL(blob);

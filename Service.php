@@ -62,51 +62,32 @@ $store_settings = getStoreSettings(null);
         }
 
         
+        /* Header Override */
+        header {
+            min-height: 60px !important;
+        }
+        
+        .header-content {
+            min-height: 60px !important;
+            padding: 0.25rem 0 !important;
+        }
+        
+        .logo-img {
+            width: 40px !important;
+            height: 40px !important;
+        }
+        
+        .logo-text {
+            font-size: 0.9rem !important;
+        }
+        
         /* Main Content */
         main {
-            padding-top: 100px;
+            padding-top: 20px;
             min-height: 100vh;
         }
 
-        /* Hero Section for Contact */
-        .contact-hero {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
-            color: white;
-            padding: 4rem 0;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
 
-        .contact-hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1.5" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            opacity: 0.3;
-        }
-
-        .contact-hero-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .contact-hero h1 {
-            font-size: clamp(2.5rem, 5vw, 3.5rem);
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .contact-hero p {
-            font-size: 1.25rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto;
-        }
 
         /* Section General Styles */
         .section {
@@ -514,13 +495,7 @@ $store_settings = getStoreSettings(null);
                 font-size: 2rem;
             }
 
-            .contact-hero h1 {
-                font-size: 2.5rem;
-            }
 
-            .contact-hero p {
-                font-size: 1.1rem;
-            }
 
             .whatsapp-float {
                 padding: 0.75rem 1.25rem;
@@ -551,9 +526,7 @@ $store_settings = getStoreSettings(null);
                 font-size: 1rem;
             }
 
-            .contact-hero {
-                padding: 3rem 0;
-            }
+
 
             .info-cards {
                 grid-template-columns: 1fr;
@@ -567,15 +540,7 @@ $store_settings = getStoreSettings(null);
 
 
     <main>
-        <!-- Contact Hero Section -->
-        <section class="contact-hero">
-            <div class="container">
-                <div class="contact-hero-content">
-                    <h1>Get In Touch</h1>
-                    <p>Ready to secure your property? Contact our expert team for professional consultation and quality service delivery.</p>
-                </div>
-            </div>
-        </section>
+
 
         <!-- Main Contact Section -->
         <section class="section">
@@ -611,17 +576,21 @@ $store_settings = getStoreSettings(null);
                         </div>
                         
                         <div class="social-links">
-                            <a href="#" class="social-link" title="Facebook">
+                            <?php if ($store_settings['enable_facebook'] && !empty($store_settings['facebook_url'])): ?>
+                            <a href="<?php echo htmlspecialchars($store_settings['facebook_url']); ?>" class="social-link" title="Facebook" target="_blank">
                                 <i class="fab fa-facebook-f"></i>
                             </a>
-                            <a href="#" class="social-link" title="Twitter">
-                                <i class="fab fa-twitter"></i>
+                            <?php endif; ?>
+                            <?php if ($store_settings['enable_whatsapp']): ?>
+                            <a href="https://wa.me/<?php echo htmlspecialchars($store_settings['whatsapp_number']); ?>" class="social-link" title="WhatsApp" target="_blank">
+                                <i class="fab fa-whatsapp"></i>
                             </a>
-                            <a href="#" class="social-link" title="Instagram">
-                                <i class="fab fa-instagram"></i>
+                            <?php endif; ?>
+                            <a href="tel:<?php echo htmlspecialchars($store_settings['store_phone']); ?>" class="social-link" title="Call Us">
+                                <i class="fas fa-phone"></i>
                             </a>
-                            <a href="#" class="social-link" title="LinkedIn">
-                                <i class="fab fa-linkedin-in"></i>
+                            <a href="mailto:<?php echo htmlspecialchars($store_settings['store_email']); ?>" class="social-link" title="Email Us">
+                                <i class="fas fa-envelope"></i>
                             </a>
                         </div>
                     </div>

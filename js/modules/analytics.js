@@ -1,7 +1,7 @@
 import { showNotification } from './notifications.js';
 
 export function fetchAnalyticsData(period = 'month', startDate = '', endDate = '', category = '') {
-    let url = 'api/sales_reports.php?period=' + period;
+    let url = 'API/get_analytics_admin_fixed.php?period=' + period;
     if (startDate && endDate) {
         url += `&start_date=${startDate}&end_date=${endDate}`;
     }
@@ -9,7 +9,9 @@ export function fetchAnalyticsData(period = 'month', startDate = '', endDate = '
         url += `&category=${category}`;
     }
 
-    return fetch(url)
+    return fetch(url, {
+        credentials: 'include'
+    })
         .then(response => {
             if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return response.json();

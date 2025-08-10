@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Management Fixed</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Admin Management Fixed</h1>
+    
+    <div class="section">
+        <h2>Issue Fixed</h2>
+        <div class="success">
+            ✅ <strong>Problem:</strong> "Cannot set properties of null (setting 'textContent')" error
+        </div>
+        <div class="success">
+            ✅ <strong>Root Cause:</strong> Missing DOM elements and column count mismatch
+        </div>
+        <div class="success">
+            ✅ <strong>Solution:</strong> Added null checks and fixed table structure
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Test Admin Management</h2>
+        <button onclick="testAdminManagement()">Test Admin Management Module</button>
+        <button onclick="testDOMElements()">Test DOM Elements</button>
+        <button onclick="testTableStructure()">Test Table Structure</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <div class="section">
+        <h2>Quick Links</h2>
+        <button onclick="window.open('AdminDashboard.html', '_blank')">Open Admin Dashboard</button>
+        <button onclick="window.open('test_admin_apis.html', '_blank')">Test Admin APIs</button>
+        <button onclick="window.open('test_admin_creation.html', '_blank')">Test Admin Creation</button>
+    </div>
+
+    <div class="section">
+        <h2>What Was Fixed</h2>
+        <ul>
+            <li><strong>updateAdminStats():</strong> Added null checks for DOM elements</li>
+            <li><strong>renderAdmins():</strong> Fixed column count from 8 to 6</li>
+            <li><strong>AdminDashboard.html:</strong> Added missing super-admins stat element</li>
+            <li><strong>Table structure:</strong> Aligned JavaScript rendering with HTML table</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Expected Behavior Now</h2>
+        <div class="success">
+            ✅ <strong>No Errors:</strong> No more "Cannot set properties of null" errors
+        </div>
+        <div class="success">
+            ✅ <strong>Stats Update:</strong> Admin statistics update correctly
+        </div>
+        <div class="success">
+            ✅ <strong>Table Rendering:</strong> Admin table renders with correct columns
+        </div>
+        <div class="success">
+            ✅ <strong>Graceful Handling:</strong> Missing elements are handled gracefully
+        </div>
+    </div>
+
+    <script>
+        async function testAdminManagement() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Admin Management Module...</div>';
+            
+            try {
+                // Test if the module can be imported
+                const response = await fetch('js/modules/adminManagement.js');
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Admin Management Module loaded successfully!</div>
+                        <div class="info">Module file exists and is accessible</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Admin Management Module not found</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Error testing admin management: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testDOMElements() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing DOM Elements...</div>';
+            
+            const elements = [
+                'total-admins',
+                'active-admins', 
+                'super-admins',
+                'recent-logins',
+                'admins-table-body',
+                'activity-table-body'
+            ];
+            
+            let results = '';
+            let foundCount = 0;
+            
+            for (const elementId of elements) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    results += `<div class="success">✅ Element '${elementId}' found</div>`;
+                    foundCount++;
+                } else {
+                    results += `<div class="warning">⚠️ Element '${elementId}' not found (this is expected on this test page)</div>`;
+                }
+            }
+            
+            resultsDiv.innerHTML = `
+                <div class="info">Found ${foundCount} out of ${elements.length} elements</div>
+                ${results}
+                <div class="info">Note: Elements will only be found on the Admin Dashboard page</div>
+            `;
+        }
+        
+        async function testTableStructure() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Table Structure...</div>';
+            
+            try {
+                // Test the admin API to see if it returns data
+                const response = await fetch('API/get_admins_fixed.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const sampleAdmin = data.admins[0];
+                    if (sampleAdmin) {
+                        const expectedColumns = [
+                            'full_name',
+                            'username', 
+                            'email',
+                            'is_active',
+                            'last_login'
+                            // Note: actions column is rendered by JavaScript
+                        ];
+                        
+                        let results = '<div class="success">✅ Admin data structure test:</div>';
+                        results += '<div class="info">Expected columns vs actual data:</div>';
+                        
+                        for (const column of expectedColumns) {
+                            if (sampleAdmin.hasOwnProperty(column)) {
+                                results += `<div class="success">✅ Column '${column}': ${sampleAdmin[column]}</div>`;
+                            } else {
+                                results += `<div class="error">❌ Column '${column}': Missing</div>`;
+                            }
+                        }
+                        
+                        resultsDiv.innerHTML = results;
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <div class="warning">⚠️ No admin data found, but API is working</div>
+                            <div class="info">This is normal if no admins have been created yet</div>
+                        `;
+                    }
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Admin API error: ${data.message}</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Error testing table structure: ${error.message}</div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+

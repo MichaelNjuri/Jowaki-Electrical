@@ -127,3 +127,8 @@ All hardcoded values have been successfully replaced:
 The settings system is now fully dynamic and integrated across the entire e-commerce platform. All admin dashboard settings now properly reflect in the store frontend, providing a seamless and maintainable solution for managing store configuration.
 
 
+
+
+
+
+

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Management Improved</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .admin-simulation {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        .badge-primary { background: #007bff; color: white; }
+        .badge-secondary { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Test Admin Management System - Improved</h1>
+    
+    <div class="test-section">
+        <h2>1. Role-Based Access Control Test</h2>
+        <p>Testing that Admin Management only appears for Super Admins (role_id = 1)</p>
+        
+        <div class="admin-simulation">
+            <h3>Simulate Super Admin Login (role_id = 1)</h3>
+            <button onclick="simulateSuperAdmin()">Login as Super Admin</button>
+            <div id="super-admin-result"></div>
+        </div>
+        
+        <div class="admin-simulation">
+            <h3>Simulate Regular Admin Login (role_id = 2)</h3>
+            <button onclick="simulateRegularAdmin()">Login as Regular Admin</button>
+            <div id="regular-admin-result"></div>
+        </div>
+        
+        <div class="admin-simulation">
+            <h3>Check Current Admin Management Visibility</h3>
+            <button onclick="checkAdminManagementVisibility()">Check Visibility</button>
+            <div id="visibility-result"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Admin Table Design Test</h2>
+        <p>Testing the improved admin table with better details and functionality</p>
+        
+        <button onclick="testAdminTableDesign()">Test Admin Table Rendering</button>
+        <div id="table-design-result"></div>
+        
+        <div id="admin-table-preview" style="margin-top: 20px; display: none;">
+            <h3>Admin Table Preview</h3>
+            <div style="background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Admin Details</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Role & Permissions</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Status</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Activity</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-table-body">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. API Endpoints Test</h2>
+        <p>Testing the fixed admin API endpoints</p>
+        
+        <button onclick="testGetAdminsAPI()">Test Get Admins API</button>
+        <button onclick="testGetRolesAPI()">Test Get Roles API</button>
+        <button onclick="testGetActivityAPI()">Test Get Activity API</button>
+        
+        <div id="api-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Permission System Test</h2>
+        <p>Testing the permission display system</p>
+        
+        <button onclick="testPermissionsDisplay()">Test Permissions Display</button>
+        <div id="permissions-result"></div>
+    </div>
+
+    <script>
+        // Simulate Super Admin login
+        function simulateSuperAdmin() {
+            const superAdmin = {
+                id: 1,
+                username: 'superadmin',
+                email: 'super@example.com',
+                role_id: 1,
+                role_name: 'Super Admin',
+                permissions: {
+                    admin_management: true,
+                    full_access: true
+                }
+            };
+            
+            localStorage.setItem('adminUser', JSON.stringify(superAdmin));
+            
+            const result = document.getElementById('super-admin-result');
+            result.innerHTML = `
+                <div class="test-result success">
+                    ✅ Super Admin logged in successfully
+                    <br>Role: <span class="role-badge badge-primary">Super Admin</span>
+                    <br>Admin Management Access: <strong>GRANTED</strong>
+                </div>
+            `;
+        }
+        
+        // Simulate Regular Admin login
+        function simulateRegularAdmin() {
+            const regularAdmin = {
+                id: 2,
+                username: 'admin',
+                email: 'admin@example.com',
+                role_id: 2,
+                role_name: 'Admin',
+                permissions: {
+                    admin_management: false,
+                    dashboard_access: true
+                }
+            };
+            
+            localStorage.setItem('adminUser', JSON.stringify(regularAdmin));
+            
+            const result = document.getElementById('regular-admin-result');
+            result.innerHTML = `
+                <div class="test-result info">
+                    ✅ Regular Admin logged in successfully
+                    <br>Role: <span class="role-badge badge-secondary">Admin</span>
+                    <br>Admin Management Access: <strong>DENIED</strong>
+                </div>
+            `;
+        }
+        
+        // Check admin management visibility
+        function checkAdminManagementVisibility() {
+            const adminUserStr = localStorage.getItem('adminUser');
+            const result = document.getElementById('visibility-result');
+            
+            if (!adminUserStr) {
+                result.innerHTML = '<div class="test-result warning">⚠️ No admin user found in localStorage</div>';
+                return;
+            }
+            
+            try {
+                const adminUser = JSON.parse(adminUserStr);
+                const hasAccess = adminUser.role_id === 1;
+                
+                result.innerHTML = `
+                    <div class="test-result ${hasAccess ? 'success' : 'info'}">
+                        ${hasAccess ? '✅' : 'ℹ️'} Admin Management Access: <strong>${hasAccess ? 'GRANTED' : 'DENIED'}</strong>
+                        <br>Current User Role: <span class="role-badge ${adminUser.role_id === 1 ? 'badge-primary' : 'badge-secondary'}">${adminUser.role_name}</span>
+                        <br>Role ID: ${adminUser.role_id}
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = '<div class="test-result error">❌ Error parsing admin user data</div>';
+            }
+        }
+        
+        // Test admin table design
+        function testAdminTableDesign() {
+            const result = document.getElementById('table-design-result');
+            const preview = document.getElementById('admin-table-preview');
+            const tbody = document.getElementById('preview-table-body');
+            
+            // Sample admin data
+            const sampleAdmins = [
+                {
+                    id: 1,
+                    full_name: 'John Super Admin',
+                    username: 'superadmin',
+                    email: 'super@example.com',
+                    role_id: 1,
+                    role_name: 'Super Admin',
+                    is_active: true,
+                    last_login: '2024-01-15 10:30:00',
+                    created_at: '2024-01-01 09:00:00'
+                },
+                {
+                    id: 2,
+                    full_name: 'Jane Regular Admin',
+                    username: 'admin',
+                    email: 'admin@example.com',
+                    role_id: 2,
+                    role_name: 'Admin',
+                    is_active: true,
+                    last_login: '2024-01-14 15:45:00',
+                    created_at: '2024-01-05 14:20:00'
+                },
+                {
+                    id: 3,
+                    full_name: 'Bob Inactive Admin',
+                    username: 'bobadmin',
+                    email: 'bob@example.com',
+                    role_id: 2,
+                    role_name: 'Admin',
+                    is_active: false,
+                    last_login: null,
+                    created_at: '2024-01-10 11:15:00'
+                }
+            ];
+            
+            // Render sample data
+            tbody.innerHTML = sampleAdmins.map(admin => `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #007bff, #1e40af); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">
+                                <i class="fas fa-${admin.role_id === 1 ? 'crown' : 'user-shield'}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: #333; font-size: 16px;">${admin.full_name}</div>
+                                <div style="color: #666; font-size: 14px;">@${admin.username}</div>
+                                <div style="color: #666; font-size: 14px;">${admin.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px;">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div>
+                                <span class="role-badge ${admin.role_id === 1 ? 'badge-primary' : 'badge-secondary'}">${admin.role_name}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666;">
+                                ${admin.role_id === 1 ? 
+                                    '✓ Full system access<br>✓ Admin management<br>✓ All dashboard features' : 
+                                    '✓ Dashboard access<br>✓ Order management<br>✓ Product management'
+                                }
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <span class="role-badge ${admin.is_active ? 'badge-success' : 'badge-danger'}">
+                                ${admin.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                            <div style="font-size: 12px; color: #666; font-style: italic;">
+                                ${admin.is_active ? 'Can access dashboard' : 'Access blocked'}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #666;">
+                            <div>🕒 ${admin.last_login ? formatDate(admin.last_login) : 'Never logged in'}</div>
+                            <div>📅 Created: ${formatDate(admin.created_at)}</div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <button class="btn-info" style="background: #17a2b8; font-size: 12px; padding: 6px 12px;">👁️ View</button>
+                            ${admin.role_id !== 1 ? `
+                                <button class="btn-warning" style="font-size: 12px; padding: 6px 12px;">✏️ Edit</button>
+                                <button class="${admin.is_active ? 'btn-danger' : 'btn-success'}" style="font-size: 12px; padding: 6px 12px;">
+                                    ${admin.is_active ? '🚫 Deactivate' : '✅ Activate'}
+                                </button>
+                            ` : '<span style="color: #666; font-style: italic; font-size: 12px;">Protected</span>'}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            preview.style.display = 'block';
+            result.innerHTML = '<div class="test-result success">✅ Admin table design test completed. Preview shown above.</div>';
+        }
+        
+        // Test API endpoints
+        async function testGetAdminsAPI() {
+            const results = document.getElementById('api-results');
+            results.innerHTML = '<div class="test-result info">🔄 Testing Get Admins API...</div>';
+            
+            try {
+                const response = await fetch('API/get_admins_fixed.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    results.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Get Admins API: SUCCESS
+                            <br>Found ${data.admins.length} admin(s)
+                            <br>Response: ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="test-result error">
+                            ❌ Get Admins API: FAILED
+                            <br>Error: ${data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="test-result error">
+                        ❌ Get Admins API: ERROR
+                        <br>Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testGetRolesAPI() {
+            const results = document.getElementById('api-results');
+            results.innerHTML = '<div class="test-result info">🔄 Testing Get Roles API...</div>';
+            
+            try {
+                const response = await fetch('API/get_admin_roles_fixed.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    results.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Get Roles API: SUCCESS
+                            <br>Found ${data.roles.length} role(s)
+                            <br>Response: ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="test-result error">
+                            ❌ Get Roles API: FAILED
+                            <br>Error: ${data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="test-result error">
+                        ❌ Get Roles API: ERROR
+                        <br>Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testGetActivityAPI() {
+            const results = document.getElementById('api-results');
+            results.innerHTML = '<div class="test-result info">🔄 Testing Get Activity API...</div>';
+            
+            try {
+                const response = await fetch('API/get_admin_activity_fixed.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    results.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Get Activity API: SUCCESS
+                            <br>Found ${data.activities.length} activity record(s)
+                            <br>Response: ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="test-result error">
+                            ❌ Get Activity API: FAILED
+                            <br>Error: ${data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="test-result error">
+                        ❌ Get Activity API: ERROR
+                        <br>Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Test permissions display
+        function testPermissionsDisplay() {
+            const result = document.getElementById('permissions-result');
+            
+            const permissions = {
+                1: [ // Super Admin
+                    'Full system access',
+                    'Admin management',
+                    'All dashboard features',
+                    'System settings'
+                ],
+                2: [ // Admin
+                    'Dashboard access',
+                    'Order management',
+                    'Product management',
+                    'Customer management',
+                    'Analytics view'
+                ]
+            };
+            
+            let html = '<div class="test-result success">✅ Permissions Display Test:</div>';
+            
+            Object.keys(permissions).forEach(roleId => {
+                const roleName = roleId === '1' ? 'Super Admin' : 'Admin';
+                const rolePermissions = permissions[roleId];
+                
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        <strong>${roleName} (Role ID: ${roleId}):</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            ${rolePermissions.map(perm => `<li style="color: #28a745;">✓ ${perm}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+            
+            result.innerHTML = html;
+        }
+        
+        // Utility function
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Admin Management Test Page Loaded');
+            checkAdminManagementVisibility();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Creation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        .form-group { margin: 10px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Admin Creation</h1>
+    
+    <div class="section">
+        <h2>Issue Fixed</h2>
+        <div class="success">
+            ✅ <strong>Problem:</strong> Admin creation was causing page reload/redirect
+        </div>
+        <div class="success">
+            ✅ <strong>Root Cause:</strong> adminManagement module was not imported/initialized in main.js
+        </div>
+        <div class="success">
+            ✅ <strong>Solution:</strong> Added adminManagement import and initialization to main.js
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Test Admin Creation</h2>
+        <div class="info">
+            <strong>Instructions:</strong> Fill out the form below and submit. The page should NOT reload or redirect.
+        </div>
+        
+        <form id="test-admin-form">
+            <div class="form-group">
+                <label>First Name *</label>
+                <input type="text" name="first_name" value="Test" required>
+            </div>
+            <div class="form-group">
+                <label>Last Name *</label>
+                <input type="text" name="last_name" value="Admin" required>
+            </div>
+            <div class="form-group">
+                <label>Username *</label>
+                <input type="text" name="username" value="testadmin" required>
+            </div>
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" name="email" value="testadmin@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password *</label>
+                <input type="password" name="password" value="testpass123" required>
+            </div>
+            <div class="form-group">
+                <label>Confirm Password *</label>
+                <input type="password" name="confirm_password" value="testpass123" required>
+            </div>
+            <button type="submit">Create Test Admin</button>
+        </form>
+        
+        <div id="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>Quick Links</h2>
+        <button onclick="window.open('AdminDashboard.html', '_blank')">Open Admin Dashboard</button>
+        <button onclick="window.open('admin_login.html', '_blank')">Open Admin Login</button>
+        <button onclick="window.open('test_no_redirect.html', '_blank')">Test No Redirect</button>
+    </div>
+
+    <div class="section">
+        <h2>What Was Fixed</h2>
+        <ul>
+            <li><strong>Added import:</strong> `import adminManagement from './modules/adminManagement.js';`</li>
+            <li><strong>Added initialization:</strong> `await adminManagement.init();` in initializeAdminDashboard()</li>
+            <li><strong>Added global access:</strong> `window.adminManagement = adminManagement;`</li>
+            <li><strong>Added admin functions:</strong> createAdmin, loadAdmins, etc. to adminModules</li>
+        </ul>
+    </div>
+
+    <script>
+        document.getElementById('test-admin-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info">Creating admin...</div>';
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('API/create_admin.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Admin created successfully! 
+                            <br>Admin ID: ${data.admin_id}
+                            <br>Message: ${data.message}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Failed to create admin: ${data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
+

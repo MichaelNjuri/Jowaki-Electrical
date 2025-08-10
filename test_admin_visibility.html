@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Visibility Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        .info { color: blue; }
+        pre {
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <h1>Admin Management Visibility Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Current Admin User Data</h2>
+        <div id="current-admin-data"></div>
+        <button class="btn-primary" onclick="checkCurrentAdmin()">Check Current Admin</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Fix Admin User Data</h2>
+        <p>If the role_id is missing, you can fix it by logging out and logging back in, or manually set it:</p>
+        <button class="btn-success" onclick="fixAdminData()">Fix Admin Data (Set role_id = 1)</button>
+        <button class="btn-warning" onclick="clearAdminData()">Clear Admin Data (Force Re-login)</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Admin Management Visibility</h2>
+        <div id="visibility-test"></div>
+        <button class="btn-primary" onclick="testVisibility()">Test Visibility</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Test Categories Loading</h2>
+        <div id="categories-test"></div>
+        <button class="btn-primary" onclick="testCategories()">Test Categories API</button>
+    </div>
+
+    <script>
+        // Check current admin data
+        function checkCurrentAdmin() {
+            const adminUserStr = localStorage.getItem('adminUser');
+            const resultDiv = document.getElementById('current-admin-data');
+            
+            if (adminUserStr) {
+                try {
+                    const adminUser = JSON.parse(adminUserStr);
+                    resultDiv.innerHTML = `
+                        <p class="info">✅ Admin user data found in localStorage</p>
+                        <pre>${JSON.stringify(adminUser, null, 2)}</pre>
+                        <p><strong>Role ID:</strong> ${adminUser.role_id || 'undefined'}</p>
+                        <p><strong>Should see Admin Management:</strong> ${adminUser.role_id === 1 ? 'Yes (Super Admin)' : 'No (Regular Admin or Missing role_id)'}</p>
+                    `;
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Error parsing admin user data: ${error.message}</p>
+                        <pre>${adminUserStr}</pre>
+                    `;
+                }
+            } else {
+                resultDiv.innerHTML = '<p class="error">❌ No admin user data found in localStorage</p>';
+            }
+        }
+
+        // Fix admin data by setting role_id = 1
+        function fixAdminData() {
+            const adminUserStr = localStorage.getItem('adminUser');
+            if (adminUserStr) {
+                try {
+                    const adminUser = JSON.parse(adminUserStr);
+                    adminUser.role_id = 1;
+                    localStorage.setItem('adminUser', JSON.stringify(adminUser));
+                    alert('Admin data fixed! role_id set to 1. Please refresh the admin dashboard.');
+                } catch (error) {
+                    alert('Error fixing admin data: ' + error.message);
+                }
+            } else {
+                alert('No admin user data found. Please log in first.');
+            }
+        }
+
+        // Clear admin data to force re-login
+        function clearAdminData() {
+            localStorage.removeItem('adminUser');
+            alert('Admin data cleared! Please log in again to get fresh data with role_id.');
+        }
+
+        // Test visibility logic
+        function testVisibility() {
+            const resultDiv = document.getElementById('visibility-test');
+            const adminUserStr = localStorage.getItem('adminUser');
+            
+            if (adminUserStr) {
+                try {
+                    const adminUser = JSON.parse(adminUserStr);
+                    const shouldShow = adminUser.role_id === 1;
+                    
+                    resultDiv.innerHTML = `
+                        <p class="${shouldShow ? 'success' : 'warning'}">
+                            ${shouldShow ? '✅' : '⚠️'} Admin Management should be ${shouldShow ? 'visible' : 'hidden'} for role_id ${adminUser.role_id || 'undefined'}
+                        </p>
+                        <p><strong>Logic:</strong> role_id === 1 ? 'Show' : 'Hide'</p>
+                        <p><strong>Current role_id:</strong> ${adminUser.role_id || 'undefined'}</p>
+                    `;
+                } catch (error) {
+                    resultDiv.innerHTML = `<p class="error">❌ Error testing visibility: ${error.message}</p>`;
+                }
+            } else {
+                resultDiv.innerHTML = '<p class="error">❌ No admin user data to test visibility</p>';
+            }
+        }
+
+        // Test categories API
+        async function testCategories() {
+            const resultDiv = document.getElementById('categories-test');
+            resultDiv.innerHTML = '<p>Testing categories API...</p>';
+            
+            try {
+                const response = await fetch('API/get_categories_admin.php');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✅ Categories API call successful</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Categories API call failed: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Run initial check on page load
+        window.onload = function() {
+            checkCurrentAdmin();
+            testVisibility();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Permissions Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        pre {
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Permissions Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Check localStorage Admin User Data</h2>
+        <div id="admin-user-data"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Admin Management Visibility</h2>
+        <div id="visibility-test"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test API Call</h2>
+        <button onclick="testAdminAPI()">Test Get Admins API</button>
+        <div id="api-test"></div>
+    </div>
+
+    <script>
+        // Test 1: Check localStorage
+        function checkLocalStorage() {
+            const adminUserStr = localStorage.getItem('adminUser');
+            const resultDiv = document.getElementById('admin-user-data');
+            
+            if (adminUserStr) {
+                try {
+                    const adminUser = JSON.parse(adminUserStr);
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Admin user data found in localStorage</p>
+                        <pre>${JSON.stringify(adminUser, null, 2)}</pre>
+                        <p><strong>Role ID:</strong> ${adminUser.role_id}</p>
+                        <p><strong>Should see Admin Management:</strong> ${adminUser.role_id === 1 ? 'Yes (Super Admin)' : 'No (Regular Admin)'}</p>
+                    `;
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Error parsing admin user data: ${error.message}</p>
+                        <pre>${adminUserStr}</pre>
+                    `;
+                }
+            } else {
+                resultDiv.innerHTML = '<p class="error">❌ No admin user data found in localStorage</p>';
+            }
+        }
+
+        // Test 2: Test visibility logic
+        function testVisibility() {
+            const resultDiv = document.getElementById('visibility-test');
+            const adminUserStr = localStorage.getItem('adminUser');
+            
+            if (adminUserStr) {
+                try {
+                    const adminUser = JSON.parse(adminUserStr);
+                    const shouldShow = adminUser.role_id === 1;
+                    
+                    resultDiv.innerHTML = `
+                        <p class="${shouldShow ? 'success' : 'warning'}">
+                            ${shouldShow ? '✅' : '⚠️'} Admin Management should be ${shouldShow ? 'visible' : 'hidden'} for role_id ${adminUser.role_id}
+                        </p>
+                        <p><strong>Logic:</strong> role_id === 1 ? 'Show' : 'Hide'</p>
+                    `;
+                } catch (error) {
+                    resultDiv.innerHTML = `<p class="error">❌ Error testing visibility: ${error.message}</p>`;
+                }
+            } else {
+                resultDiv.innerHTML = '<p class="error">❌ No admin user data to test visibility</p>';
+            }
+        }
+
+        // Test 3: Test API
+        async function testAdminAPI() {
+            const resultDiv = document.getElementById('api-test');
+            resultDiv.innerHTML = '<p>Testing API...</p>';
+            
+            try {
+                const response = await fetch('API/get_admins.php');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✅ API call successful</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ API call failed: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Run tests on page load
+        window.onload = function() {
+            checkLocalStorage();
+            testVisibility();
+        };
+    </script>
+</body>
+</html>

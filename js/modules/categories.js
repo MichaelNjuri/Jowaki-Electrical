@@ -45,7 +45,7 @@ export function renderCategories(categoriesToRender, state) {
 }
 
 export function fetchCategories(state) {
-    return fetch('api/get_categories_admin.php')
+    return fetch('API/get_categories_admin.php')
         .then(response => {
             if (!response.ok) {
                 // Gracefully handle 404 errors as requested
@@ -79,7 +79,7 @@ export function fetchCategories(state) {
 
 // CRUD operations
 export function addCategory(categoryData, state) {
-    return fetch('api/get_categories_admin.php', {
+    return fetch('API/get_categories_admin.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -126,7 +126,7 @@ export function editCategory(categoryId, state) {
         return;
     }
     
-    fetch('api/get_categories_admin.php', {
+    fetch('API/get_categories_admin.php', {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -150,7 +150,7 @@ export function editCategory(categoryId, state) {
 
 export function deleteCategory(categoryId, state) {
     if (confirm('Are you sure you want to delete this category?')) {
-        fetch('api/get_categories_admin.php', {
+        fetch('API/get_categories_admin.php', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'

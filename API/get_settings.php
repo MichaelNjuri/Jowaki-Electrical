@@ -1,16 +1,42 @@
 <?php
+session_start();
+require_once 'db_connection.php';
+require_once 'check_auth.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Add error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Don't display errors in output
+ini_set('log_errors', 1);
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-require_once 'db_connection.php';
+// Check if user is admin
+try {
+    if (!isAdmin()) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Access denied. Admin privileges required.']);
+        exit;
+    }
+} catch (Exception $authError) {
+    error_log("Admin check error: " . $authError->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Authentication error']);
+    exit;
+}
 
 try {
+    $conn = getConnection();
+    if (!$conn) {
+        throw new Exception('Database connection failed');
+    }
+
     // Get settings from database or return defaults
     $settings = [
         'tax_rate' => 16.0,
@@ -61,6 +87,16 @@ try {
         }
     }
 
+    $conn->close();
+    
+    // Log activity (with error handling)
+    try {
+        logAdminActivity('View Settings', 'Viewed system settings in admin dashboard');
+    } catch (Exception $logError) {
+        error_log("Failed to log settings view activity: " . $logError->getMessage());
+        // Continue execution even if logging fails
+    }
+
     echo json_encode([
         'success' => true,
         'settings' => $settings
@@ -73,6 +109,4 @@ try {
         'error' => 'Failed to retrieve settings: ' . $e->getMessage()
     ]);
 }
-
-$conn->close();
 ?> 

@@ -1,173 +1,215 @@
- // Parse URL parameters on page load
+    // Parse URL parameters on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get('redirect');
+    const returnToCheckout = urlParams.get('return_to_checkout');
+    const error = urlParams.get('error');
+    const success = urlParams.get('success');
+    const message = urlParams.get('message');
+
+    // Set hidden fields with redirect parameters
+    function setRedirectFields() {
         const urlParams = new URLSearchParams(window.location.search);
         const redirect = urlParams.get('redirect');
         const returnToCheckout = urlParams.get('return_to_checkout');
-        const error = urlParams.get('error');
-        const success = urlParams.get('success');
-        const message = urlParams.get('message');
-
-        // Set hidden fields with redirect parameters
-        function setRedirectFields() {
-            if (redirect) {
-                document.getElementById('redirectField').value = redirect;
-                document.getElementById('signupRedirectField').value = redirect;
-            }
-            if (returnToCheckout) {
-                document.getElementById('returnToCheckoutField').value = returnToCheckout;
-                document.getElementById('signupReturnToCheckoutField').value = returnToCheckout;
-            }
+        
+        if (redirect) {
+            const redirectField = document.getElementById('redirectField');
+            const signupRedirectField = document.getElementById('signupRedirectField');
+            if (redirectField) redirectField.value = redirect;
+            if (signupRedirectField) signupRedirectField.value = redirect;
         }
+        
+        if (returnToCheckout) {
+            const returnToCheckoutField = document.getElementById('returnToCheckoutField');
+            const signupReturnToCheckoutField = document.getElementById('signupReturnToCheckoutField');
+            if (returnToCheckoutField) returnToCheckoutField.value = returnToCheckout;
+            if (signupReturnToCheckoutField) signupReturnToCheckoutField.value = returnToCheckout;
+        }
+    }
 
-        // Initialize redirect fields
-        setRedirectFields();
+    // Initialize redirect fields
+    setRedirectFields();
 
-        // Password toggle functionality
-        function initializePasswordToggles() {
-            const passwordToggles = document.querySelectorAll('.password-toggle');
-            
-            passwordToggles.forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const input = this.parentElement.querySelector('input');
-                    const icon = this.querySelector('i');
-                    
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
-                    } else {
-                        input.type = 'password';
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                    }
-                });
+    // Password toggle functionality
+    function initializePasswordToggles() {
+        const passwordToggles = document.querySelectorAll('.password-toggle');
+        
+        passwordToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
             });
-        }
+        });
+    }
 
-        // Show alert messages
-        function showAlert(message, type) {
-            const alertElement = type === 'error' ? 
-                document.getElementById('generalError') : 
-                document.getElementById('successMessage');
-            
-            alertElement.textContent = message;
-            alertElement.classList.add('show');
-            
-            // Auto-hide success messages after 5 seconds
-            if (type === 'success') {
-                setTimeout(() => {
-                    alertElement.classList.remove('show');
-                }, 5000);
-            }
+    // Show alert messages
+    function showAlert(message, type) {
+        const alertElement = type === 'error' ? 
+            document.getElementById('generalError') : 
+            document.getElementById('successMessage');
+        
+        if (!alertElement) {
+            console.warn(`Alert element not found for type: ${type}`);
+            return;
         }
-
-        // Show error or success messages from URL
-        if (error) {
-            showAlert(decodeURIComponent(error), 'error');
-        }
-        if (success && message) {
-            showAlert(decodeURIComponent(message), 'success');
-        }
-
-        // Update auth link text based on current form
-        function updateAuthLink() {
-            const authLink = document.getElementById('auth-link');
-            const currentForm = document.querySelector('.form-section.active');
-            
-            if (currentForm && currentForm.id === 'signUpForm') {
-                authLink.textContent = 'Sign In';
-            } else {
-                authLink.textContent = 'Sign Up';
-            }
-        }
-
-        // Form switching functionality
-        function switchForm(hideFormId, showFormId) {
-            const hideForm = document.getElementById(hideFormId);
-            const showForm = document.getElementById(showFormId);
-            
-            hideForm.classList.remove('active');
+        
+        alertElement.textContent = message;
+        alertElement.classList.add('show');
+        
+        // Auto-hide success messages after 5 seconds
+        if (type === 'success') {
             setTimeout(() => {
-                showForm.classList.add('active');
-                // Clear any error messages
-                document.getElementById('generalError').classList.remove('show');
-                document.getElementById('successMessage').classList.remove('show');
-                // Clear form validation errors
-                clearFormErrors();
-                // Update auth link
-                updateAuthLink();
-                // Initialize password toggles for new form
-                initializePasswordToggles();
-            }, 250);
+                if (alertElement) {
+                    alertElement.classList.remove('show');
+                }
+            }, 5000);
         }
+    }
 
-        // Clear form validation errors
-        function clearFormErrors() {
-            const errorMessages = document.querySelectorAll('.error-message');
-            const inputFields = document.querySelectorAll('input.error');
-            
-            errorMessages.forEach(error => {
-                error.classList.remove('show');
-                error.textContent = '';
-            });
-            
-            inputFields.forEach(input => {
-                input.classList.remove('error');
-            });
+    // Show error or success messages from URL
+    if (error) {
+        showAlert(decodeURIComponent(error), 'error');
+    }
+    if (success && message) {
+        showAlert(decodeURIComponent(message), 'success');
+    }
+
+    // Update auth link text based on current form
+    function updateAuthLink() {
+        const authLink = document.getElementById('auth-link');
+        if (!authLink) return; // Skip if element doesn't exist
+        
+        const currentForm = document.querySelector('.form-section.active');
+        
+        if (currentForm && currentForm.id === 'signUpForm') {
+            authLink.textContent = 'Sign In';
+        } else {
+            authLink.textContent = 'Sign Up';
         }
+    }
 
-        // Show field-specific error
-        function showFieldError(fieldId, message) {
-            const field = document.getElementById(fieldId);
-            const errorElement = field.parentElement.querySelector('.error-message');
-            
-            field.classList.add('error');
-            errorElement.textContent = message;
-            errorElement.classList.add('show');
+    // Form switching functionality
+    function switchForm(hideFormId, showFormId) {
+        const hideForm = document.getElementById(hideFormId);
+        const showForm = document.getElementById(showFormId);
+        
+        if (!hideForm || !showForm) {
+            console.warn(`Form elements not found: ${hideFormId} or ${showFormId}`);
+            return;
         }
+        
+        hideForm.classList.remove('active');
+        setTimeout(() => {
+            showForm.classList.add('active');
+            // Clear any error messages
+            const generalError = document.getElementById('generalError');
+            const successMessage = document.getElementById('successMessage');
+            if (generalError) generalError.classList.remove('show');
+            if (successMessage) successMessage.classList.remove('show');
+            // Clear form validation errors
+            clearFormErrors();
+            // Update auth link
+            updateAuthLink();
+            // Initialize password toggles for new form
+            initializePasswordToggles();
+        }, 250);
+    }
 
-        // Validate email format
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
+    // Clear form validation errors
+    function clearFormErrors() {
+        const errorMessages = document.querySelectorAll('.error-message');
+        const inputFields = document.querySelectorAll('input.error');
+        
+        errorMessages.forEach(error => {
+            error.classList.remove('show');
+            error.textContent = '';
+        });
+        
+        inputFields.forEach(input => {
+            input.classList.remove('error');
+        });
+    }
+
+    // Show field-specific error
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        
+        const errorElement = field.parentElement.querySelector('.error-message');
+        if (!errorElement) return;
+        
+        field.classList.add('error');
+        errorElement.textContent = message;
+        errorElement.classList.add('show');
+    }
+
+    // Validate email format
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // Validate phone number format (basic validation)
+    function isValidPhone(phone) {
+        const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
+        return phoneRegex.test(phone);
+    }
+
+    // Validate password strength
+    function validatePassword(password) {
+        if (password.length < 6) {
+            return 'Password must be at least 6 characters long';
         }
+        return null;
+    }
 
-        // Validate phone number format (basic validation)
-        function isValidPhone(phone) {
-            const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
-            return phoneRegex.test(phone);
-        }
-
-        // Validate password strength
-        function validatePassword(password) {
-            if (password.length < 6) {
-                return 'Password must be at least 6 characters long';
-            }
-            return null;
-        }
-
-        // Event listeners for form switching
-        document.getElementById('switchToSignUpLink').addEventListener('click', (e) => {
+    // Event listeners for form switching
+    const switchToSignUpLink = document.getElementById('switchToSignUpLink');
+    if (switchToSignUpLink) {
+        switchToSignUpLink.addEventListener('click', (e) => {
             e.preventDefault();
             switchForm('loginForm', 'signUpForm');
         });
+    }
 
-        document.getElementById('switchToLoginLink').addEventListener('click', (e) => {
+    const switchToLoginLink = document.getElementById('switchToLoginLink');
+    if (switchToLoginLink) {
+        switchToLoginLink.addEventListener('click', (e) => {
             e.preventDefault();
             switchForm('signUpForm', 'loginForm');
         });
+    }
 
-        document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
             e.preventDefault();
             switchForm('loginForm', 'forgotPasswordForm');
         });
+    }
 
-        document.getElementById('backToLoginLink').addEventListener('click', (e) => {
+    const backToLoginLink = document.getElementById('backToLoginLink');
+    if (backToLoginLink) {
+        backToLoginLink.addEventListener('click', (e) => {
             e.preventDefault();
             switchForm('forgotPasswordForm', 'loginForm');
         });
+    }
 
-        // Google login button handlers
-        document.getElementById('googleLoginBtn').addEventListener('click', function() {
+    // Google login button handlers
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', function() {
             // Show loading state
             this.classList.add('loading');
             this.disabled = true;
@@ -177,11 +219,14 @@
             if (redirect) params.append('redirect', redirect);
             if (returnToCheckout) params.append('return_to_checkout', returnToCheckout);
             
-            const googleAuthUrl = `/jowaki_electrical_srvs/api/google_auth.php?${params.toString()}`;
+            const googleAuthUrl = `api/google_auth.php?${params.toString()}`;
             window.location.href = googleAuthUrl;
         });
+    }
 
-        document.getElementById('googleSignupBtn').addEventListener('click', function() {
+    const googleSignupBtn = document.getElementById('googleSignupBtn');
+    if (googleSignupBtn) {
+        googleSignupBtn.addEventListener('click', function() {
             // Show loading state
             this.classList.add('loading');
             this.disabled = true;
@@ -192,12 +237,15 @@
             if (redirect) params.append('redirect', redirect);
             if (returnToCheckout) params.append('return_to_checkout', returnToCheckout);
             
-            const googleAuthUrl = `/jowaki_electrical_srvs/api/google_auth.php?${params.toString()}`;
+            const googleAuthUrl = `api/google_auth.php?${params.toString()}`;
             window.location.href = googleAuthUrl;
         });
+    }
 
-        // Handle login form submission
-        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+    // Handle login form submission
+    const loginFormElement = document.getElementById('loginFormElement');
+    if (loginFormElement) {
+        loginFormElement.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
@@ -232,10 +280,12 @@
             submitButton.disabled = true;
             
             // Clear previous alerts
-            document.getElementById('generalError').classList.remove('show');
-            document.getElementById('successMessage').classList.remove('show');
+            const generalError = document.getElementById('generalError');
+            const successMessage = document.getElementById('successMessage');
+            if (generalError) generalError.classList.remove('show');
+            if (successMessage) successMessage.classList.remove('show');
             
-            fetch('/jowaki_electrical_srvs/api/login.php', {
+            fetch('api/login.php', {
                 method: 'POST',
                 body: formData
             })
@@ -263,9 +313,12 @@
                 submitButton.disabled = false;
             });
         });
+    }
 
-        // Handle signup form submission
-        document.getElementById('signUpFormElement').addEventListener('submit', function(e) {
+    // Handle signup form submission
+    const signUpFormElement = document.getElementById('signUpFormElement');
+    if (signUpFormElement) {
+        signUpFormElement.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
@@ -348,10 +401,12 @@
             submitButton.disabled = true;
             
             // Clear previous alerts
-            document.getElementById('generalError').classList.remove('show');
-            document.getElementById('successMessage').classList.remove('show');
+            const generalError = document.getElementById('generalError');
+            const successMessage = document.getElementById('successMessage');
+            if (generalError) generalError.classList.remove('show');
+            if (successMessage) successMessage.classList.remove('show');
             
-            fetch('/jowaki_electrical_srvs/api/signup.php', {
+            fetch('api/signup.php', {
                 method: 'POST',
                 body: formData
             })
@@ -380,9 +435,12 @@
                 submitButton.disabled = false;
             });
         });
+    }
 
-        // Handle password reset form submission
-        document.getElementById('resetPasswordFormElement').addEventListener('submit', function(e) {
+    // Handle password reset form submission
+    const resetPasswordFormElement = document.getElementById('resetPasswordFormElement');
+    if (resetPasswordFormElement) {
+        resetPasswordFormElement.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
@@ -411,10 +469,12 @@
             submitButton.disabled = true;
             
             // Clear previous alerts
-            document.getElementById('generalError').classList.remove('show');
-            document.getElementById('successMessage').classList.remove('show');
+            const generalError = document.getElementById('generalError');
+            const successMessage = document.getElementById('successMessage');
+            if (generalError) generalError.classList.remove('show');
+            if (successMessage) successMessage.classList.remove('show');
             
-            fetch('/jowaki_electrical_srvs/api/reset_password.php', {
+            fetch('api/reset_password.php', {
                 method: 'POST',
                 body: formData
             })
@@ -443,42 +503,54 @@
                 submitButton.disabled = false;
             });
         });
+    }
 
-        // Real-time validation for better UX
-        document.getElementById('loginEmail').addEventListener('blur', function() {
+    // Real-time validation for better UX
+    const loginEmail = document.getElementById('loginEmail');
+    if (loginEmail) {
+        loginEmail.addEventListener('blur', function() {
             const email = this.value.trim();
             if (email && !isValidEmail(email)) {
                 showFieldError('loginEmail', 'Please enter a valid email address');
             } else if (email) {
                 this.classList.remove('error');
                 const errorElement = this.parentElement.querySelector('.error-message');
-                errorElement.classList.remove('show');
+                if (errorElement) errorElement.classList.remove('show');
             }
         });
+    }
 
-        document.getElementById('signUpEmail').addEventListener('blur', function() {
+    const signUpEmail = document.getElementById('signUpEmail');
+    if (signUpEmail) {
+        signUpEmail.addEventListener('blur', function() {
             const email = this.value.trim();
             if (email && !isValidEmail(email)) {
                 showFieldError('signUpEmail', 'Please enter a valid email address');
             } else if (email) {
                 this.classList.remove('error');
                 const errorElement = this.parentElement.querySelector('.error-message');
-                errorElement.classList.remove('show');
+                if (errorElement) errorElement.classList.remove('show');
             }
         });
+    }
 
-        document.getElementById('phoneNumber').addEventListener('blur', function() {
+    const phoneNumber = document.getElementById('phoneNumber');
+    if (phoneNumber) {
+        phoneNumber.addEventListener('blur', function() {
             const phone = this.value.trim();
             if (phone && !isValidPhone(phone)) {
                 showFieldError('phoneNumber', 'Please enter a valid phone number');
             } else if (phone) {
                 this.classList.remove('error');
                 const errorElement = this.parentElement.querySelector('.error-message');
-                errorElement.classList.remove('show');
+                if (errorElement) errorElement.classList.remove('show');
             }
         });
+    }
 
-        document.getElementById('confirmPassword').addEventListener('blur', function() {
+    const confirmPassword = document.getElementById('confirmPassword');
+    if (confirmPassword) {
+        confirmPassword.addEventListener('blur', function() {
             const password = document.getElementById('signUpPassword').value;
             const confirmPassword = this.value;
             
@@ -487,48 +559,64 @@
             } else if (confirmPassword) {
                 this.classList.remove('error');
                 const errorElement = this.parentElement.querySelector('.error-message');
-                errorElement.classList.remove('show');
+                if (errorElement) errorElement.classList.remove('show');
             }
         });
+    }
 
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize auth link
-            updateAuthLink();
-            
-            // Initialize password toggles
-            initializePasswordToggles();
-            
-            // Handle auth link click in header
-            document.getElementById('auth-link').addEventListener('click', function(e) {
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize auth link
+        updateAuthLink();
+        
+        // Initialize password toggles
+        initializePasswordToggles();
+        
+        // Handle auth link click in header
+        const authLink = document.getElementById('auth-link');
+        if (authLink) {
+            authLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 const currentActive = document.querySelector('.form-section.active');
                 
-                if (currentActive.id === 'loginForm' || currentActive.id === 'forgotPasswordForm') {
+                if (currentActive && (currentActive.id === 'loginForm' || currentActive.id === 'forgotPasswordForm')) {
                     switchForm(currentActive.id, 'signUpForm');
                 } else {
                     switchForm('signUpForm', 'loginForm');
                 }
             });
-            
-            // Form switching event listeners
-            document.getElementById('switchToSignUpLink').addEventListener('click', function(e) {
+        }
+        
+        // Form switching event listeners
+        const switchToSignUpLink = document.getElementById('switchToSignUpLink');
+        if (switchToSignUpLink) {
+            switchToSignUpLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 switchForm('loginForm', 'signUpForm');
             });
-            
-            document.getElementById('switchToLoginLink').addEventListener('click', function(e) {
+        }
+        
+        const switchToLoginLink = document.getElementById('switchToLoginLink');
+        if (switchToLoginLink) {
+            switchToLoginLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 switchForm('signUpForm', 'loginForm');
             });
-            
-            document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+        }
+        
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 switchForm('loginForm', 'forgotPasswordForm');
             });
-            
-            document.getElementById('backToLoginLink').addEventListener('click', function(e) {
+        }
+        
+        const backToLoginLink = document.getElementById('backToLoginLink');
+        if (backToLoginLink) {
+            backToLoginLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 switchForm('forgotPasswordForm', 'loginForm');
             });
-        });
+        }
+    });

@@ -10,6 +10,9 @@ import { initializeSearchFilters } from './modules/searchFilters.js';
 import { initializeAnalytics } from './modules/analytics.js';
 import { storeCategoriesModule, initializeStoreCategories } from './modules/storeCategories.js';
 import { contactMessagesModule, initializeContactMessages } from './modules/contactMessages.js';
+import adminManagement from './modules/adminManagement.js';
+import adminProfile from './modules/adminProfile.js';
+import { SettingsManager } from './modules/settings.js';
 
 // Shared state object
 const state = {
@@ -27,6 +30,8 @@ window.adminState = state;
 // Expose managers globally
 window.storeCategoriesModule = storeCategoriesModule;
 window.contactMessagesModule = contactMessagesModule;
+window.adminManagement = adminManagement;
+window.settingsManager = new SettingsManager();
 
 // Make functions available globally for onclick handlers
 window.adminModules = {
@@ -79,6 +84,96 @@ window.adminModules = {
     showModal: (modalId) => showModal(modalId),
     hideModal: (modalId) => hideModal(modalId),
     
+    // Admin Management
+    createAdmin: () => adminManagement.createAdmin(),
+    loadAdmins: () => adminManagement.loadAdmins(),
+    refreshAdmins: () => adminManagement.refreshAdmins(),
+    loadActivity: () => adminManagement.loadActivity(),
+    refreshActivity: () => adminManagement.refreshActivity(),
+    viewAdmin: (adminId) => adminManagement.viewAdmin(adminId),
+    editAdmin: (adminId) => adminManagement.editAdmin(adminId),
+    toggleAdminStatus: (adminId, currentStatus) => adminManagement.toggleAdminStatus(adminId, currentStatus),
+    
+    // Admin Profile functions
+    loadProfile: () => adminProfile.loadProfile(),
+    refreshProfile: () => adminProfile.refreshProfile(),
+    updateProfile: () => adminProfile.updateProfile(),
+    
+    // Settings
+    loadSettings: async () => {
+        try {
+            const response = await fetch('API/get_settings.php');
+            const data = await response.json();
+            return data.success ? data.settings : null;
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            return null;
+        }
+    },
+    saveSettings: async (settingsData) => {
+        try {
+            const response = await fetch('API/update_settings.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(settingsData)
+            });
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to save settings');
+            }
+            return data;
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            throw error;
+        }
+    },
+    backupDatabase: () => window.settingsManager.backupDatabase(),
+    downloadLogs: () => window.settingsManager.downloadLogs(),
+    
+    // Profile Dropdown
+    toggleProfileDropdown: () => {
+        const dropdown = document.querySelector('.profile-dropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('active');
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('active');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        }
+    },
+
+    // Force check admin management visibility
+    checkAdminManagementVisibility: () => {
+        const adminUserStr = localStorage.getItem('adminUser');
+        const adminManagementLink = document.getElementById('admin-management-link');
+        
+        if (adminManagementLink && adminUserStr) {
+            try {
+                const adminUser = JSON.parse(adminUserStr);
+                console.log('Current admin user:', adminUser);
+                
+                if (adminUser.role_id === 1) {
+                    adminManagementLink.style.display = 'block';
+                    console.log('✅ Admin Management should be visible for Super Admin');
+                } else {
+                    adminManagementLink.style.display = 'none';
+                    console.log('❌ Admin Management hidden for Regular Admin');
+                }
+            } catch (error) {
+                console.error('Error checking admin management visibility:', error);
+                adminManagementLink.style.display = 'none';
+            }
+        } else {
+            console.log('Admin management link not found or no admin user data');
+        }
+    },
+    
     // Stock Management
     manageStock: async (productId, action, quantity = 0) => {
         try {
@@ -119,7 +214,9 @@ window.adminModules = {
     // Settings
     loadSettings: async () => {
         try {
-            const response = await fetch('./API/get_settings.php');
+            const response = await fetch('./API/get_settings_fixed.php', {
+                credentials: 'include'
+            });
             const data = await response.json();
             if (data.success) {
                 return data.settings;
@@ -139,6 +236,7 @@ window.adminModules = {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(settings)
             });
             const data = await response.json();
@@ -176,10 +274,19 @@ window.adminModules = {
         if (confirm('Are you sure you want to logout?')) {
             // Clear any stored session data
             sessionStorage.clear();
-            localStorage.removeItem('admin_session');
+            localStorage.removeItem('adminUser');
             
-            // Redirect to login page
-            window.location.href = 'login.html';
+            // Call admin logout endpoint
+            fetch('API/admin_logout.php')
+                .then(() => {
+                    // Redirect to admin login page
+                    window.location.href = 'admin_login.html';
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    // Fallback: redirect to admin login page anyway
+                    window.location.href = 'admin_login.html';
+                });
         }
     }
 };
@@ -220,32 +327,87 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Initialize the application
+// Check authentication on page load
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Initializing Modular Admin Dashboard...');
-    
     try {
-        // Show current section or dashboard by default
-        const currentSection = window.location.hash.slice(1) || 'dashboard';
-        showSection(currentSection);
+        // Check if admin is logged in
+        const adminUser = localStorage.getItem('adminUser');
+        if (!adminUser) {
+            // Show message instead of redirecting
+            document.body.innerHTML = `
+                <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                    <h2>Not Logged In</h2>
+                    <p>You need to log in to access the admin dashboard.</p>
+                    <a href="admin_login.html" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Go to Login</a>
+                </div>
+            `;
+            return;
+        }
+
+        // Verify session is still valid
+        try {
+            const response = await fetch('./API/check_auth.php');
+            const authData = await response.json();
+            
+            if (!authData.success || !authData.authenticated) {
+                // Session expired, show message instead of redirecting
+                localStorage.removeItem('adminUser');
+                document.body.innerHTML = `
+                    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                        <h2>Session Expired</h2>
+                        <p>Your session has expired. Please log in again.</p>
+                        <a href="admin_login.html" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Go to Login</a>
+                    </div>
+                `;
+                return;
+            }
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            // If auth check fails, show message instead of redirecting
+            localStorage.removeItem('adminUser');
+            document.body.innerHTML = `
+                <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                    <h2>Authentication Error</h2>
+                    <p>Unable to verify your session. Please log in again.</p>
+                    <a href="admin_login.html" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Go to Login</a>
+                </div>
+            `;
+            return;
+        }
+
+        // Initialize admin dashboard
+        await initializeAdminDashboard();
         
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        // If initialization fails, show message instead of redirecting
+        localStorage.removeItem('adminUser');
+        document.body.innerHTML = `
+            <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                <h2>Initialization Error</h2>
+                <p>Unable to initialize the admin dashboard. Please try refreshing the page or log in again.</p>
+                <a href="admin_login.html" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Go to Login</a>
+                <button onclick="location.reload()" style="display: inline-block; margin-left: 10px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Refresh Page</button>
+            </div>
+        `;
+    }
+});
+
+// Main initialization function
+async function initializeAdminDashboard() {
+    try {
         // Initialize all modules
-        await Promise.allSettled([
-            initializeDashboard(state),
-            initializeOrders(state),
-            initializeProducts(state),
-            initializeCustomers(state),
-            initializeCategories(state),
-            initializeNotifications(state),
-            initializeAnalytics()
-        ]);
+        await initializeDashboard(state);
+        await initializeOrders(state);
+        await initializeProducts(state);
+        await initializeCustomers(state);
+        await initializeCategories(state);
+        await initializeAnalytics(state);
+        await initializeNotifications(state);
+        await adminManagement.init();
         
-        // Initialize carousel manager
-        // await carouselManager.init(); // This line is removed
-        
-        // Initialize store categories
-        initializeStoreCategories();
-        await storeCategoriesModule.loadStoreCategories();
+        // Initialize admin profile
+        await adminProfile.init();
         
         // Initialize contact messages
         initializeContactMessages();
@@ -280,7 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Error initializing admin dashboard:', error);
     }
-});
+}
 
 // Initialize settings forms
 async function initializeSettingsForms() {
