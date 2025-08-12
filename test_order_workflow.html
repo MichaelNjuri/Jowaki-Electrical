@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Workflow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-info { background-color: #17a2b8; color: white; }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-pending { background: rgb(251 191 36 / 0.1); color: #d97706; }
+        .status-processing { background: rgb(37 99 235 / 0.1); color: #007bff; }
+        .status-shipped { background: rgb(16 185 129 / 0.1); color: #28a745; }
+        .status-delivered { background: rgb(16 185 129 / 0.2); color: #059669; }
+        .status-cancelled { background: rgb(239 68 68 / 0.1); color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>Order Workflow Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Order Status Updates</h2>
+        <button class="btn-primary" onclick="testOrderWorkflow()">Test Complete Order Workflow</button>
+        <button class="btn-success" onclick="testConfirmOrder()">Test Confirm Order</button>
+        <button class="btn-danger" onclick="testCancelOrder()">Test Cancel Order</button>
+        <button class="btn-info" onclick="testShipOrder()">Test Ship Order</button>
+        <button class="btn-success" onclick="testDeliverOrder()">Test Deliver Order</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Current Orders</h2>
+        <button class="btn-primary" onclick="loadOrders()">Load Orders</button>
+        <div id="orders-display"></div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        async function testOrderWorkflow() {
+            addResult('Testing complete order workflow...', 'info');
+            
+            // Test order ID 1 (assuming it exists)
+            const orderId = 1;
+            
+            try {
+                // Step 1: Confirm order (pending -> processing)
+                addResult('Step 1: Confirming order...', 'info');
+                const confirmResponse = await fetch('./API/update_order_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        status: 'processing',
+                        notes: 'Order confirmed and moved to processing',
+                        updated_by: 'admin'
+                    })
+                });
+                const confirmData = await confirmResponse.json();
+                
+                if (confirmData.success) {
+                    addResult('✅ Order confirmed successfully!', 'success');
+                } else {
+                    addResult(`❌ Confirm failed: ${confirmData.error}`, 'error');
+                    return;
+                }
+                
+                // Step 2: Ship order (processing -> shipped)
+                addResult('Step 2: Shipping order...', 'info');
+                const shipResponse = await fetch('./API/update_order_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        status: 'shipped',
+                        notes: 'Order shipped with tracking',
+                        updated_by: 'admin'
+                    })
+                });
+                const shipData = await shipResponse.json();
+                
+                if (shipData.success) {
+                    addResult('✅ Order shipped successfully!', 'success');
+                } else {
+                    addResult(`❌ Ship failed: ${shipData.error}`, 'error');
+                    return;
+                }
+                
+                // Step 3: Deliver order (shipped -> delivered)
+                addResult('Step 3: Delivering order...', 'info');
+                const deliverResponse = await fetch('./API/update_order_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        status: 'delivered',
+                        notes: 'Order delivered successfully',
+                        updated_by: 'admin'
+                    })
+                });
+                const deliverData = await deliverResponse.json();
+                
+                if (deliverData.success) {
+                    addResult('✅ Order delivered successfully!', 'success');
+                    addResult('🎉 Complete order workflow test passed!', 'success');
+                } else {
+                    addResult(`❌ Deliver failed: ${deliverData.error}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Workflow test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testConfirmOrder() {
+            addResult('Testing confirm order...', 'info');
+            
+            try {
+                const response = await fetch('./API/update_order_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: 1,
+                        status: 'processing',
+                        notes: 'Order confirmed',
+                        updated_by: 'admin'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('✅ Order confirmed successfully!', 'success');
+                } else {
+                    addResult(`❌ Confirm failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Confirm error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCancelOrder() {
+            addResult('Testing cancel order...', 'info');
+            
+            try {
+                const response = await fetch('./API/update_order_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: 1,
+                        status: 'cancelled',
+                        notes: 'Order cancelled by admin',
+                        updated_by: 'admin'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('✅ Order cancelled successfully!', 'success');
+                } else {
+                    addResult(`❌ Cancel failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Cancel error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testShipOrder() {
+            addResult('Testing ship order...', 'info');
+            
+            try {
+                const response = await fetch('./API/update_order_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: 1,
+                        status: 'shipped',
+                        notes: 'Order shipped',
+                        updated_by: 'admin'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('✅ Order shipped successfully!', 'success');
+                } else {
+                    addResult(`❌ Ship failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Ship error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDeliverOrder() {
+            addResult('Testing deliver order...', 'info');
+            
+            try {
+                const response = await fetch('./API/update_order_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: 1,
+                        status: 'delivered',
+                        notes: 'Order delivered',
+                        updated_by: 'admin'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('✅ Order delivered successfully!', 'success');
+                } else {
+                    addResult(`❌ Deliver failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Deliver error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadOrders() {
+            addResult('Loading orders...', 'info');
+            
+            try {
+                const response = await fetch('./API/admin_orders.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const ordersDisplay = document.getElementById('orders-display');
+                    let html = '<h3>Current Orders:</h3><table border="1" style="width: 100%; border-collapse: collapse;">';
+                    html += '<tr><th>ID</th><th>Customer</th><th>Status</th><th>Total</th><th>Date</th></tr>';
+                    
+                    data.data.forEach(order => {
+                        const statusClass = `status-${order.status}`;
+                        const statusText = formatStatusText(order.status);
+                        const date = new Date(order.order_date).toLocaleDateString();
+                        
+                        html += `
+                            <tr>
+                                <td>#${order.id}</td>
+                                <td>${order.customer_name}</td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                <td>KSh ${order.total_amount.toLocaleString()}</td>
+                                <td>${date}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</table>';
+                    ordersDisplay.innerHTML = html;
+                    addResult(`✅ Loaded ${data.data.length} orders`, 'success');
+                } else {
+                    addResult(`❌ Load failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Load error: ${error.message}`, 'error');
+            }
+        }
+
+        function formatStatusText(status) {
+            const statusMap = {
+                'pending': 'Pending',
+                'processing': 'Processing',
+                'shipped': 'Shipped',
+                'delivered': 'Delivered',
+                'cancelled': 'Cancelled'
+            };
+            return statusMap[status] || status;
+        }
+    </script>
+</body>
+</html> 

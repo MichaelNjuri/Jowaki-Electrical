@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Display Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/store.css">
+    <style>
+        body { padding: 20px; background: #f5f5f5; }
+        .test-container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .debug-info { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Store Display Test</h1>
+        
+        <div class="debug-info">
+            <h3>Debug Information:</h3>
+            <div id="debugOutput"></div>
+        </div>
+
+        <!-- Test Categories -->
+        <div class="category-scroll-container">
+            <div class="category-scroll" id="categoryScroll">
+                <!-- Categories will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Test Products Grid -->
+        <div class="products-grid" id="productsGrid">
+            <!-- Products will be loaded here -->
+        </div>
+    </div>
+
+    <script type="module">
+        import ProductsModule from './assets/js/store-products.js';
+        
+        const debugOutput = document.getElementById('debugOutput');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            debugOutput.innerHTML += `<div style="color: ${color};">[${timestamp}] ${message}</div>`;
+        }
+
+        async function testStore() {
+            log('Starting store test...');
+            
+            try {
+                // Test categories API
+                log('Testing categories API...');
+                const categoriesResponse = await fetch('api/get_categories.php');
+                const categoriesData = await categoriesResponse.json();
+                log(`Categories API response: ${JSON.stringify(categoriesData)}`);
+                
+                if (categoriesData.success) {
+                    log(`Found ${categoriesData.categories.length} categories`, 'success');
+                } else {
+                    log(`Categories API error: ${categoriesData.error}`, 'error');
+                }
+
+                // Test products API
+                log('Testing products API...');
+                const productsResponse = await fetch('api/get_products.php');
+                const productsData = await productsResponse.json();
+                log(`Products API response: ${JSON.stringify(productsData)}`);
+                
+                if (productsData.success) {
+                    log(`Found ${productsData.products.length} products`, 'success');
+                    
+                    if (productsData.products.length > 0) {
+                        const sampleProduct = productsData.products[0];
+                        log(`Sample product: ${JSON.stringify(sampleProduct, null, 2)}`);
+                    }
+                } else {
+                    log(`Products API error: ${productsData.error}`, 'error');
+                }
+
+                // Test ProductsModule
+                log('Testing ProductsModule...');
+                await ProductsModule.loadCategories();
+                await ProductsModule.loadProductsFromAPI();
+                ProductsModule.initializeSearch();
+                
+                log('Store test completed!', 'success');
+                
+            } catch (error) {
+                log(`Error during test: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            }
+        }
+
+        // Run test when page loads
+        testStore();
+    </script>
+</body>
+</html>

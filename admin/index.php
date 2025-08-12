@@ -1,0 +1,3246 @@
+<?php
+// Include admin authentication check
+require_once 'auth_check.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jowaki Admin Dashboard</title>
+    <link rel="stylesheet" href="assets/css/AdminDashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS Variables */
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --border-color: #e5e7eb;
+            --border-light: #f3f4f6;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --sidebar-width: 260px;
+            --header-height: 64px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            overflow-x: hidden;
+        }
+
+        /* Layout Structure */
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        .logo {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .logo h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .logo p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0 0.75rem 0.25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-icon {
+            margin-right: 0.75rem;
+            width: 1.25rem;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            height: var(--header-height);
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Language Switcher */
+        #language-switcher {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        /* Notification Bell */
+        .notification-bell {
+            position: relative;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+
+        .notification-bell:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .notification-bell i {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        #notification-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--danger-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 1rem;
+            min-width: 1.25rem;
+            text-align: center;
+        }
+
+        /* Notification Dropdown */
+        #notification-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        #notification-dropdown.show {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .notification {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            transition: all 0.2s ease;
+        }
+
+        .notification:hover {
+            background: var(--bg-secondary);
+        }
+
+        .notification:last-child {
+            border-bottom: none;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .dashboard-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+        }
+
+        .dashboard-card h3 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-card p {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        /* Contact Messages Styles */
+        .unread-message {
+            background-color: #fef3c7;
+            font-weight: 500;
+        }
+        
+        .unread-message:hover {
+            background-color: #fde68a;
+        }
+        
+        .message-details .detail-row {
+            margin-bottom: 10px;
+        }
+        
+        .message-content {
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Form Controls */
+        .form-control {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Image Upload Styles */
+        .image-upload-section {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            margin-top: 0.5rem;
+        }
+
+        .current-image-preview {
+            text-align: center;
+        }
+
+        .image-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .image-upload-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 120px;
+        }
+
+        .file-upload-label:hover {
+            border-color: var(--primary-color);
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+
+        .file-upload-label i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload-label span {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .image-preview-wrapper {
+            text-align: center;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Responsive adjustments for image upload */
+        @media (max-width: 768px) {
+            .image-upload-section {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .current-image-preview img,
+            .image-preview-wrapper img {
+                max-width: 150px;
+                max-height: 150px;
+            }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 1.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1rem 1.5rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal-footer .btn {
+            min-width: 100px;
+        }
+
+        /* Form Groups in Modal */
+        .modal-body .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-body .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-body label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .modal-body .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .modal-body .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .modal-body textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-body select.form-control {
+            cursor: pointer;
+        }
+
+        /* Data Table */
+        .table-container {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: rgb(251 191 36 / 0.1);
+            color: #d97706;
+        }
+
+        .status-processing {
+            background: rgb(37 99 235 / 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-shipped {
+            background: rgb(16 185 129 / 0.1);
+            color: var(--success-color);
+        }
+
+        .status-delivered {
+            background: rgb(16 185 129 / 0.2);
+            color: #059669;
+        }
+
+        .status-cancelled {
+            background: rgb(239 68 68 / 0.1);
+            color: var(--danger-color);
+        }
+
+        /* Notification Popup */
+        .notification-popup {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            box-shadow: var(--shadow-lg);
+            min-width: 320px;
+            max-width: 400px;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .notification-popup.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+
+        .notification-popup.notification-error {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .notification-popup.notification-success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification-popup.notification-warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .notification-popup.notification-info {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Tab Styles */
+        .tabs-container {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .tab-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .tab-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .form-help {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Profile Styles */
+        .profile-container {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+            color: white;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .profile-info h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-info p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-details {
+            padding: 2rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .profile-item {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .profile-item label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-item span {
+            display: block;
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .badge-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        /* Profile Dropdown Styles */
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .profile-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+        }
+
+        .profile-btn i:first-child {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .profile-btn i:last-child {
+            font-size: 0.75rem;
+            transition: transform 0.2s ease;
+        }
+
+        .profile-dropdown.active .profile-btn i:last-child {
+            transform: rotate(180deg);
+        }
+
+        .profile-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 280px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .profile-dropdown.active .profile-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .profile-dropdown-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .profile-dropdown-header i {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .profile-dropdown-header div {
+            flex: 1;
+        }
+
+        .profile-dropdown-header div:first-child {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .profile-dropdown-header div:last-child {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .profile-dropdown-divider {
+            height: 1px;
+            background: var(--border-light);
+            margin: 0.5rem 0;
+        }
+
+        .profile-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .profile-dropdown-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .profile-dropdown-item i {
+            width: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Admin Management Styles */
+        .admin-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-stat-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .admin-stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .admin-stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .admin-stat-icon.active {
+            background: var(--success-color);
+        }
+
+        .admin-stat-icon.super {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .admin-stat-icon.recent {
+            background: var(--warning-color);
+        }
+
+        .admin-stat-info h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .admin-stat-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .admin-table-container {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .admin-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .admin-table-header h4 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .admin-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+
+        .admin-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .admin-details h5 {
+            margin: 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-details p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .role-badge.super {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .role-badge.admin {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.active {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-badge.inactive {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .admin-actions .btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .admin-activity-container {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .admin-activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .admin-activity-header h4 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-activity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            transition: background-color 0.2s ease;
+        }
+
+        .activity-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 0.25rem 0;
+        }
+
+        .activity-details {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Admin Details Modal Styles */
+        .admin-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-detail-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .admin-detail-info h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-detail-info p {
+            margin: 0 0 0.75rem 0;
+            color: var(--text-secondary);
+        }
+
+        .admin-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-detail-item {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+        }
+
+        .admin-detail-item label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-detail-item span {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .admin-detail-section {
+            border-top: 1px solid var(--border-light);
+            padding-top: 1.5rem;
+        }
+
+        .admin-detail-section h5 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-section="dashboard">
+                            <i class="nav-icon fas fa-home"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="orders">
+                            <i class="nav-icon fas fa-shopping-cart"></i>
+                            Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="products">
+                            <i class="nav-icon fas fa-box"></i>
+                            Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="customers">
+                            <i class="nav-icon fas fa-users"></i>
+                            Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="categories">
+                            <i class="nav-icon fas fa-tags"></i>
+                            Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="analytics">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="contact-messages">
+                            <i class="nav-icon fas fa-envelope"></i>
+                            Contact Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="settings">
+                            <i class="nav-icon fas fa-cog"></i>
+                            Settings
+                        </a>
+                        <a href="#" class="nav-link" data-section="admin-management" id="admin-management-link" style="display: none;">
+                            <i class="nav-icon fas fa-users-cog"></i>
+                            Admin Management
+                        </a>
+                        <a href="#" class="nav-link" data-section="admin-profile">
+                            <i class="nav-icon fas fa-user"></i>
+                            My Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h2 id="page-title">Dashboard</h2>
+                <div class="header-actions">
+                    <button class="notification-bell" onclick="adminModules.toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span id="notification-count">0</span>
+                        <div id="notification-dropdown">
+                            <div class="notification-header">Notifications</div>
+                        </div>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" onclick="adminModules.toggleProfileDropdown()">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="header-admin-name">Admin</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="profile-dropdown-menu" class="profile-dropdown-menu">
+                            <div class="profile-dropdown-header">
+                                <i class="fas fa-user-circle"></i>
+                                <div>
+                                    <div id="dropdown-admin-name">Admin</div>
+                                    <div id="dropdown-admin-role">Role</div>
+                                </div>
+                            </div>
+                            <div class="profile-dropdown-divider"></div>
+                            <a href="#" class="profile-dropdown-item" onclick="adminModules.showSection('admin-profile')">
+                                <i class="fas fa-user"></i>
+                                My Profile
+                            </a>
+                            <a href="#" class="profile-dropdown-item" onclick="adminModules.logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main class="content-area">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="content-section active">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" onclick="adminModules.showProductsSection()" style="cursor: pointer;">
+                            <h3>Total Products</h3>
+                            <p id="total-products">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Pending Orders</h3>
+                            <p id="pending-orders">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showCustomersSection()" style="cursor: pointer;">
+                            <h3>Total Customers</h3>
+                            <p id="total-customers">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Monthly Revenue</h3>
+                            <p>$<span id="monthly-revenue">0.00</span></p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Monthly Sales</h3>
+                            <p id="monthly-sales">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Orders This Month</h3>
+                            <p id="orders-this-month">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showCustomersSection()" style="cursor: pointer;">
+                            <h3>New Customers</h3>
+                            <p id="new-customers">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showContactMessagesSection()" style="cursor: pointer;">
+                            <h3>Contact Messages</h3>
+                            <p id="contact-messages-count">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showProductsSection()" style="cursor: pointer; border-left: 4px solid #f59e0b;">
+                            <h3>Low Stock Alerts</h3>
+                            <p id="low-stock-products" style="color: #f59e0b;">0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Orders Section -->
+                <section id="orders" class="content-section">
+                    <div class="section-header">
+                        <h3>Orders Management</h3>
+                        <div class="section-controls">
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-order-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Order
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Tabs -->
+                    <div class="tabs-container" style="margin-bottom: 1rem;">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="active-orders" onclick="adminModules.switchOrderTab('active-orders')">
+                                <i class="fas fa-shopping-cart"></i>
+                                Active Orders
+                                <span class="tab-badge" id="active-orders-count">0</span>
+                            </button>
+                            <button class="tab-btn" data-tab="cancelled-orders" onclick="adminModules.switchOrderTab('cancelled-orders')">
+                                <i class="fas fa-times-circle"></i>
+                                Cancelled Orders
+                                <span class="tab-badge" id="cancelled-orders-count">0</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Orders Tab -->
+                    <div id="active-orders-tab" class="tab-content active">
+                        <div class="section-controls" style="margin-bottom: 1rem;">
+                            <input type="text" class="form-control" placeholder="Search active orders..." id="active-order-search">
+                            <select class="form-control" id="active-order-status-filter">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="processing">Processing</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="delivered">Delivered</option>
+                            </select>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Payment</th>
+                                        <th>Items</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="active-orders-tbody">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading active orders...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Cancelled Orders Tab -->
+                    <div id="cancelled-orders-tab" class="tab-content">
+                        <div class="section-controls" style="margin-bottom: 1rem;">
+                            <input type="text" class="form-control" placeholder="Search cancelled orders..." id="cancelled-order-search">
+                            <select class="form-control" id="cancelled-order-status-filter">
+                                <option value="">All Cancelled</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="refunded">Refunded</option>
+                            </select>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Payment</th>
+                                        <th>Items</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cancelled-orders-tbody">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading cancelled orders...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Products Section -->
+                <section id="products" class="content-section">
+                    <div class="section-header">
+                        <h3>Products Management</h3>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search products..." id="product-search">
+                            <select class="form-control" id="product-category-filter">
+                                <option value="">All Categories</option>
+                            </select>
+                            <select class="form-control" id="product-stock-filter">
+                                <option value="">All Stock Levels</option>
+                                <option value="in-stock">In Stock</option>
+                                <option value="low-stock">Low Stock</option>
+                                <option value="out-of-stock">Out of Stock</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-product-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Product
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>SKU</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading products...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Customers Section -->
+                <section id="customers" class="content-section">
+                    <div class="section-header">
+                        <h3>Customers Management</h3>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search customers..." id="customer-search">
+                            <select class="form-control" id="customer-loyalty-filter">
+                                <option value="">All Loyalty Tiers</option>
+                                <option value="Bronze">Bronze</option>
+                                <option value="Silver">Silver</option>
+                                <option value="Gold">Gold</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-customer-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Customer
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Orders</th>
+                                    <th>Total Spent</th>
+                                    <th>Loyalty Tier</th>
+                                    <th>Last Order</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-tbody">
+                                <tr>
+                                    <td colspan="9" style="text-align: center; padding: 20px; color: #666;">Loading customers...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Store Categories Section -->
+                <section id="categories" class="content-section">
+                    <div class="section-header">
+                        <h3>Store Categories Management</h3>
+                        <p class="section-subtitle">Manage the category cards that appear in the store's category scroll section</p>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search categories..." id="category-search">
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-store-category-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Store Category
+                            </button>
+                            <button class="btn btn-secondary" onclick="adminModules.exportCategoriesCSV()">
+                                <i class="fas fa-download"></i>
+                                Export CSV
+                            </button>
+                            <button class="btn btn-info" onclick="adminModules.importCategoriesCSV()">
+                                <i class="fas fa-upload"></i>
+                                Import CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Image/Icon</th>
+                                    <th>Name</th>
+                                    <th>Display Name</th>
+                                    <th>Filter Value</th>
+                                    <th>Sort Order</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="store-categories-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading store categories...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Legacy Categories Section -->
+                <section id="legacy-categories" class="content-section">
+                    <div class="section-header">
+                        <h3>Legacy Categories Management</h3>
+                        <p class="section-subtitle">Manage the legacy category system (for backward compatibility)</p>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search categories..." id="legacy-category-search">
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-category-modal')">
+                                <i class="fas fa-plus"></i>
+                                Add Legacy Category
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Category</th>
+                                    <th>Subcategory</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categories-tbody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">Loading legacy categories...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Analytics Section -->
+                <section id="analytics" class="content-section">
+                    <div class="section-header">
+                        <h3>Analytics & Reports</h3>
+                        <div class="section-controls">
+                            <select class="form-control" id="report-period">
+                                <option value="day">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                            <input type="date" class="form-control" id="start-date" style="display: none;">
+                            <input type="date" class="form-control" id="end-date" style="display: none;">
+                            <select class="form-control" id="report-category">
+                                <option value="">All Categories</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="adminModules.generateReport()">
+                                <i class="fas fa-chart-bar"></i>
+                                Generate Report
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Sales Overview -->
+                    <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Total Revenue</h3>
+                            <p id="total-revenue">KSh 0.00</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Total Orders</h3>
+                            <p id="total-orders">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showProductsSection()" style="cursor: pointer;">
+                            <h3>Items Sold</h3>
+                            <p id="items-sold">0</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Average Order Value</h3>
+                            <p id="avg-order-value">KSh 0.00</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Total Tax</h3>
+                            <p id="total-tax">KSh 0.00</p>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showOrdersSection()" style="cursor: pointer;">
+                            <h3>Delivery Fees</h3>
+                            <p id="total-delivery">KSh 0.00</p>
+                        </div>
+                    </div>
+
+                    <!-- Top Products -->
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <div class="section-header" style="padding: 1rem; margin: 0;">
+                            <h4 style="margin: 0;">Top Selling Products</h4>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Revenue</th>
+                                    <th>Orders</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-products-tbody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Sales by Category -->
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <div class="section-header" style="padding: 1rem; margin: 0;">
+                            <h4 style="margin: 0;">Sales by Category</h4>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Orders</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="category-sales-tbody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Payment Analysis -->
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <div class="section-header" style="padding: 1rem; margin: 0;">
+                            <h4 style="margin: 0;">Payment Method Analysis</h4>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Payment Method</th>
+                                    <th>Orders</th>
+                                    <th>Revenue</th>
+                                    <th>Average Order Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payment-analysis-tbody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">No data available</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Customer Analysis -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>Unique Customers</h3>
+                            <p id="unique-customers">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>New Customers (30d)</h3>
+                            <p id="new-customers-30d">0</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>New Customers (7d)</h3>
+                            <p id="new-customers-7d">0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contact Messages Section -->
+                <section id="contact-messages" class="content-section">
+                    <div class="section-header">
+                        <h3>Contact Messages</h3>
+                        <div class="section-controls">
+                            <input type="text" class="form-control" placeholder="Search messages..." id="message-search">
+                            <select class="form-control" id="message-status-filter">
+                                <option value="">All Messages</option>
+                                <option value="unread">Unread</option>
+                                <option value="read">Read</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Subject</th>
+                                    <th>Message</th>
+                                    <th>Submitted</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contact-messages-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">Loading messages...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings" class="content-section">
+                    <div class="section-header">
+                        <h3>System Settings</h3>
+                    </div>
+                    
+
+                    
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" onclick="adminModules.showModal('general-settings-modal')" style="cursor: pointer;">
+                            <h3>General Settings</h3>
+                            <p>Configure system preferences</p>
+                            <i class="fas fa-cogs" style="font-size: 2rem; color: var(--primary-color); margin-top: 1rem;"></i>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showModal('payment-settings-modal')" style="cursor: pointer;">
+                            <h3>Payment Settings</h3>
+                            <p>Configure payment methods</p>
+                            <i class="fas fa-credit-card" style="font-size: 2rem; color: var(--success-color); margin-top: 1rem;"></i>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showModal('shipping-settings-modal')" style="cursor: pointer;">
+                            <h3>Shipping Settings</h3>
+                            <p>Configure shipping options</p>
+                            <i class="fas fa-shipping-fast" style="font-size: 2rem; color: var(--warning-color); margin-top: 1rem;"></i>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showModal('backup-settings-modal')" style="cursor: pointer;">
+                            <h3>Backup & Security</h3>
+                            <p>Database backup and security</p>
+                            <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--danger-color); margin-top: 1rem;"></i>
+                        </div>
+                        <div class="dashboard-card" onclick="adminModules.showModal('social-media-settings-modal')" style="cursor: pointer;">
+                            <h3>Social Media</h3>
+                            <p>Manage social media links</p>
+                            <i class="fas fa-share-alt" style="font-size: 2rem; color: var(--primary-color); margin-top: 1rem;"></i>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin Management Section -->
+                <section id="admin-management" class="content-section">
+                    <div class="section-header">
+                        <h3>Admin Management</h3>
+                        <div class="section-controls">
+                            <button class="btn btn-primary" onclick="adminModules.showModal('add-admin-modal')">
+                                <i class="fas fa-plus"></i> Add New Admin
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Admin Overview Cards -->
+                    <div class="admin-overview-grid">
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h4 id="total-admins">0</h4>
+                                <p>Total Admins</p>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon active">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h4 id="active-admins">0</h4>
+                                <p>Active</p>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon super">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h4 id="super-admins">0</h4>
+                                <p>Super Admins</p>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon recent">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="admin-stat-info">
+                                <h4 id="recent-logins">0</h4>
+                                <p>Recent Logins</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Users Table -->
+                    <div class="admin-table-container">
+                        <div class="admin-table-header">
+                            <h4>Admin Users</h4>
+                            <button class="btn btn-outline" onclick="adminModules.refreshAdmins()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table" id="admins-table">
+                                <thead>
+                                    <tr>
+                                        <th>Admin</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admins-table-body">
+                                    <tr>
+                                        <td colspan="5" class="loading-state">
+                                            <div class="loading-spinner"></div>
+                                            <span>Loading admins...</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="admin-activity-container">
+                        <div class="admin-activity-header">
+                            <h4>Recent Activity</h4>
+                            <button class="btn btn-outline" onclick="adminModules.refreshActivity()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="admin-activity-list" id="activity-list">
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <span>Loading activity...</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin Profile Section -->
+                <section id="admin-profile" class="content-section">
+                    <div class="section-header">
+                        <h3>My Profile</h3>
+                        <div class="section-controls">
+                            <button class="btn btn-primary" onclick="adminProfile.showModal('edit-profile-modal')">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </button>
+                            <button class="btn btn-secondary" onclick="adminProfile.refreshProfile()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="profile-container">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="profile-info">
+                                <h4 id="profile-full-name">Loading...</h4>
+                                <p id="profile-role">Loading...</p>
+                                <span id="profile-status-badge" class="badge badge-success">Active</span>
+                            </div>
+                        </div>
+
+                        <div class="profile-details">
+                            <div class="profile-grid">
+                                <div class="profile-item">
+                                    <label>Username</label>
+                                    <span id="profile-username">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Email</label>
+                                    <span id="profile-email">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Role</label>
+                                    <span id="profile-role-description">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Status</label>
+                                    <span id="profile-status">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Last Login</label>
+                                    <span id="profile-last-login">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <label>Account Created</label>
+                                    <span id="profile-created">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Order Modal -->
+    <div id="add-order-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Order</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-order-modal')">&times;</button>
+            </div>
+            <form id="add-order-form">
+                <div class="form-group">
+                    <label class="form-label">Customer Name</label>
+                    <input type="text" class="form-input" name="customer_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Customer Email</label>
+                    <input type="email" class="form-input" name="customer_email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Customer Phone</label>
+                    <input type="tel" class="form-input" name="customer_phone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Total Amount</label>
+                    <input type="number" class="form-input" name="total_amount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" name="status">
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-order-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="add-product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Product</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-product-modal')">&times;</button>
+            </div>
+            <form id="add-product-form">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-input" name="category" id="product-category-select" required>
+                        <option value="">Select a category...</option>
+                        <!-- Categories will be loaded dynamically -->
+                    </select>
+                    <small class="form-help">Choose from the store categories or type a custom category</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price</label>
+                    <input type="number" class="form-input" name="price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock Quantity</label>
+                    <input type="number" class="form-input" name="stock_quantity" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Low Stock Alert Threshold</label>
+                    <input type="number" class="form-input" name="low_stock_threshold" value="10" min="1" required>
+                    <small class="form-help">Get notified when stock falls below this number</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Brand (Optional)</label>
+                    <input type="text" class="form-input" name="brand">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discount Price (Optional)</label>
+                    <input type="number" class="form-input" name="discount_price" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Weight (kg)</label>
+                    <input type="number" class="form-input" name="weight_kg" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Warranty (months)</label>
+                    <input type="number" class="form-input" name="warranty_months">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Product Images</label>
+                    <input type="file" class="form-input" name="images[]" multiple accept="image/*" id="product-images">
+                    <small class="form-help">You can select multiple images (JPG, PNG, GIF, WebP - Max 5MB each)</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="is_featured" style="margin-right: 8px;">
+                        Featured Product
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="is_active" checked style="margin-right: 8px;">
+                        Active (Show to customers)
+                    </label>
+                    <small class="form-help">Uncheck to hide this product from customers without deleting</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-product-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Customer Modal -->
+    <div id="add-customer-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Customer</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-customer-modal')">&times;</button>
+            </div>
+            <form id="add-customer-form">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" class="form-input" name="phone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <textarea class="form-input" name="address" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-customer-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="add-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Store Category</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-category-modal')">&times;</button>
+            </div>
+            <form id="add-category-form">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon Class</label>
+                    <input type="text" class="form-input" name="icon" placeholder="fas fa-shield-alt" required>
+                    <div class="form-help">Enter FontAwesome icon class (e.g., fas fa-shield-alt)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter Value</label>
+                    <input type="text" class="form-input" name="filter_value" placeholder="fencing" required>
+                    <div class="form-help">The value used in filterProducts() function</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" class="form-input" name="sort_order" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" name="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-category-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div id="edit-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Store Category</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('edit-category-modal')">&times;</button>
+            </div>
+            <form id="edit-category-form">
+                <input type="hidden" id="edit-category-id">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" class="form-input" id="edit-category-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon Class</label>
+                    <input type="text" class="form-input" id="edit-category-icon" name="icon" required>
+                    <div class="form-help">Enter FontAwesome icon class (e.g., fas fa-shield-alt)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter Value</label>
+                    <input type="text" class="form-input" id="edit-category-filter-value" name="filter_value" required>
+                    <div class="form-help">The value used in filterProducts() function</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" class="form-input" id="edit-category-sort-order" name="sort_order" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" id="edit-category-status" name="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('edit-category-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Store Category Modal -->
+    <div id="add-store-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Store Category</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-store-category-modal')">&times;</button>
+            </div>
+            <form id="add-store-category-form">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                    <div class="form-help">Internal name for the category</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" class="form-input" name="display_name" required>
+                    <div class="form-help">Name shown to customers</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category Image</label>
+                    <div class="image-input-container">
+                        <div class="image-input-option">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-input" name="image_url" placeholder="https://example.com/image.jpg">
+                            <div class="form-help">Direct URL to category image</div>
+                        </div>
+                        <div class="image-input-divider">OR</div>
+                        <div class="image-input-option">
+                            <label class="form-label">Upload Image</label>
+                            <input type="file" class="form-input" name="image_upload" accept="image/*">
+                            <div class="form-help">Upload image file (JPG, PNG, GIF)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon Class</label>
+                    <input type="text" class="form-input" name="icon_class" value="fas fa-box">
+                    <div class="form-help">FontAwesome icon class (used if no image provided)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter Value</label>
+                    <input type="text" class="form-input" name="filter_value" required>
+                    <div class="form-help">Value used in filterProducts() function</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" class="form-input" name="sort_order" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" name="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-store-category-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Store Category Modal -->
+    <div id="edit-store-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Store Category</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('edit-store-category-modal')">&times;</button>
+            </div>
+            <form id="edit-store-category-form">
+                <input type="hidden" id="edit-store-category-id">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" class="form-input" id="edit-store-category-name" name="name" required>
+                    <div class="form-help">Internal name for the category</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" class="form-input" id="edit-store-category-display-name" name="display_name" required>
+                    <div class="form-help">Name shown to customers</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category Image</label>
+                    <div class="image-input-container">
+                        <div class="image-input-option">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-input" id="edit-store-category-image-url" name="image_url" placeholder="https://example.com/image.jpg">
+                            <div class="form-help">Direct URL to category image</div>
+                        </div>
+                        <div class="image-input-divider">OR</div>
+                        <div class="image-input-option">
+                            <label class="form-label">Upload Image</label>
+                            <input type="file" class="form-input" name="image_upload" accept="image/*">
+                            <div class="form-help">Upload image file (JPG, PNG, GIF)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon Class</label>
+                    <input type="text" class="form-input" id="edit-store-category-icon-class" name="icon_class">
+                    <div class="form-help">FontAwesome icon class (used if no image provided)</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter Value</label>
+                    <input type="text" class="form-input" id="edit-store-category-filter-value" name="filter_value" required>
+                    <div class="form-help">Value used in filterProducts() function</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" class="form-input" id="edit-store-category-sort-order" name="sort_order" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" id="edit-store-category-status" name="is_active">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('edit-store-category-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- Order Details Modal -->
+    <div id="order-details-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Order Details</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('order-details-modal')">&times;</button>
+            </div>
+            <div id="order-details-content">
+                <div style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <p>Loading order details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Management Modal -->
+    <div id="stock-management-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Stock Management</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('stock-management-modal')">&times;</button>
+            </div>
+            <form id="stock-management-form">
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    <input type="text" class="form-input" id="stock-product-name" readonly>
+                    <input type="hidden" id="stock-product-id">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Current Stock</label>
+                    <input type="number" class="form-input" id="current-stock" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Operation</label>
+                    <select class="form-input" id="stock-operation" required>
+                        <option value="set">Set Stock Level</option>
+                        <option value="add">Add Stock</option>
+                        <option value="subtract">Subtract Stock</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" class="form-input" id="stock-quantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reason</label>
+                    <textarea class="form-input" id="stock-reason" rows="3" placeholder="e.g., Restock, Sale, Return, etc."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('stock-management-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="edit-product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Product</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('edit-product-modal')">&times;</button>
+            </div>
+            <form id="edit-product-form">
+                <input type="hidden" id="edit-product-id">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-input" id="edit-product-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-input" id="edit-product-category" name="category" required>
+                        <option value="">Select a category...</option>
+                        <!-- Categories will be loaded dynamically -->
+                    </select>
+                    <small class="form-help">Choose from the store categories or type a custom category</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price (KSh)</label>
+                    <input type="number" class="form-input" id="edit-product-price" name="price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stock Quantity</label>
+                    <input type="number" class="form-input" id="edit-product-stock" name="stock" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" id="edit-product-description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" id="edit-product-status" name="status" required>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SKU</label>
+                    <input type="text" class="form-input" id="edit-product-sku" name="sku" placeholder="Stock Keeping Unit">
+                </div>
+                
+                <!-- Product Image Section -->
+                <div class="form-group">
+                    <label class="form-label">Product Image</label>
+                    <div class="image-upload-section">
+                        <div class="current-image-preview">
+                            <img id="edit-product-current-image" src="" alt="Current product image" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">
+                            <p class="image-label">Current Image</p>
+                        </div>
+                        <div class="image-upload-controls">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="edit-product-image-upload" name="image" accept="image/*" class="file-input">
+                                <label for="edit-product-image-upload" class="file-upload-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Choose New Image</span>
+                                </label>
+                            </div>
+                            <div class="image-preview-wrapper" style="display: none;">
+                                <img id="edit-product-new-image-preview" src="" alt="New image preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #10b981;">
+                                <p class="image-label">New Image Preview</p>
+                                <button type="button" id="edit-product-remove-image" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <small class="form-help">Upload a new image to replace the current product image. Supported formats: JPG, PNG, GIF</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('edit-product-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Details Modal -->
+    <div id="customer-details-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Customer Details</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('customer-details-modal')">&times;</button>
+            </div>
+            <div id="customer-details-content">
+                <div style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <p>Loading customer details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- General Settings Modal -->
+    <div id="general-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">General Settings</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('general-settings-modal')">&times;</button>
+            </div>
+            <form id="general-settings-form">
+                <div class="form-group">
+                    <label class="form-label">Tax Rate (%)</label>
+                    <input type="number" class="form-input" name="tax_rate" min="0" max="100" step="0.01" value="16" required>
+                    <small class="form-help">Current tax rate applied to all orders</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Standard Delivery Fee (KSh)</label>
+                    <input type="number" class="form-input" name="standard_delivery_fee" min="0" step="0.01" value="0" required>
+                    <small class="form-help">Default delivery fee for standard shipping</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Express Delivery Fee (KSh)</label>
+                    <input type="number" class="form-input" name="express_delivery_fee" min="0" step="0.01" value="500" required>
+                    <small class="form-help">Delivery fee for express shipping</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Name</label>
+                    <input type="text" class="form-input" name="store_name" value="Jowaki Electrical Services" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Email</label>
+                    <input type="email" class="form-input" name="store_email" value="info@jowaki.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Phone</label>
+                    <input type="tel" class="form-input" name="store_phone" value="+254721442248" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Store Address</label>
+                    <textarea class="form-input" name="store_address" rows="3" placeholder="Enter store address"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('general-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Settings Modal -->
+    <div id="payment-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Payment Settings</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('payment-settings-modal')">&times;</button>
+            </div>
+            <form id="payment-settings-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_mpesa" checked style="margin-right: 8px;">
+                        Enable M-Pesa Payments
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">M-Pesa Business Number</label>
+                    <input type="text" class="form-input" name="mpesa_business_number" value="254721442248">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_card" checked style="margin-right: 8px;">
+                        Enable Card Payments
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_whatsapp" checked style="margin-right: 8px;">
+                        Enable WhatsApp Orders
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">WhatsApp Number</label>
+                    <input type="text" class="form-input" name="whatsapp_number" value="254721442248">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('payment-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Shipping Settings Modal -->
+    <div id="shipping-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Shipping Settings</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('shipping-settings-modal')">&times;</button>
+            </div>
+            <form id="shipping-settings-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_standard_delivery" checked style="margin-right: 8px;">
+                        Enable Standard Delivery
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Standard Delivery Time</label>
+                    <input type="text" class="form-input" name="standard_delivery_time" value="3-5 business days">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_express_delivery" checked style="margin-right: 8px;">
+                        Enable Express Delivery
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Express Delivery Time</label>
+                    <input type="text" class="form-input" name="express_delivery_time" value="1-2 business days">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_pickup" checked style="margin-right: 8px;">
+                        Enable Store Pickup
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pickup Location</label>
+                    <textarea class="form-input" name="pickup_location" rows="3" placeholder="Enter pickup location details"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('shipping-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Backup Settings Modal -->
+    <div id="backup-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Backup & Security</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('backup-settings-modal')">&times;</button>
+            </div>
+            <form id="backup-settings-form">
+                <div class="form-group">
+                    <label class="form-label">Database Backup</label>
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.backupDatabase()">
+                        <i class="fas fa-download"></i> Download Backup
+                    </button>
+                    <small class="form-help">Download a complete backup of your database</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">System Logs</label>
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.downloadLogs()">
+                        <i class="fas fa-file-alt"></i> Download Logs
+                    </button>
+                    <small class="form-help">Download system activity logs</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Security Settings</label>
+                    <div style="margin-top: 0.5rem;">
+                        <label style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <input type="checkbox" name="enable_2fa" style="margin-right: 8px;">
+                            Enable Two-Factor Authentication
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <input type="checkbox" name="enable_login_notifications" style="margin-right: 8px;">
+                            Login Notifications
+                        </label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="enable_audit_log" checked style="margin-right: 8px;">
+                            Audit Logging
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('backup-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Social Media Settings Modal -->
+    <div id="social-media-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Social Media Settings</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('social-media-settings-modal')">&times;</button>
+            </div>
+            <form id="social-media-settings-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_facebook" checked style="margin-right: 8px;">
+                        Enable Facebook
+                    </label>
+                    <input type="url" class="form-input" name="facebook_url" placeholder="https://www.facebook.com/yourpage" value="https://www.facebook.com/JowakiElectricalServicesLTD">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_twitter" style="margin-right: 8px;">
+                        Enable Twitter
+                    </label>
+                    <input type="url" class="form-input" name="twitter_url" placeholder="https://twitter.com/yourhandle">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_instagram" style="margin-right: 8px;">
+                        Enable Instagram
+                    </label>
+                    <input type="url" class="form-input" name="instagram_url" placeholder="https://instagram.com/yourhandle">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_linkedin" style="margin-right: 8px;">
+                        Enable LinkedIn
+                    </label>
+                    <input type="url" class="form-input" name="linkedin_url" placeholder="https://linkedin.com/company/yourcompany">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_youtube" style="margin-right: 8px;">
+                        Enable YouTube
+                    </label>
+                    <input type="url" class="form-input" name="youtube_url" placeholder="https://youtube.com/@yourchannel">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="enable_tiktok" style="margin-right: 8px;">
+                        Enable TikTok
+                    </label>
+                    <input type="url" class="form-input" name="tiktok_url" placeholder="https://tiktok.com/@yourhandle">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('social-media-settings-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Admin Modal -->
+    <div id="add-admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Admin</h3>
+                <button class="modal-close" onclick="adminModules.hideModal('add-admin-modal')">&times;</button>
+            </div>
+            <form id="add-admin-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name *</label>
+                        <input type="text" class="form-input" name="first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name *</label>
+                        <input type="text" class="form-input" name="last_name" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Username *</label>
+                        <input type="text" class="form-input" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-input" name="email" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Password *</label>
+                        <input type="password" class="form-input" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        <input type="password" class="form-input" name="confirm_password" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Role *</label>
+                    <select class="form-input" name="role_id" required>
+                        <option value="">Select a role...</option>
+                        <option value="1">Super Admin - Full system access</option>
+                        <option value="2" selected>Admin - Standard admin access</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="is_active" checked style="margin-right: 8px;">
+                        Active Account
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminModules.hideModal('add-admin-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Admin Modal -->
+    <div id="view-admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Admin Details</h3>
+                <button class="modal-close" onclick="adminManagement.hideModal('view-admin-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="admin-details-content">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <span>Loading admin details...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Admin Modal -->
+    <div id="edit-admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Admin</h3>
+                <button class="modal-close" onclick="adminManagement.hideModal('edit-admin-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-admin-form">
+                    <input type="hidden" name="admin_id">
+                    <div class="form-group">
+                        <label class="form-label">Username *</label>
+                        <input type="text" class="form-input" name="username" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" class="form-input" name="first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" class="form-input" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-input" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <select class="form-input" name="role_id">
+                            <option value="1">Super Admin</option>
+                            <option value="2">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-input" name="new_password" minlength="6">
+                        <small class="form-help">Leave blank to keep current password</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="adminManagement.hideModal('edit-admin-modal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Admin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Profile</h3>
+                <button class="modal-close" onclick="adminProfile.hideModal('edit-profile-modal')">&times;</button>
+            </div>
+            <form id="edit-profile-form">
+                <div class="form-group">
+                    <label class="form-label">Username *</label>
+                    <input type="text" class="form-input" name="username" required>
+                    <small class="form-help">Username must be unique and cannot be changed by other admins</small>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First Name *</label>
+                        <input type="text" class="form-input" name="first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name *</label>
+                        <input type="text" class="form-input" name="last_name" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-input" name="email" required>
+                    <small class="form-help">This email will be used for notifications and password reset</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="change-password-toggle" style="margin-right: 8px;">
+                        Change Password
+                    </label>
+                </div>
+                
+                <div id="password-fields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Current Password *</label>
+                        <input type="password" class="form-input" name="current_password">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">New Password *</label>
+                            <input type="password" class="form-input" name="new_password" minlength="6">
+                            <small class="form-help">Password must be at least 6 characters long</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm New Password *</label>
+                            <input type="password" class="form-input" name="confirm_password">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="adminProfile.hideModal('edit-profile-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Admin Login API Test</h1>
+    
+    <div class="section">
+        <h2>Test Admin Login API</h2>
+        <button onclick="testAdminLogin()">Test Admin Login API</button>
+        <button onclick="testDatabaseConnection()">Test Database Connection</button>
+        <button onclick="testCreateAdminTables()">Test Create Admin Tables</button>
+        <button onclick="testCheckAuth()">Test Check Auth</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testAdminLogin() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing admin login API...</div>';
+            
+            try {
+                const response = await fetch('API/admin_login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Admin Login API is accessible!</div>
+                        <div class="info">Response: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Admin Login API returned status: ${response.status}</div>
+                        <div class="info">Status Text: ${response.statusText}</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Error accessing Admin Login API: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testDatabaseConnection() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing database connection...</div>';
+            
+            try {
+                const response = await fetch('API/db_connection.php');
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Database connection API is accessible!</div>
+                        <div class="info">Response: ${text}</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Database connection API returned status: ${response.status}</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Error accessing Database connection API: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testCreateAdminTables() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing create admin tables...</div>';
+            
+            try {
+                const response = await fetch('API/create_admin_tables.php');
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Create Admin Tables API is accessible!</div>
+                        <div class="info">Response: ${text}</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Create Admin Tables API returned status: ${response.status}</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Error accessing Create Admin Tables API: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testCheckAuth() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing check auth...</div>';
+            
+            try {
+                const response = await fetch('API/check_auth.php');
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Check Auth API is accessible!</div>
+                        <div class="info">Response: ${text}</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Check Auth API returned status: ${response.status}</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Error accessing Check Auth API: ${error.message}</div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+

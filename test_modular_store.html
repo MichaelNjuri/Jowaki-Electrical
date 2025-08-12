@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modular Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Modular Store JavaScript Test</h1>
+    
+    <div class="test-section">
+        <h2>Module Loading Test</h2>
+        <p>This test verifies that all modules are loaded correctly.</p>
+        <button class="test-button" onclick="testModuleLoading()">Test Module Loading</button>
+        <div id="moduleStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Global Functions Test</h2>
+        <p>This test verifies that global functions are available.</p>
+        <button class="test-button" onclick="testGlobalFunctions()">Test Global Functions</button>
+        <div id="globalStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>UI Functions Test</h2>
+        <p>This test verifies UI functions work correctly.</p>
+        <button class="test-button" onclick="testUIFunctions()">Test UI Functions</button>
+        <div id="uiStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Cart Functions Test</h2>
+        <p>This test verifies cart functions work correctly.</p>
+        <button class="test-button" onclick="testCartFunctions()">Test Cart Functions</button>
+        <div id="cartStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Product Functions Test</h2>
+        <p>This test verifies product functions work correctly.</p>
+        <button class="test-button" onclick="testProductFunctions()">Test Product Functions</button>
+        <div id="productStatus"></div>
+    </div>
+
+    <script type="module" src="store.js"></script>
+    
+    <script>
+        // Test functions
+        function testModuleLoading() {
+            const statusDiv = document.getElementById('moduleStatus');
+            try {
+                // Check if modules are loaded
+                if (window.showNotification && window.addToCart && window.filterProducts) {
+                    statusDiv.innerHTML = '<div class="status success">✅ All modules loaded successfully!</div>';
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Some modules failed to load</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testGlobalFunctions() {
+            const statusDiv = document.getElementById('globalStatus');
+            const requiredFunctions = [
+                'addToCart', 'removeFromCart', 'updateQuantity', 'clearCart',
+                'filterProducts', 'searchProducts', 'sortProducts', 'setView',
+                'showProductDetail', 'hideProductDetail', 'toggleCart',
+                'showNotification', 'showModal', 'hideModal'
+            ];
+
+            const missingFunctions = requiredFunctions.filter(func => typeof window[func] !== 'function');
+            
+            if (missingFunctions.length === 0) {
+                statusDiv.innerHTML = '<div class="status success">✅ All global functions are available!</div>';
+            } else {
+                statusDiv.innerHTML = `<div class="status error">❌ Missing functions: ${missingFunctions.join(', ')}</div>`;
+            }
+        }
+
+        function testUIFunctions() {
+            const statusDiv = document.getElementById('uiStatus');
+            try {
+                // Test notification
+                window.showNotification('Test notification', 'success');
+                statusDiv.innerHTML = '<div class="status success">✅ UI functions working correctly!</div>';
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ UI function error: ${error.message}</div>`;
+            }
+        }
+
+        function testCartFunctions() {
+            const statusDiv = document.getElementById('cartStatus');
+            try {
+                // Test cart functions
+                if (typeof window.getCart === 'function') {
+                    const cart = window.getCart();
+                    statusDiv.innerHTML = '<div class="status success">✅ Cart functions working correctly!</div>';
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Cart functions not available</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Cart function error: ${error.message}</div>`;
+            }
+        }
+
+        function testProductFunctions() {
+            const statusDiv = document.getElementById('productStatus');
+            try {
+                // Test product functions
+                if (typeof window.getStoreProducts === 'function') {
+                    const products = window.getStoreProducts();
+                    statusDiv.innerHTML = '<div class="status success">✅ Product functions working correctly!</div>';
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Product functions not available</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Product function error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run tests after page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testModuleLoading();
+                testGlobalFunctions();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

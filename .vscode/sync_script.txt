@@ -1,0 +1,3 @@
+open sftp://username:password@host/
+synchronize remote "c:\Users\USER\OneDrive\Desktop\public_html" "/remote/path/"
+exit

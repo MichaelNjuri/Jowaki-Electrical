@@ -1,0 +1,22 @@
+{
+  "name": "MyHostingerSite",
+  "host": "145.79.28.7",
+  "protocol": "ftp",
+  "port": 21,
+  "username": "u383641303",
+  "password": "Jowakiftp1.",
+  "remotePath": "/public_html",
+  "uploadOnSave": false,
+  "syncOption": {
+    "delete": false,
+    "skipCreate": false,
+    "ignoreExisting": false,
+    "update": false
+  },
+  "ignore": [
+    ".vscode",
+    ".git",
+    ".DS_Store",
+    "node_modules"
+  ]
+}

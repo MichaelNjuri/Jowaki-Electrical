@@ -1,0 +1,10 @@
+[33me2d2b0c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Improve header design and contact cards: reduce header size, add mobile responsiveness, remove Josephine from team, enhance contact card design with better sizing and styling
+[33m14c932f[m Fix store-ui.js module export to resolve JavaScript import error
+[33mc625b06[m Add config.php for auto-deployment
+[33m1b7f807[m Fix config file path issues in load_settings.php and header_include.php
+[33m0990cf9[m changes
+[33ma91ee6b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix API JSON corruption by suppressing error output - Added error suppression to prevent PHP errors from corrupting JSON responses - Fixed get_categories.php and get_products.php API endpoints - Updated db_connection.php and config.php to suppress display errors - Resolves 500 errors and JSON parsing issues in store modules
+[33m95f0f1d[m Fix: Rename API directory to lowercase 'api' to resolve case sensitivity issues on web server
+[33m906f6b4[m Refactor: Move all public API endpoints from /includes/ to /api/ directory to resolve firewall blocking issues
+[33mf123dd4[m Reduce contact card sizes to fit side by side on index page
+[33mb0f18ef[m Fix header CSS conflicts - remove duplicate .header-content definitions

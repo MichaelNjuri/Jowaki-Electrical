@@ -1,0 +1,14 @@
+# Ignore all files in uploads directory except .gitignore
+*
+!.gitignore
+
+# Allow specific directories if needed
+!categories/
+!products/
+
+# But ignore PHP files in those directories
+**/*.php
+**/*.php3
+**/*.php4
+**/*.php5
+**/*.phtml

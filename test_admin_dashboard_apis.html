@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard APIs Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .warning { color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .info { color: #0c5460; background: #d1ecf1; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Admin Dashboard APIs Test</h1>
+    
+    <div class="section">
+        <h2>Test API Endpoints</h2>
+        <button onclick="testOrdersAPI()">Test Orders API</button>
+        <button onclick="testAnalyticsAPI()">Test Analytics API</button>
+        <button onclick="testContactMessagesAPI()">Test Contact Messages API</button>
+        <button onclick="testSettingsAPI()">Test Settings API</button>
+        <button onclick="testAllAPIs()">Test All APIs</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <div class="section">
+        <h2>Quick Links</h2>
+        <button onclick="window.open('AdminDashboard.html', '_blank')">Open Admin Dashboard</button>
+        <button onclick="window.open('fix_admin_apis.php', '_blank')">Open API Fix Tool</button>
+        <button onclick="window.open('test_admin_login_simple.html', '_blank')">Test Admin Login</button>
+    </div>
+
+    <script>
+        async function testOrdersAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Orders API...</div>';
+            
+            try {
+                const response = await fetch('API/get_orders_fixed.php');
+                const data = await response.json();
+                
+                if (Array.isArray(data)) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Orders API working!</div>
+                        <div class="info">Found ${data.length} orders</div>
+                        <pre>${JSON.stringify(data.slice(0, 2), null, 2)}</pre>
+                    `;
+                } else if (data.success === false) {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Orders API: ${data.message}</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Orders API working!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Orders API error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testAnalyticsAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Analytics API...</div>';
+            
+            try {
+                const response = await fetch('API/get_analytics_admin_fixed.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Analytics API working!</div>
+                        <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Analytics API: ${data.message}</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Analytics API error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testContactMessagesAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Contact Messages API...</div>';
+            
+            try {
+                const response = await fetch('API/get_contact_messages_fixed.php');
+                const text = await response.text();
+                
+                if (text.includes('success') || text.includes('data') || text.includes('[]')) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Contact Messages API working!</div>
+                        <div class="info">Response: ${text.substring(0, 200)}...</div>
+                    `;
+                } else if (text.includes('Access denied')) {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Contact Messages API: Access denied (need login)</div>
+                    `;
+                } else if (text.includes('<br />') || text.includes('<b>')) {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Contact Messages API: HTML error in response</div>
+                        <div class="info">Response: ${text.substring(0, 200)}...</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="info">ℹ️ Contact Messages API: ${text.substring(0, 200)}...</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Contact Messages API error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testSettingsAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing Settings API...</div>';
+            
+            try {
+                const response = await fetch('API/get_settings_fixed.php');
+                const text = await response.text();
+                
+                if (text.includes('success') || text.includes('data') || text.includes('[]')) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">✅ Settings API working!</div>
+                        <div class="info">Response: ${text.substring(0, 200)}...</div>
+                    `;
+                } else if (text.includes('Access denied')) {
+                    resultsDiv.innerHTML = `
+                        <div class="warning">⚠️ Settings API: Access denied (need login)</div>
+                    `;
+                } else if (text.includes('<br />') || text.includes('<b>')) {
+                    resultsDiv.innerHTML = `
+                        <div class="error">❌ Settings API: HTML error in response</div>
+                        <div class="info">Response: ${text.substring(0, 200)}...</div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="info">ℹ️ Settings API: ${text.substring(0, 200)}...</div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">❌ Settings API error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testAllAPIs() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing all APIs...</div>';
+            
+                         const apis = [
+                 { name: 'Orders (Fixed)', url: 'get_orders_fixed.php' },
+                 { name: 'Analytics (Fixed)', url: 'get_analytics_admin_fixed.php' },
+                 { name: 'Contact Messages (Fixed)', url: 'get_contact_messages_fixed.php' },
+                 { name: 'Settings (Fixed)', url: 'get_settings_fixed.php' },
+                 { name: 'Store Categories (Fixed)', url: 'get_store_categories_fixed.php' },
+                 { name: 'Products Admin', url: 'get_products_admin.php' },
+                 { name: 'Customer Admin', url: 'get_customer_admin.php' },
+                 { name: 'Categories Admin', url: 'get_categories_admin.php' }
+             ];
+            
+            let results = '';
+            
+            for (const api of apis) {
+                try {
+                    const response = await fetch(`API/${api.url}`);
+                    const text = await response.text();
+                    
+                    if (text.includes('success') || text.includes('data') || text.includes('[]')) {
+                        results += `<div class="success">✅ ${api.name}: Working</div>`;
+                    } else if (text.includes('Access denied')) {
+                        results += `<div class="warning">⚠️ ${api.name}: Access denied (need login)</div>`;
+                    } else if (text.includes('<br />') || text.includes('<b>')) {
+                        results += `<div class="error">❌ ${api.name}: HTML error in response</div>`;
+                    } else {
+                        results += `<div class="info">ℹ️ ${api.name}: ${text.substring(0, 50)}...</div>`;
+                    }
+                } catch (error) {
+                    results += `<div class="error">❌ ${api.name}: Network error - ${error.message}</div>`;
+                }
+            }
+            
+            resultsDiv.innerHTML = results;
+        }
+    </script>
+</body>
+</html>

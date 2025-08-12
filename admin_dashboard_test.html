@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard Comprehensive Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .test-result { 
+            margin: 10px 0; 
+            padding: 12px; 
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+        .success { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border-color: #28a745;
+        }
+        .error { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border-color: #dc3545;
+        }
+        .info { 
+            background-color: #d1ecf1; 
+            color: #0c5460; 
+            border-color: #17a2b8;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-color: #ffc107;
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 8px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-success:hover { background-color: #1e7e34; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .btn-warning:hover { background-color: #e0a800; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-info { background-color: #17a2b8; color: white; }
+        .btn-info:hover { background-color: #138496; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+        }
+        
+        .test-summary {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .function-test {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .function-name {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .function-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pass { background: #d4edda; color: #155724; }
+        .status-fail { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Admin Dashboard Comprehensive Test Suite</h1>
+        <p>This test suite will verify all admin dashboard functions and API endpoints.</p>
+        
+        <div class="test-summary">
+            <h3>Test Summary</h3>
+            <div id="test-summary-content">
+                <p>Click "Run Complete Test Suite" to start testing all functions.</p>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>1. Database & Connection Tests</h2>
+            <button class="btn-primary" onclick="testDatabaseConnection()">Test Database Connection</button>
+            <button class="btn-primary" onclick="testDatabaseTables()">Test Database Tables</button>
+            <div id="db-test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. API Endpoints Tests</h2>
+            <button class="btn-success" onclick="testAllAPIEndpoints()">Test All API Endpoints</button>
+            <div id="api-test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Dashboard Functions Tests</h2>
+            <button class="btn-warning" onclick="testDashboardFunctions()">Test Dashboard Functions</button>
+            <div id="dashboard-test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. CRUD Operations Tests</h2>
+            <button class="btn-info" onclick="testCRUDOperations()">Test CRUD Operations</button>
+            <div id="crud-test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>5. JavaScript Module Tests</h2>
+            <button class="btn-warning" onclick="testJavaScriptModules()">Test JavaScript Modules</button>
+            <div id="js-test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>6. Complete Integration Test</h2>
+            <button class="btn-danger" onclick="runCompleteTestSuite()">🚀 Run Complete Test Suite</button>
+            <div id="complete-test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            pending: 0
+        };
+
+        function updateProgress() {
+            const progress = testResults.total > 0 ? (testResults.passed / testResults.total) * 100 : 0;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            
+            const summary = document.getElementById('test-summary-content');
+            summary.innerHTML = `
+                <p><strong>Total Tests:</strong> ${testResults.total}</p>
+                <p><strong>Passed:</strong> <span style="color: #28a745;">${testResults.passed}</span></p>
+                <p><strong>Failed:</strong> <span style="color: #dc3545;">${testResults.failed}</span></p>
+                <p><strong>Pending:</strong> <span style="color: #ffc107;">${testResults.pending}</span></p>
+            `;
+        }
+
+        function addResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            element.appendChild(div);
+            
+            // Update test results
+            testResults.total++;
+            if (type === 'success') testResults.passed++;
+            else if (type === 'error') testResults.failed++;
+            else testResults.pending++;
+            updateProgress();
+        }
+
+        function clearResults(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        function addFunctionTest(elementId, functionName, status, details = '') {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = 'function-test';
+            
+            const statusClass = status === 'pass' ? 'status-pass' : status === 'fail' ? 'status-fail' : 'status-pending';
+            const statusText = status === 'pass' ? 'PASS' : status === 'fail' ? 'FAIL' : 'PENDING';
+            
+            div.innerHTML = `
+                <div class="function-name">${functionName}</div>
+                <span class="function-status ${statusClass}">${statusText}</span>
+                ${details ? `<div style="margin-top: 5px; font-size: 0.9em; color: #666;">${details}</div>` : ''}
+            `;
+            element.appendChild(div);
+        }
+
+        async function testDatabaseConnection() {
+            clearResults('db-test-result');
+            addResult('db-test-result', 'Testing database connection...', 'info');
+            
+            try {
+                const response = await fetch('./api/test_db.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('db-test-result', '✅ Database connection successful!', 'success');
+                    addResult('db-test-result', `Database: ${data.database_name}`, 'info');
+                    addResult('db-test-result', `Tables found: ${data.tables.join(', ')}`, 'info');
+                    addFunctionTest('db-test-result', 'Database Connection', 'pass', 'Successfully connected to database');
+                } else {
+                    addResult('db-test-result', `❌ Database connection failed: ${data.error}`, 'error');
+                    addFunctionTest('db-test-result', 'Database Connection', 'fail', data.error);
+                }
+            } catch (error) {
+                addResult('db-test-result', `❌ Database test error: ${error.message}`, 'error');
+                addFunctionTest('db-test-result', 'Database Connection', 'fail', error.message);
+            }
+        }
+
+        async function testDatabaseTables() {
+            addResult('db-test-result', 'Testing database tables...', 'info');
+            
+            const requiredTables = ['products', 'orders', 'categories', 'users'];
+            
+            try {
+                const response = await fetch('./api/test_db.php');
+                const data = await response.json();
+                
+                if (data.success && data.tables) {
+                    let allTablesExist = true;
+                    const missingTables = [];
+                    
+                    for (const table of requiredTables) {
+                        if (!data.tables.includes(table)) {
+                            allTablesExist = false;
+                            missingTables.push(table);
+                        }
+                    }
+                    
+                    if (allTablesExist) {
+                        addResult('db-test-result', '✅ All required tables exist!', 'success');
+                        addFunctionTest('db-test-result', 'Database Tables', 'pass', 'All required tables found');
+                    } else {
+                        addResult('db-test-result', `⚠️ Missing tables: ${missingTables.join(', ')}`, 'warning');
+                        addFunctionTest('db-test-result', 'Database Tables', 'fail', `Missing: ${missingTables.join(', ')}`);
+                    }
+                } else {
+                    addResult('db-test-result', '❌ Could not verify tables', 'error');
+                    addFunctionTest('db-test-result', 'Database Tables', 'fail', 'Could not verify tables');
+                }
+            } catch (error) {
+                addResult('db-test-result', `❌ Table test error: ${error.message}`, 'error');
+                addFunctionTest('db-test-result', 'Database Tables', 'fail', error.message);
+            }
+        }
+
+        async function testAllAPIEndpoints() {
+            clearResults('api-test-result');
+            addResult('api-test-result', 'Testing all API endpoints...', 'info');
+            
+            const endpoints = [
+                { name: 'Dashboard Stats', url: './api/get_dashboard_stats.php', method: 'GET' },
+                { name: 'Orders Management', url: './api/admin_orders.php', method: 'GET' },
+                { name: 'Products Management', url: './api/get_products_admin.php', method: 'GET' },
+                { name: 'Customers Management', url: './api/admin_customers.php', method: 'GET' },
+                { name: 'Categories Management', url: './api/admin_categories.php', method: 'GET' },
+                { name: 'Settings', url: './api/get_settings.php', method: 'GET' },
+                { name: 'Notifications', url: './api/get_notifications_admin.php', method: 'GET' },
+                { name: 'Low Stock Check', url: './api/check_low_stock.php', method: 'GET' },
+                { name: 'Order Status Update', url: './api/update_order_status.php', method: 'POST' },
+                { name: 'Stock Update', url: './api/update_stock.php', method: 'POST' },
+                { name: 'Product Update', url: './api/update_product.php', method: 'POST' },
+                { name: 'Settings Update', url: './api/update_settings.php', method: 'POST' }
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const options = {
+                        method: endpoint.method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    };
+                    
+                    if (endpoint.method === 'POST') {
+                        options.body = JSON.stringify({ test: true });
+                    }
+                    
+                    const response = await fetch(endpoint.url, options);
+                    const data = await response.json();
+                    
+                    if (data.success !== false) {
+                        addResult('api-test-result', `✅ ${endpoint.name}: Working`, 'success');
+                        addFunctionTest('api-test-result', endpoint.name, 'pass', 'Endpoint responding correctly');
+                    } else {
+                        addResult('api-test-result', `⚠️ ${endpoint.name}: ${data.error || 'Unknown error'}`, 'warning');
+                        addFunctionTest('api-test-result', endpoint.name, 'fail', data.error || 'Unknown error');
+                    }
+                } catch (error) {
+                    addResult('api-test-result', `❌ ${endpoint.name}: ${error.message}`, 'error');
+                    addFunctionTest('api-test-result', endpoint.name, 'fail', error.message);
+                }
+            }
+        }
+
+        async function testDashboardFunctions() {
+            clearResults('dashboard-test-result');
+            addResult('dashboard-test-result', 'Testing dashboard functions...', 'info');
+            
+            // Test dashboard stats
+            try {
+                const response = await fetch('./api/get_dashboard_stats.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('dashboard-test-result', '✅ Dashboard stats loaded successfully!', 'success');
+                    addResult('dashboard-test-result', `Total Products: ${data.total_products}`, 'info');
+                    addResult('dashboard-test-result', `Pending Orders: ${data.pending_orders}`, 'info');
+                    addResult('dashboard-test-result', `Total Customers: ${data.total_customers}`, 'info');
+                    addResult('dashboard-test-result', `Monthly Revenue: KSh ${data.monthly_revenue}`, 'info');
+                    addFunctionTest('dashboard-test-result', 'Dashboard Stats', 'pass', 'Stats loaded successfully');
+                } else {
+                    addResult('dashboard-test-result', `❌ Dashboard stats failed: ${data.error}`, 'error');
+                    addFunctionTest('dashboard-test-result', 'Dashboard Stats', 'fail', data.error);
+                }
+            } catch (error) {
+                addResult('dashboard-test-result', `❌ Dashboard stats error: ${error.message}`, 'error');
+                addFunctionTest('dashboard-test-result', 'Dashboard Stats', 'fail', error.message);
+            }
+            
+            // Test low stock notifications
+            try {
+                const response = await fetch('./api/check_low_stock.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult('dashboard-test-result', '✅ Low stock check working!', 'success');
+                    addResult('dashboard-test-result', `Low stock products: ${data.total_low_stock || 0}`, 'info');
+                    addFunctionTest('dashboard-test-result', 'Low Stock Check', 'pass', 'Low stock check working');
+                } else {
+                    addResult('dashboard-test-result', `⚠️ Low stock check: ${data.error}`, 'warning');
+                    addFunctionTest('dashboard-test-result', 'Low Stock Check', 'fail', data.error);
+                }
+            } catch (error) {
+                addResult('dashboard-test-result', `❌ Low stock check error: ${error.message}`, 'error');
+                addFunctionTest('dashboard-test-result', 'Low Stock Check', 'fail', error.message);
+            }
+        }
+
+        async function testCRUDOperations() {
+            clearResults('crud-test-result');
+            addResult('crud-test-result', 'Testing CRUD operations...', 'info');
+            
+            // Test Orders CRUD
+            try {
+                const response = await fetch('./api/admin_orders.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('crud-test-result', '✅ Orders CRUD working!', 'success');
+                    addResult('crud-test-result', `Found ${data.data ? data.data.length : 0} orders`, 'info');
+                    addFunctionTest('crud-test-result', 'Orders CRUD', 'pass', 'Orders operations working');
+                } else {
+                    addResult('crud-test-result', `❌ Orders CRUD failed: ${data.error}`, 'error');
+                    addFunctionTest('crud-test-result', 'Orders CRUD', 'fail', data.error);
+                }
+            } catch (error) {
+                addResult('crud-test-result', `❌ Orders CRUD error: ${error.message}`, 'error');
+                addFunctionTest('crud-test-result', 'Orders CRUD', 'fail', error.message);
+            }
+            
+            // Test Products CRUD
+            try {
+                const response = await fetch('./api/get_products_admin.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('crud-test-result', '✅ Products CRUD working!', 'success');
+                    addResult('crud-test-result', `Found ${data.products ? data.products.length : 0} products`, 'info');
+                    addFunctionTest('crud-test-result', 'Products CRUD', 'pass', 'Products operations working');
+                } else {
+                    addResult('crud-test-result', `❌ Products CRUD failed: ${data.error}`, 'error');
+                    addFunctionTest('crud-test-result', 'Products CRUD', 'fail', data.error);
+                }
+            } catch (error) {
+                addResult('crud-test-result', `❌ Products CRUD error: ${error.message}`, 'error');
+                addFunctionTest('crud-test-result', 'Products CRUD', 'fail', error.message);
+            }
+            
+            // Test Customers CRUD
+            try {
+                const response = await fetch('./api/admin_customers.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('crud-test-result', '✅ Customers CRUD working!', 'success');
+                    addResult('crud-test-result', `Found ${data.customers ? data.customers.length : 0} customers`, 'info');
+                    addFunctionTest('crud-test-result', 'Customers CRUD', 'pass', 'Customers operations working');
+                } else {
+                    addResult('crud-test-result', `❌ Customers CRUD failed: ${data.error}`, 'error');
+                    addFunctionTest('crud-test-result', 'Customers CRUD', 'fail', data.error);
+                }
+            } catch (error) {
+                addResult('crud-test-result', `❌ Customers CRUD error: ${error.message}`, 'error');
+                addFunctionTest('crud-test-result', 'Customers CRUD', 'fail', error.message);
+            }
+            
+            // Test Categories CRUD
+            try {
+                const response = await fetch('./api/admin_categories.php');
+                const data = await response.json();
+                
+                if (data.success !== false) {
+                    addResult('crud-test-result', '✅ Categories CRUD working!', 'success');
+                    addResult('crud-test-result', `Found ${data.categories ? data.categories.length : 0} categories`, 'info');
+                    addFunctionTest('crud-test-result', 'Categories CRUD', 'pass', 'Categories operations working');
+                } else {
+                    addResult('crud-test-result', `❌ Categories CRUD failed: ${data.error}`, 'error');
+                    addFunctionTest('crud-test-result', 'Categories CRUD', 'fail', data.error);
+                }
+            } catch (error) {
+                addResult('crud-test-result', `❌ Categories CRUD error: ${error.message}`, 'error');
+                addFunctionTest('crud-test-result', 'Categories CRUD', 'fail', error.message);
+            }
+        }
+
+        async function testJavaScriptModules() {
+            clearResults('js-test-result');
+            addResult('js-test-result', 'Testing JavaScript modules...', 'info');
+            
+            // Test if adminModules object exists
+            if (typeof window.adminModules !== 'undefined') {
+                addResult('js-test-result', '✅ adminModules object exists!', 'success');
+                addFunctionTest('js-test-result', 'adminModules Object', 'pass', 'Global adminModules object available');
+                
+                // Test individual functions
+                const functions = [
+                    'showSection', 'viewOrder', 'editOrder', 'deleteOrder',
+                    'viewProduct', 'editProduct', 'deleteProduct',
+                    'viewCustomer', 'editCustomer', 'deleteCustomer',
+                    'editCategory', 'deleteCategory', 'promptAddCategory',
+                    'showModal', 'hideModal', 'toggleNotifications',
+                    'updateOrderStatus', 'manageStock', 'generateReport',
+                    'loadSettings', 'saveSettings'
+                ];
+                
+                for (const func of functions) {
+                    if (typeof window.adminModules[func] === 'function') {
+                        addFunctionTest('js-test-result', func, 'pass', 'Function available');
+                    } else {
+                        addFunctionTest('js-test-result', func, 'fail', 'Function not available');
+                    }
+                }
+            } else {
+                addResult('js-test-result', '❌ adminModules object not found!', 'error');
+                addFunctionTest('js-test-result', 'adminModules Object', 'fail', 'Global adminModules object not available');
+            }
+            
+            // Test if modules are loaded
+            const modules = ['dashboard', 'orders', 'products', 'customers', 'categories', 'notifications', 'analytics'];
+            for (const module of modules) {
+                addFunctionTest('js-test-result', `${module} Module`, 'pending', 'Module loading status');
+            }
+        }
+
+        async function runCompleteTestSuite() {
+            clearResults('complete-test-result');
+            addResult('complete-test-result', '🚀 Starting comprehensive test suite...', 'info');
+            
+            // Reset test results
+            testResults = { total: 0, passed: 0, failed: 0, pending: 0 };
+            updateProgress();
+            
+            const tests = [
+                { name: 'Database Connection', func: testDatabaseConnection },
+                { name: 'Database Tables', func: testDatabaseTables },
+                { name: 'API Endpoints', func: testAllAPIEndpoints },
+                { name: 'Dashboard Functions', func: testDashboardFunctions },
+                { name: 'CRUD Operations', func: testCRUDOperations },
+                { name: 'JavaScript Modules', func: testJavaScriptModules }
+            ];
+            
+            for (const test of tests) {
+                addResult('complete-test-result', `Running ${test.name}...`, 'info');
+                await test.func();
+                await new Promise(resolve => setTimeout(resolve, 500)); // Wait 0.5 seconds between tests
+            }
+            
+            addResult('complete-test-result', '🎉 Complete test suite finished!', 'success');
+            addResult('complete-test-result', `Final Results: ${testResults.passed} passed, ${testResults.failed} failed, ${testResults.pending} pending`, 'info');
+            
+            if (testResults.failed === 0) {
+                addResult('complete-test-result', '🎊 All tests passed! Admin dashboard is working correctly.', 'success');
+            } else {
+                addResult('complete-test-result', `⚠️ ${testResults.failed} tests failed. Please check the errors above.`, 'warning');
+            }
+        }
+    </script>
+</body>
+</html> 

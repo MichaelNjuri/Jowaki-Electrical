@@ -1,0 +1,1021 @@
+// Global variables
+let orders = [];
+let products = [];
+let customers = [];
+let categories = [];
+let notifications = [];
+let translations = {};
+let currentLanguage = 'en'; // Default language
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing Admin Dashboard...');
+    showSection('dashboard');
+    fetchDashboardStats();
+    fetchOrders();
+    fetchProducts();
+    fetchCustomers();
+    fetchCategories();
+    fetchNotifications();
+
+    // Add event listeners for sidebar navigation
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sectionId = link.getAttribute('data-section');
+            console.log(`Switching to section: ${sectionId}`);
+            showSection(sectionId);
+        });
+    });
+
+    // Initialize language switcher
+    initializeLanguageSwitcher();
+    
+    // Initialize search and filter functionality
+    initializeSearchAndFilters();
+    
+    // Initialize modal forms
+    initializeModalForms();
+});
+
+function getTranslation(key, params = {}) {
+    let translation = translations;
+    key.split('.').forEach(part => {
+        translation = translation ? translation[part] : '';
+    });
+    if (!translation) return key;
+    return Object.keys(params).reduce((str, param) => 
+        str.replace(`{{${param}}}`, params[param]), translation);
+}
+
+function initializeLanguageSwitcher() {
+    const languageSelect = document.createElement('select');
+    languageSelect.id = 'language-switcher';
+    languageSelect.className = 'form-control';
+    languageSelect.innerHTML = `
+        <option value="en">English</option>
+        <option value="sw">Swahili</option>
+    `;
+    languageSelect.value = currentLanguage;
+    languageSelect.addEventListener('change', async (e) => {
+        currentLanguage = e.target.value;
+        await initializeI18n();
+        updateUIText();
+        renderNotifications();
+        renderOrders(orders);
+        renderProducts(products);
+        renderCustomers(customers);
+        renderCategories(categories);
+    });
+    
+    const headerActions = document.querySelector('.header-actions');
+    if (headerActions) {
+        headerActions.insertBefore(languageSelect, headerActions.firstChild);
+    }
+}
+
+function updateUIText() {
+    const activeSection = document.querySelector('.content-section.active');
+    const sectionId = activeSection ? activeSection.id : 'dashboard';
+    document.getElementById('page-title').textContent = getTranslation(`sections.${sectionId}`);
+    
+    document.querySelectorAll('.modal-title').forEach(title => {
+        const modalId = title.closest('.modal').id;
+        title.textContent = getTranslation(`modals.${modalId}.title`);
+    });
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const existingNotification = document.querySelector('.notification-popup');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    const notification = document.createElement('div');
+    notification.className = `notification-popup notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-message">${sanitizeHTML(message)}</span>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 15000);
+}
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notification-dropdown');
+    if (!dropdown) {
+        console.error('Notifications dropdown not found');
+        return;
+    }
+    const isVisible = dropdown.style.display === 'block';
+    dropdown.style.display = isVisible ? 'none' : 'block';
+}
+
+function processNotificationData(notification) {
+    return {
+        id: parseInt(notification.id) || 0,
+        message: sanitizeHTML(notification.message || getTranslation('notifications.no_message')),
+        type: sanitizeHTML(notification.type || 'info')
+    };
+}
+
+function renderNotifications() {
+    const notificationList = document.getElementById('notification-dropdown');
+    const notificationCount = document.getElementById('notification-count');
+    
+    if (!notificationList || !notificationCount) {
+        console.error('Notification elements not found!');
+        return;
+    }
+    
+    notificationList.innerHTML = '';
+    notificationCount.textContent = notifications.length;
+    
+    // Add header
+    const header = document.createElement('div');
+    header.className = 'notification-header';
+    header.textContent = getTranslation('notifications.title') || 'Notifications';
+    notificationList.appendChild(header);
+    
+    if (notifications.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'notification';
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.color = '#666';
+        emptyMessage.textContent = getTranslation('notifications.empty') || 'No notifications';
+        notificationList.appendChild(emptyMessage);
+        return;
+    }
+    
+    notifications.forEach(notification => {
+        const div = document.createElement('div');
+        div.className = `notification ${notification.type}`;
+        div.textContent = notification.message;
+        notificationList.appendChild(div);
+    });
+}
+
+function fetchNotifications() {
+    fetch('api/get_notifications_admin.php')
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false && Array.isArray(data)) {
+                notifications = data.map(notification => processNotificationData(notification));
+                renderNotifications();
+            } else {
+                throw new Error(data.error || getTranslation('errors.fetch_notifications'));
+            }
+        })
+        .catch(error => {
+            console.error('Notifications fetch error:', error);
+            showNotification(getTranslation('errors.fetch_notifications_error', { error: error.message }), 'error');
+            renderNotifications();
+        });
+}
+
+// Utility functions
+function sanitizeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function showSection(sectionId) {
+    console.log(`Switching to section: ${sectionId}`);
+    const sections = document.querySelectorAll('.content-section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const pageTitle = document.getElementById('page-title');
+
+    if (!pageTitle) {
+        console.error('page-title element not found!');
+        return;
+    }
+
+    sections.forEach(section => section.classList.remove('active'));
+    const section = document.querySelector(`#${sectionId}`);
+    if (section) {
+        section.classList.add('active');
+    } else {
+        console.error(`Section #${sectionId} not found!`);
+        showNotification(getTranslation('errors.section_not_found', { section: sectionId }), 'error');
+    }
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-section') === sectionId) {
+            link.classList.add('active');
+        }
+    });
+
+    pageTitle.textContent = getTranslation(`sections.${sectionId}`) || sectionId;
+}
+
+// Dashboard functions
+function fetchDashboardStats() {
+    fetch('api/get_dashboard_stats.php')
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false) {
+                updateDashboardElements({
+                    'total-products': data.total_products || 0,
+                    'pending-orders': data.pending_orders || 0,
+                    'total-customers': data.total_customers || 0,
+                    'monthly-revenue': data.monthly_revenue ? Number(data.monthly_revenue).toFixed(2) : '0.00',
+                    'monthly-sales': data.monthly_sales || '0',
+                    'orders-this-month': data.orders_this_month || 0,
+                    'new-customers': data.new_customers || '0',
+                    'service-completion': data.service_completion || '0%'
+                });
+            } else {
+                updateDashboardStatsFromLocal();
+            }
+        })
+        .catch(error => {
+            console.error('Dashboard stats fetch error:', error);
+            showNotification(getTranslation('errors.fetch_dashboard_stats', { error: error.message }), 'error');
+            updateDashboardStatsFromLocal();
+        });
+}
+
+function updateDashboardElements(data) {
+    Object.keys(data).forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = data[id];
+        } else {
+            console.warn(`Dashboard element #${id} not found!`);
+        }
+    });
+}
+
+function updateDashboardStatsFromLocal() {
+    const pendingOrders = orders.filter(order => order.status === 'pending').length;
+    const monthlyRevenue = orders.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0);
+    
+    updateDashboardElements({
+        'total-products': products.length,
+        'pending-orders': pendingOrders,
+        'total-customers': customers.length,
+        'monthly-revenue': monthlyRevenue.toFixed(2),
+        'monthly-sales': orders.length,
+        'orders-this-month': orders.length,
+        'new-customers': customers.length,
+        'service-completion': '0%'
+    });
+}
+
+// Orders management
+function fetchOrders() {
+    fetch('api/admin_orders.php')
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false && Array.isArray(data.data)) {
+                orders = data.data.map(order => processOrderData(order));
+                renderOrders(orders);
+                updateDashboardStatsFromLocal();
+            } else {
+                throw new Error(data.error || getTranslation('errors.fetch_orders'));
+            }
+        })
+        .catch(error => {
+            console.error('Orders fetch error:', error);
+            showNotification(getTranslation('errors.fetch_orders_error', { error: error.message }), 'error');
+            renderOrders([]);
+        });
+}
+
+function processOrderData(order) {
+    return {
+        id: parseInt(order.id) || 0,
+        customer_name: sanitizeHTML(order.customer_name || getTranslation('orders.unknown_customer')),
+        customer_email: sanitizeHTML(order.customer_email || ''),
+        customer_phone: sanitizeHTML(order.customer_phone || ''),
+        customer_address: sanitizeHTML(order.customer_address || ''),
+        order_date: order.order_date || new Date().toISOString(),
+        items: Array.isArray(order.items) ? order.items.map(item => ({
+            name: sanitizeHTML(item.name || ''),
+            sku: sanitizeHTML(item.sku || ''),
+            quantity: parseInt(item.quantity) || 0,
+            price: parseFloat(item.price) || 0
+        })) : [],
+        subtotal: parseFloat(order.subtotal) || 0,
+        shipping: parseFloat(order.shipping) || 0,
+        tax: parseFloat(order.tax) || 0,
+        total_amount: parseFloat(order.total_amount) || 0,
+        payment_method: sanitizeHTML(order.payment_method || getTranslation('orders.na')),
+        shipping_method: sanitizeHTML(order.shipping_method || getTranslation('orders.na')),
+        status: order.status || 'pending'
+    };
+}
+
+function renderOrders(ordersToRender) {
+    const tbody = document.getElementById('orders-tbody');
+    if (!tbody) {
+        console.error('orders-tbody element not found!');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (!Array.isArray(ordersToRender) || ordersToRender.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">${getTranslation('orders.empty') || 'No orders found'}</td></tr>`;
+        return;
+    }
+    
+    ordersToRender.forEach(order => {
+        const tr = document.createElement('tr');
+        const statusClass = `status-${order.status}`;
+        const statusText = formatStatusText(order.status);
+        const orderDate = new Date(order.order_date).toLocaleDateString();
+        
+        tr.innerHTML = `
+            <td>${order.id}</td>
+            <td>${order.customer_name}</td>
+            <td>${orderDate}</td>
+            <td>$${order.total_amount.toFixed(2)}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>${order.payment_method}</td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="viewOrder(${order.id})">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-warning btn-sm" onclick="editOrder(${order.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteOrder(${order.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function formatStatusText(status) {
+    const statusMap = {
+        'pending': 'Pending',
+        'processing': 'Processing',
+        'shipped': 'Shipped',
+        'delivered': 'Delivered',
+        'cancelled': 'Cancelled'
+    };
+    return statusMap[status] || status;
+}
+
+// Products management
+function fetchProducts() {
+    fetch('api/get_products_admin.php')
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false && Array.isArray(data)) {
+                products = data.map(product => processProductData(product));
+                renderProducts(products);
+                updateProductCategoryOptions();
+            } else {
+                throw new Error(data.error || getTranslation('errors.fetch_products'));
+            }
+        })
+        .catch(error => {
+            console.error('Products fetch error:', error);
+            showNotification(getTranslation('errors.fetch_products_error', { error: error.message }), 'error');
+            renderProducts([]);
+        });
+}
+
+function processProductData(product) {
+    return {
+        id: parseInt(product.id) || 0,
+        name: sanitizeHTML(product.name || ''),
+        sku: sanitizeHTML(product.sku || ''),
+        category: sanitizeHTML(product.category || ''),
+        category_id: parseInt(product.category_id) || 0,
+        price: parseFloat(product.price) || 0,
+        stock_quantity: parseInt(product.stock_quantity) || 0,
+        description: sanitizeHTML(product.description || ''),
+        status: product.status || 'active'
+    };
+}
+
+function renderProducts(productsToRender) {
+    const tbody = document.getElementById('products-tbody');
+    if (!tbody) {
+        console.error('products-tbody element not found!');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (!Array.isArray(productsToRender) || productsToRender.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: #666;">${getTranslation('products.empty') || 'No products found'}</td></tr>`;
+        return;
+    }
+    
+    productsToRender.forEach(product => {
+        const tr = document.createElement('tr');
+        const statusClass = product.status === 'active' ? 'status-delivered' : 'status-cancelled';
+        const statusText = product.status === 'active' ? 'Active' : 'Inactive';
+        
+        tr.innerHTML = `
+            <td>${product.id}</td>
+            <td>${product.name}</td>
+            <td>${product.sku}</td>
+            <td>${product.category}</td>
+            <td>$${product.price.toFixed(2)}</td>
+            <td>${product.stock_quantity}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="viewProduct(${product.id})">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-warning btn-sm" onclick="editProduct(${product.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function updateProductCategoryOptions() {
+    const categoryFilter = document.getElementById('product-category-filter');
+    const categorySelect = document.getElementById('product-category-select');
+    
+    if (categoryFilter) {
+        categoryFilter.innerHTML = '<option value="">All Categories</option>';
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            categoryFilter.appendChild(option);
+        });
+    }
+    
+    if (categorySelect) {
+        categorySelect.innerHTML = '<option value="">Select Category</option>';
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            categorySelect.appendChild(option);
+        });
+    }
+}
+
+// Customers management
+function fetchCustomers() {
+    fetch('api/get_customer_admin.php')
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false && Array.isArray(data)) {
+                customers = data.map(customer => processCustomerData(customer));
+                renderCustomers(customers);
+            } else {
+                throw new Error(data.error || getTranslation('errors.fetch_customers'));
+            }
+        })
+        .catch(error => {
+            console.error('Customers fetch error:', error);
+            showNotification(getTranslation('errors.fetch_customers_error', { error: error.message }), 'error');
+            renderCustomers([]);
+        });
+}
+
+function processCustomerData(customer) {
+    return {
+        id: parseInt(customer.id) || 0,
+        name: sanitizeHTML(customer.name || ''),
+        email: sanitizeHTML(customer.email || ''),
+        phone: sanitizeHTML(customer.phone || ''),
+        address: sanitizeHTML(customer.address || ''),
+        orders_count: parseInt(customer.orders_count) || 0,
+        total_spent: parseFloat(customer.total_spent) || 0
+    };
+}
+
+function renderCustomers(customersToRender) {
+    const tbody = document.getElementById('customers-tbody');
+    if (!tbody) {
+        console.error('customers-tbody element not found!');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (!Array.isArray(customersToRender) || customersToRender.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">${getTranslation('customers.empty') || 'No customers found'}</td></tr>`;
+        return;
+    }
+    
+    customersToRender.forEach(customer => {
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+            <td>${customer.id}</td>
+            <td>${customer.name}</td>
+            <td>${customer.email}</td>
+            <td>${customer.phone}</td>
+            <td>${customer.orders_count}</td>
+            <td>$${customer.total_spent.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="viewCustomer(${customer.id})">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-warning btn-sm" onclick="editCustomer(${customer.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${customer.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Categories management
+function fetchCategories() {
+    fetch('api/get_categories_admin.php') // <-- updated endpoint
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success !== false && Array.isArray(data.data)) {
+                categories = data.data.map(category => processCategoryData(category));
+                renderCategories(categories);
+                updateProductCategoryOptions();
+            } else {
+                throw new Error(data.error || getTranslation('errors.fetch_categories'));
+            }
+        })
+        .catch(error => {
+            console.error('Categories fetch error:', error);
+            showNotification(getTranslation('errors.fetch_categories_error', { error: error.message }), 'error');
+            renderCategories([]);
+        });
+}
+
+function processCategoryData(category) {
+    return {
+        id: parseInt(category.id) || 0,
+        name: sanitizeHTML(category.name || ''),
+        description: sanitizeHTML(category.description || ''),
+        products_count: parseInt(category.products_count) || 0
+    };
+}
+
+function renderCategories(categoriesToRender) {
+    const tbody = document.getElementById('categories-tbody');
+    if (!tbody) {
+        console.error('categories-tbody element not found!');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (!Array.isArray(categoriesToRender) || categoriesToRender.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #666;">${getTranslation('categories.empty') || 'No categories found'}</td></tr>`;
+        return;
+    }
+    
+    categoriesToRender.forEach(category => {
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+            <td>${category.id}</td>
+            <td>${category.name}</td>
+            <td>${category.description}</td>
+            <td>${category.products_count}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="editCategory(${category.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCategory(${category.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Search and filter functionality
+function initializeSearchAndFilters() {
+    // Order search and filter
+    const orderSearch = document.getElementById('order-search');
+    const orderStatusFilter = document.getElementById('order-status-filter');
+    
+    if (orderSearch) {
+        orderSearch.addEventListener('input', (e) => {
+            filterOrders(e.target.value, orderStatusFilter?.value || '');
+        });
+    }
+    
+    if (orderStatusFilter) {
+        orderStatusFilter.addEventListener('change', (e) => {
+            filterOrders(orderSearch?.value || '', e.target.value);
+        });
+    }
+    
+    // Product search and filter
+    const productSearch = document.getElementById('product-search');
+    const productCategoryFilter = document.getElementById('product-category-filter');
+    
+    if (productSearch) {
+        productSearch.addEventListener('input', (e) => {
+            filterProducts(e.target.value, productCategoryFilter?.value || '');
+        });
+    }
+    
+    if (productCategoryFilter) {
+        productCategoryFilter.addEventListener('change', (e) => {
+            filterProducts(productSearch?.value || '', e.target.value);
+        });
+    }
+    
+    // Customer search
+    const customerSearch = document.getElementById('customer-search');
+    if (customerSearch) {
+        customerSearch.addEventListener('input', (e) => {
+            filterCustomers(e.target.value);
+        });
+    }
+    
+    // Category search
+    const categorySearch = document.getElementById('category-search');
+    if (categorySearch) {
+        categorySearch.addEventListener('input', (e) => {
+            filterCategories(e.target.value);
+        });
+    }
+}
+
+function filterOrders(searchTerm, statusFilter) {
+    let filteredOrders = orders;
+    
+    if (searchTerm) {
+        filteredOrders = filteredOrders.filter(order => 
+            order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.id.toString().includes(searchTerm)
+        );
+    }
+    
+    if (statusFilter) {
+        filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
+    }
+    
+    renderOrders(filteredOrders);
+}
+
+function filterProducts(searchTerm, categoryFilter) {
+    let filteredProducts = products;
+    
+    if (searchTerm) {
+        filteredProducts = filteredProducts.filter(product => 
+            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.sku.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+    
+    if (categoryFilter) {
+        filteredProducts = filteredProducts.filter(product => 
+            product.category_id.toString() === categoryFilter
+        );
+    }
+    
+    renderProducts(filteredProducts);
+}
+
+function filterCustomers(searchTerm) {
+    let filteredCustomers = customers;
+    
+    if (searchTerm) {
+        filteredCustomers = filteredCustomers.filter(customer => 
+            customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            customer.phone.includes(searchTerm)
+        );
+    }
+    
+    renderCustomers(filteredCustomers);
+}
+
+function filterCategories(searchTerm) {
+    let filteredCategories = categories;
+    
+    if (searchTerm) {
+        filteredCategories = filteredCategories.filter(category => 
+            category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            category.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+    
+    renderCategories(filteredCategories);
+}
+
+// Modal functionality
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        
+        // Reset form
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+    }
+}
+
+function initializeModalForms() {
+    // Close modals when clicking outside
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+            e.target.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    });
+    
+    // Add Order Form
+    const addOrderForm = document.getElementById('add-order-form');
+    if (addOrderForm) {
+        addOrderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(addOrderForm);
+            const orderData = Object.fromEntries(formData.entries());
+            
+            fetch('api/admin_orders.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Order added successfully!', 'success');
+                    hideModal('add-order-modal');
+                    fetchOrders();
+                } else {
+                    throw new Error(data.error || 'Failed to add order');
+                }
+            })
+            .catch(error => {
+                console.error('Add order error:', error);
+                showNotification(`Error adding order: ${error.message}`, 'error');
+            });
+        });
+    }
+    
+    // Add Product Form
+    const addProductForm = document.getElementById('add-product-form');
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(addProductForm);
+            const productData = Object.fromEntries(formData.entries());
+            
+            fetch('api/admin_products.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Product added successfully!', 'success');
+                    hideModal('add-product-modal');
+                    fetchProducts();
+                } else {
+                    throw new Error(data.error || 'Failed to add product');
+                }
+            })
+            .catch(error => {
+                console.error('Add product error:', error);
+                showNotification(`Error adding product: ${error.message}`, 'error');
+            });
+        });
+    }
+    
+    // Add Customer Form
+    const addCustomerForm = document.getElementById('add-customer-form');
+    if (addCustomerForm) {
+        addCustomerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(addCustomerForm);
+            const customerData = Object.fromEntries(formData.entries());
+            
+            fetch('api/admin_customers.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(customerData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Customer added successfully!', 'success');
+                    hideModal('add-customer-modal');
+                    fetchCustomers();
+                } else {
+                    throw new Error(data.error || 'Failed to add customer');
+                }
+            })
+            .catch(error => {
+                console.error('Add customer error:', error);
+                showNotification(`Error adding customer: ${error.message}`, 'error');
+            });
+        });
+    }
+    
+    // Add Category Form
+    const addCategoryForm = document.getElementById('add-category-form');
+    if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(addCategoryForm);
+            const categoryData = Object.fromEntries(formData.entries());
+            
+            fetch('api/admin_categories.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(categoryData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Category added successfully!', 'success');
+                    hideModal('add-category-modal');
+                    fetchCategories();
+                } else {
+                    throw new Error(data.error || 'Failed to add category');
+                }
+            })
+            .catch(error => {
+                console.error('Add category error:', error);
+                showNotification(`Error adding category: ${error.message}`, 'error');
+            });
+        });
+    }
+}
+
+// CRUD operation functions
+function viewOrder(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+        alert(`Order Details:\nID: ${order.id}\nCustomer: ${order.customer_name}\nTotal: $${order.total_amount.toFixed(2)}\nStatus: ${order.status}`);
+    }
+}
+
+function editOrder(orderId) {
+    showNotification('Edit order functionality coming soon!', 'info');
+}
+
+function deleteOrder(orderId) {
+    if (confirm('Are you sure you want to delete this order?')) {
+        fetch(`api/admin_orders.php?id=${orderId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Order deleted successfully!', 'success');
+                fetchOrders();
+            } else {
+                throw new Error(data.error || 'Failed to delete order');
+            }
+        })
+        .catch(error => {
+            console.error('Delete order error:', error);
+            showNotification(`Error deleting order: ${error.message}`, 'error');
+        });
+    }
+}
+
+function viewProduct(productId) {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        alert(`Product Details:\nID: ${product.id}\nName: ${product.name}\nSKU: ${product.sku}\nPrice: $${product.price.toFixed(2)}\nStock: ${product.stock_quantity}`);
+    }
+}
+
+function editProduct(productId) {
+    showNotification('Edit product functionality coming soon!', 'info');
+}
+
+function deleteProduct(productId) {
+    if (confirm('Are you sure you want to delete this product?')) {
+        fetch(`api/get_products_admin.php?id=${productId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Product deleted successfully!', 'success');
+                fetchProducts();
+            } else {
+                throw new Error(data.error || 'Failed to delete product');
+            }
+        })
+        .catch(error => {
+            console.error('Delete product error:', error);
+            showNotification(`Error deleting product: ${error.message}`, 'error');
+        });
+    }
+}
+
+function viewCustomer(customerId) {
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+        alert(`Customer Details:\nID: ${customer.id}\nName: ${customer.name}\nEmail: ${customer.email}\nPhone: ${customer.phone}\nOrders: ${customer.orders_count}\nTotal Spent: $${customer.total_spent.toFixed(2)}`);
+    }
+}
+
+function editCustomer(customerId) {
+    showNotification('Edit customer functionality coming soon!', 'info');
+}
+
+function deleteCustomer(customerId) {
+    if (confirm('Are you sure you want to delete this customer?')) {
+        fetch(`api/get_customer_admin.php?id=${customerId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Customer deleted successfully!', 'success');
+                fetchCustomers();
+            } else {
+                throw new Error(data.error || 'Failed to delete customer');
+            }
+        })
+        .catch(error => {
+            console.error('Delete customer error:', error);
+            showNotification(`Error deleting customer: ${error.message}`, 'error');
+        });
+    }
+}
+
+function editCategory(categoryId) {
+    showNotification('Edit category functionality coming soon!', 'info');
+}
+
+function deleteCategory(categoryId) {
+    if (confirm('Are you sure you want to delete this category?')) {
+        fetch(`api/get_categories_admin.php?id=${categoryId}`, { // <-- updated endpoint
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Category deleted successfully!', 'success');
+                fetchCategories();
+            } else {
+                throw new Error(data.error || 'Failed to delete category');
+            }
+        })
+        .catch(error => {
+            console.error('Delete category error:', error);
+            showNotification(`Error deleting category: ${error.message}`, 'error');
+        });
+    }
+}

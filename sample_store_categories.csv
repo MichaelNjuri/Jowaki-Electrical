@@ -1,0 +1,9 @@
+name,icon,filter_value,sort_order,is_active
+Security Systems,fas fa-shield-alt,security,1,1
+CCTV Systems,fas fa-video,cctv,2,1
+Electric Fencing,fas fa-bolt,fencing,3,1
+Access Control,fas fa-key,access,4,1
+Alarm Systems,fas fa-bell,alarm,5,1
+Lighting,fas fa-lightbulb,lighting,6,1
+Wiring,fas fa-plug,wiring,7,1
+Tools,fas fa-tools,tools,8,1 
